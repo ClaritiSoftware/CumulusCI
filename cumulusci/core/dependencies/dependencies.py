@@ -455,7 +455,13 @@ class PackageNamespaceVersionDependency(StaticDependency):
         else:
             version = self.version
 
-        if org.has_minimum_package_version(
+        # Get shared package state from task context if available
+        shared_package_state = None
+        if hasattr(context, "task") and hasattr(context.task, "shared_package_state"):
+            shared_package_state = context.task.shared_package_state
+            
+        # Check if package is already installed using org_config or shared state
+        if (shared_package_state and shared_package_state.has_package(self.namespace, version)) or org.has_minimum_package_version(
             self.namespace,
             version,
         ):
@@ -464,14 +470,18 @@ class PackageNamespaceVersionDependency(StaticDependency):
             )
             return
 
-        context.logger.info(f"Installing {self.description}")
+        # Create a context with task reference for shared_package_state
+        task_context = TaskContext(org, context, context.logger, task=context.task if hasattr(context, "task") else None)
+        
+        task_context.logger.info(f"Installing {self.description}")
         install_package_by_namespace_version(
-            context,
+            task_context,
             org,
             self.namespace,
             self.version,
             options,
             retry_options=retry_options,
+            shared_package_state=shared_package_state,
         )
 
     @property
@@ -510,7 +520,13 @@ class PackageVersionIdDependency(StaticDependency):
         if not retry_options:
             retry_options = DEFAULT_PACKAGE_RETRY_OPTIONS
 
-        if any(
+        # Get shared package state from task context if available
+        shared_package_state = None
+        if hasattr(context, "task") and hasattr(context.task, "shared_package_state"):
+            shared_package_state = context.task.shared_package_state
+            
+        # Check if package is already installed using org_config or shared state
+        if (shared_package_state and shared_package_state.has_package(self.version_id)) or any(
             self.version_id == v.id
             for v in itertools.chain(*org.installed_packages.values())
         ):
@@ -519,13 +535,17 @@ class PackageVersionIdDependency(StaticDependency):
             )
             return
 
-        context.logger.info(f"Installing {self.description}")
+        # Create a context with task reference for shared_package_state
+        task_context = TaskContext(org, context, context.logger, task=context.task if hasattr(context, "task") else None)
+        
+        task_context.logger.info(f"Installing {self.description}")
         install_package_by_version_id(
-            context,
+            task_context,
             org,
             self.version_id,
             options,
             retry_options=retry_options,
+            shared_package_state=shared_package_state,
         )
 
     @property
@@ -610,7 +630,7 @@ class UnmanagedDependency(StaticDependency, abc.ABC):
                 )
                 zip_src = None  # Don't use the zipfile if we converted source.
 
-            context = TaskContext(org, project_config, project_config.logger)
+            context = TaskContext(org, project_config, project_config.logger, task=None)
             # We now know what to send to MetadataPackageZipBuilder
             # Note that subfolder logic is applied either by subsetting the zip
             # (for MDAPI) or by the conversion (for SFDX format)
@@ -629,7 +649,7 @@ class UnmanagedDependency(StaticDependency, abc.ABC):
         context.logger.info(f"Deploying unmanaged metadata from {self.description}")
 
         package_zip_builder = self.get_metadata_package_zip_builder(context, org)
-        task = TaskContext(org_config=org, project_config=context, logger=logger)
+        task = TaskContext(org_config=org, project_config=context, logger=logger, task=context.task if hasattr(context, "task") else None)
         api = ApiDeploy(task, package_zip_builder.as_base64())
 
         return api()

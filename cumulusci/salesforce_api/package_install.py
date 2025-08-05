@@ -190,8 +190,10 @@ def _install_package_by_namespace_version(
     install_options: PackageInstallOptions,
     retry_options=None,
 ):
+    # Get task reference from project_config if available
+    task_ref = getattr(project_config, "task", None)
     task = TaskContext(
-        org_config=org_config, project_config=project_config, logger=logger
+        org_config=org_config, project_config=project_config, logger=logger, task=task_ref
     )
 
     retry_options = {
@@ -207,7 +209,14 @@ def _install_package_by_namespace_version(
             password=install_options.password,
             securityType=install_options.security_type,
         )
-        ApiDeploy(task, package_zip(), purge_on_delete=False)()
+        # Get api_version from project_config if available, otherwise use a default
+        api_version = None
+        if hasattr(project_config, "project__package__api_version"):
+            api_version = project_config.project__package__api_version
+        elif hasattr(project_config, "project_config") and hasattr(project_config.project_config, "project__package__api_version"):
+            api_version = project_config.project_config.project__package__api_version
+        
+        ApiDeploy(task, package_zip(), purge_on_delete=False, api_version=api_version)()
 
     retry(
         deploy,
@@ -221,8 +230,14 @@ def install_package_by_version_id(
     version_id: str,
     install_options: PackageInstallOptions,
     retry_options=None,
+    shared_package_state=None,
 ):
     """Install a 1gp or 2gp package using PackageInstallRequest, with retries"""
+    # Check if already installed via shared state
+    if shared_package_state and shared_package_state.has_package(version_id):
+        logger.info(f"Package {version_id} already installed, skipping installation")
+        return
+        
     retry_options = {
         **(retry_options or {}),
         "should_retry": _should_retry_package_install,
@@ -237,6 +252,14 @@ def install_package_by_version_id(
         ),
         **retry_options,
     )
+    
+    # Update shared state after successful installation
+    if shared_package_state:
+        # Force refresh of installed packages
+        org_config.reset_installed_packages()
+        # Get the version info from the org
+        for version_info in org_config.installed_packages.get(version_id, []):
+            shared_package_state.add_package(version_id, version_info)
 
 
 def install_package_by_namespace_version(
@@ -246,8 +269,18 @@ def install_package_by_namespace_version(
     version: str,
     install_options: PackageInstallOptions,
     retry_options=None,
+    shared_package_state=None,
 ):
     """Install a 1gp package by deploying InstalledPackage metadata, with retries"""
+    # Check if already installed via shared state
+    key = f"{namespace}@{version}"
+    if shared_package_state and (
+        shared_package_state.has_package(key) or 
+        shared_package_state.has_package(namespace, version)
+    ):
+        logger.info(f"Package {namespace} {version} already installed, skipping installation")
+        return
+        
     retry_options = {
         **(retry_options or {}),
         "should_retry": _should_retry_package_install,
@@ -263,3 +296,12 @@ def install_package_by_namespace_version(
         ),
         **retry_options,
     )
+    
+    # Update shared state after successful installation
+    if shared_package_state:
+        # Force refresh of installed packages
+        org_config.reset_installed_packages()
+        # Get the version info from the org
+        for version_info in org_config.installed_packages.get(namespace, []):
+            shared_package_state.add_package(namespace, version_info)
+            shared_package_state.add_package(key, version_info)

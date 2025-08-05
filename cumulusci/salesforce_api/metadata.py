@@ -58,11 +58,18 @@ class BaseMetadataApiCall(object):
         self.task = task
         self.status = None
         self.check_num = 1
-        self.api_version = (
-            api_version
-            if api_version
-            else task.project_config.project__package__api_version
-        )
+        
+        # Handle case where task.project_config is a TaskContext
+        if api_version:
+            self.api_version = api_version
+        elif hasattr(task.project_config, "project__package__api_version"):
+            self.api_version = task.project_config.project__package__api_version
+        elif hasattr(task.project_config, "project_config") and hasattr(task.project_config.project_config, "project__package__api_version"):
+            # If project_config is a TaskContext, get api_version from its project_config
+            self.api_version = task.project_config.project_config.project__package__api_version
+        else:
+            # Default to a reasonable API version if we can't find it
+            self.api_version = "55.0"
 
     def __call__(self):
         self.task.logger.info("Pending")

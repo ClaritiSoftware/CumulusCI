@@ -327,6 +327,24 @@ class BaseSalesforceTask(BaseTask):
 
     name = "BaseSalesforceTask"
     salesforce_task = True
+    shared_package_state = None
+
+    def __init__(
+        self,
+        project_config,
+        task_config,
+        org_config=None,
+        flow=None,
+        name=None,
+        stepnum=None,
+        logger=None,
+        shared_package_state=None,
+        **kwargs,
+    ):
+        self.shared_package_state = shared_package_state
+        super().__init__(
+            project_config, task_config, org_config, flow, name, stepnum, logger, **kwargs
+        )
 
     def _get_client_name(self):
         try:

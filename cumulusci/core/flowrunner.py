@@ -78,6 +78,7 @@ from cumulusci.core.exceptions import (
     FlowInfiniteLoopError,
     TaskImportError,
 )
+from cumulusci.core.shared_state import SharedPackageState
 from cumulusci.utils.version_strings import LooseVersion
 
 if TYPE_CHECKING:
@@ -273,6 +274,11 @@ class TaskRunner:
 
         assert self.step.task_class
 
+        # Pass shared_package_state if the task is a BaseSalesforceTask
+        kwargs = {}
+        if hasattr(self.flow, "shared_package_state") and self.flow.shared_package_state:
+            kwargs["shared_package_state"] = self.flow.shared_package_state
+
         task = self.step.task_class(
             self.step.project_config,
             TaskConfig(task_config),
@@ -280,6 +286,7 @@ class TaskRunner:
             name=self.step.task_name,
             stepnum=self.step.step_num,
             flow=self.flow,
+            **kwargs
         )
         self._log_options(task)
         exc = None
@@ -330,6 +337,7 @@ class FlowCoordinator:
     runtime_options: dict
     name: Optional[str]
     results: List[StepResult]
+    shared_package_state: Optional[SharedPackageState]
 
     def __init__(
         self,
@@ -344,6 +352,7 @@ class FlowCoordinator:
         self.flow_config = flow_config
         self.name = name
         self.org_config = None
+        self.shared_package_state = None
 
         if not callbacks:
             callbacks = FlowCallback()
@@ -470,6 +479,10 @@ class FlowCoordinator:
         self._rule(new_line=True)
 
         self._init_org()
+        
+        # Initialize shared package state
+        self.shared_package_state = SharedPackageState()
+        self.shared_package_state.set_org_config(org_config)
         self._rule(fill="-")
         self.logger.info("Organization:")
         self.logger.info(f"  Username: {org_config.username}")
