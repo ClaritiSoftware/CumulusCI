@@ -3,7 +3,6 @@ import json
 import os
 from typing import List, NoReturn, Optional
 
-
 import sarge
 
 from cumulusci.core.config import FAILED_TO_CREATE_SCRATCH_ORG
@@ -124,9 +123,6 @@ class ScratchOrgConfig(SfdxOrgConfig):
 
             self.config["org_id"] = res["orgId"]
             self.config["username"] = res["username"]
-            
-            if self.snapshot:
-                self.config["snapshot"] = self.snapshot
 
             self.config["date_created"] = datetime.datetime.utcnow()
 
@@ -161,11 +157,10 @@ class ScratchOrgConfig(SfdxOrgConfig):
                 
             # Create temporary config file
             tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+            self._tmp_config = tmp.name
             json.dump(org_config, tmp, indent=4)
             tmp.close()
             config_file = tmp.name
-            self._tmp_config = config_file
-
         args = ["-f", config_file, "-w", "120"]
         devhub_username: Optional[str] = self._choose_devhub_username()
         if devhub_username:
