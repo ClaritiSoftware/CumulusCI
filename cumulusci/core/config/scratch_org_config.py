@@ -158,9 +158,23 @@ class ScratchOrgConfig(SfdxOrgConfig):
             # Create temporary config file
             tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
             self._tmp_config = tmp.name
-            json.dump(org_config, tmp, indent=4)
-            tmp.close()
-            config_file = tmp.name
+
+            # Try catch error here to avoid leaving temp file around
+            try:
+                json.dump(org_config, tmp, indent=4)
+                tmp.close()
+                config_file = tmp.name
+                self._tmp_config = config_file
+            except Exception:
+                tmp_name = tmp.name
+                try:
+                    tmp.close()
+                except Exception:
+                    pass
+                if os.path.exists(tmp_name):
+                    os.remove(tmp_name)
+                raise
+
         args = ["-f", config_file, "-w", "120"]
         devhub_username: Optional[str] = self._choose_devhub_username()
         if devhub_username:
