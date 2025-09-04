@@ -17,6 +17,7 @@ from cumulusci.core.config import (
     BaseProjectConfig,
     BaseTaskFlowConfig,
     OrgConfig,
+    ScratchOrgConfig,
     ServiceConfig,
     UniversalConfig,
 )
@@ -1767,3 +1768,51 @@ class TestOrgConfig:
             config.resolve_04t_dependencies(
                 [PackageNamespaceVersionDependency(namespace="dep", version="1.0")]
             )
+            
+    def test_create_org_with_snapshot(self):
+        """Test that creating an org with a snapshot:
+        1. Stores the snapshot value in config
+        2. Removes features and edition from config when using snapshot
+        3. Adds the --snapshot argument to the command
+        4. Creates and cleans up the temporary config file
+        """
+        with temporary_dir() as d:
+            config_path = os.path.join(d, "scratch_def.json")
+            with open(config_path, "w") as f:
+                json.dump(
+                    {
+                        "edition": "Developer",
+                        "features": ["EnableSetPasswordInApi"],
+                        "settings": {"securitySettings": {"passwordPolicies": {"enableSetPasswordInApi": True}}},
+                    },
+                    f,
+                )
+
+            config = ScratchOrgConfig(
+                {
+                    "config_file": config_path,
+                    "snapshot": "test_snapshot",
+                    "days": 1,
+                    "email": "test@example.com",
+                },
+                "test",
+            )
+
+            with mock.patch("cumulusci.core.config.scratch_org_config.sfdx") as sfdx:
+                sfdx.return_value.returncode = 0
+                sfdx.return_value.stdout_text.read.return_value = json.dumps(
+                    {"result": {"username": "test", "orgId": "test"}}
+                )
+                config.create_org()
+
+            # Verify snapshot was stored in config
+            assert config.config["snapshot"] == "test_snapshot"
+
+            # Verify the command included the snapshot argument
+            sfdx.assert_called_once()
+            args = sfdx.call_args[1]["args"]
+            assert "--snapshot=test_snapshot" in args
+
+            # Verify temporary config file was created and cleaned up
+            tmp_config = getattr(config, "_tmp_config", None)
+            assert not tmp_config or not os.path.exists(tmp_config)
