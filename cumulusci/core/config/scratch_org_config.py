@@ -14,6 +14,7 @@ from cumulusci.core.exceptions import (
 )
 from cumulusci.core.sfdx import sfdx
 from cumulusci.utils import parse_api_datetime
+from cumulusci.core.org_import import import_sfdx_org_to_keychain
 
 import tempfile
 
@@ -92,52 +93,28 @@ class ScratchOrgConfig(SfdxOrgConfig):
                     message = f"Failed to checkout pooled org.\n{stdout}\n{stderr}"
                     raise ScratchOrgException(message)
 
-                # Import the checked out org into CCI using its alias
-                imported = SfdxOrgConfig(
-                    {"username": alias, "sfdx": True},
-                    self.name,
-                    self.keychain,
-                    global_org=False,
+                # Import the checked out org into CCI using shared import logic
+                imported = import_sfdx_org_to_keychain(
+                    self.keychain, alias, self.name, global_org=False
                 )
+                # Update this config to reflect the imported org
                 info = imported.sfdx_info
-
-                # Treat pooled orgs as scratch if they have created_date
-                if info.get("created_date"):
-                    self.config["created"] = True
-                    self.config["username"] = info.get("username")
-                    self.config["org_id"] = info.get("org_id")
-                    self.config["instance_url"] = info.get("instance_url")
-                    if info.get("password"):
-                        self.config["password"] = info.get("password")
-                    # compute days + date_created similar to cci org import
-                    try:
-                        created_date = parse_api_datetime(info["created_date"]).date()
-                        expires_str = info.get("expiration_date")
-                        if created_date and expires_str:
-                            from datetime import datetime as _dt
-
-                            expires_date = _dt.strptime(expires_str, "%Y-%m-%d").date()
-                            self.config["days"] = abs((expires_date - created_date).days) or 1
-                        else:
-                            self.config["days"] = self.config.get("days", 1)
-                        self.config["date_created"] = parse_api_datetime(info["created_date"])
-                    except Exception:
-                        # Fallback to defaults if parsing fails
-                        self.config["days"] = self.config.get("days", 1)
-                        self.config["date_created"] = datetime.datetime.utcnow()
-
-                    # Do not reset password for pooled orgs
-                    return
-                else:
-                    # Persistent org import path
-                    # Populate minimal fields; SfdxOrgConfig handles token/instance
-                    self.config.update({
+                self.config.update(
+                    {
+                        "created": True,
                         "username": info.get("username"),
                         "org_id": info.get("org_id"),
                         "instance_url": info.get("instance_url"),
-                        "created": True,
-                    })
-                    return
+                    }
+                )
+                # days/date_created are already set in imported org where available
+                if imported.config.get("days"):
+                    self.config["days"] = imported.config.get("days")
+                if imported.config.get("date_created"):
+                    self.config["date_created"] = imported.config.get("date_created")
+
+                # Do not reset password for pooled orgs
+                return
 
             if not self.config_file:
                 raise ScratchOrgException(
