@@ -20,6 +20,10 @@ from cumulusci.oauth.client import (
 )
 from cumulusci.salesforce_api.utils import get_simple_salesforce_connection
 from cumulusci.utils import parse_api_datetime
+from cumulusci.core.org_import import (
+    import_sfdx_org_to_keychain,
+    calculate_org_days as _core_calculate_org_days,
+)
 
 from .runtime import CliRuntime, pass_runtime
 
@@ -240,46 +244,16 @@ def org_default(runtime, org_name, unset):
 @orgname_option_or_argument(required=True)
 @pass_runtime(require_keychain=True)
 def org_import(runtime: CliRuntime, username_or_alias: str, org_name: str):
-    # Import the org from the SFDX keychain as an SfdxOrgConfig
-    # The `sfdx` key ensures we can reload using the right class.
-    org_config = SfdxOrgConfig(
-        {"username": username_or_alias, "sfdx": True},
-        org_name,
-        runtime.keychain,
-        global_org=False,
+    org_config = import_sfdx_org_to_keychain(
+        runtime.keychain, username_or_alias, org_name, global_org=False
     )
-
-    # Determine if we received a locally-created scratch org
-    # or some other org (which we'll treat as persistent)
-
-    info = org_config.sfdx_info
-    if info.get("created_date"):
-        # This is a locally-created scratch org.
-        # Re-import accordingly.
-        org_config = ScratchOrgConfig(
-            {"username": username_or_alias},
-            org_name,
-            runtime.keychain,
-            global_org=False,
-        )
-        org_config._sfdx_info = info
-        # Set `created` so we don't try to rebuild it.
-        org_config.config["created"] = True
-
-        org_config.config["days"] = calculate_org_days(info)
-        org_config.config["date_created"] = parse_api_datetime(info["created_date"])
-
-        org_config.save()
+    if org_config.scratch:
         click.echo(
             "Imported scratch org: {org_id}, username: {username}".format(
                 **org_config.sfdx_info
             )
         )
     else:
-        # This is either a persistent org or a scratch org imported into the
-        # sfdx keychain via OAuth login.
-        org_config.populate_expiration_date()
-        org_config.save()
         click.echo(
             "Imported org: {org_id}, username: {username}".format(
                 **org_config.sfdx_info
@@ -288,13 +262,8 @@ def org_import(runtime: CliRuntime, username_or_alias: str, org_name: str):
 
 
 def calculate_org_days(info):
-    """Returns the difference in days between created_date (ISO 8601),
-    and expiration_date (%Y-%m-%d)"""
-    if not info.get("created_date") or not info.get("expiration_date"):
-        return 1
-    created_date = parse_api_datetime(info["created_date"]).date()
-    expires_date = datetime.strptime(info["expiration_date"], "%Y-%m-%d").date()
-    return abs((expires_date - created_date).days)
+    """Backwards-compat shim; prefer core.org_import.calculate_org_days"""
+    return _core_calculate_org_days(info)
 
 
 @org.command(name="info", help="Display information for a connected org")

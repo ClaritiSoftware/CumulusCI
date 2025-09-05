@@ -13,6 +13,8 @@ from cumulusci.core.exceptions import (
     ServiceNotConfigured,
 )
 from cumulusci.core.sfdx import sfdx
+from cumulusci.utils import parse_api_datetime
+from cumulusci.core.org_import import import_sfdx_org_to_keychain
 
 import tempfile
 
@@ -26,6 +28,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
     devhub: str
     release: str
     snapshot: str
+    org_pool_id: str
 
     createable: bool = True
 
@@ -65,6 +68,54 @@ class ScratchOrgConfig(SfdxOrgConfig):
     def create_org(self) -> None:
         """Uses sf org create scratch  to create the org"""
         try:
+            # If configured to use an org pool, checkout and import instead of creating
+            pool_id = self.config.get("org_pool_id")
+            if pool_id:
+                alias = self.sfdx_alias or f"{getattr(getattr(self.keychain, 'project_config', None), 'project__name', '')}__{self.name}".strip("_")
+                args: List[str] = []
+                # pass pool id and alias
+                args += ["-p", str(pool_id)]
+                args += ["-n", alias]
+                # Set default org if requested in config
+                if self.default:
+                    args += ["-s"]
+
+                p: sarge.Command = sfdx(
+                    "clariti org checkout --json",
+                    args=args,
+                    username=None,
+                    log_note="Checking out org from pool",
+                )
+                stdout = p.stdout_text.read()
+                stderr = p.stderr_text.read()
+
+                if p.returncode:
+                    message = f"Failed to checkout pooled org.\n{stdout}\n{stderr}"
+                    raise ScratchOrgException(message)
+
+                # Import the checked out org into CCI using shared import logic
+                imported = import_sfdx_org_to_keychain(
+                    self.keychain, alias, self.name, global_org=False
+                )
+                # Update this config to reflect the imported org
+                info = imported.sfdx_info
+                self.config.update(
+                    {
+                        "created": True,
+                        "username": info.get("username"),
+                        "org_id": info.get("org_id"),
+                        "instance_url": info.get("instance_url"),
+                    }
+                )
+                # days/date_created are already set in imported org where available
+                if imported.config.get("days"):
+                    self.config["days"] = imported.config.get("days")
+                if imported.config.get("date_created"):
+                    self.config["date_created"] = imported.config.get("date_created")
+
+                # Do not reset password for pooled orgs
+                return
+
             if not self.config_file:
                 raise ScratchOrgException(
                     f"Scratch org config {self.name} is missing a config_file"
