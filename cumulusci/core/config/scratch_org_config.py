@@ -149,12 +149,13 @@ class ScratchOrgConfig(SfdxOrgConfig):
         config_file = self.config_file
         self._tmp_config = None
         if self.snapshot and self.config_file:
-            # When using snapshot, remove features and edition from config
+            # When using snapshot, remove features, edition and snapshot from config
             with open(self.config_file, "r") as f:
                 org_config = json.load(f)
                 org_config.pop("features", None)
                 org_config.pop("edition", None)
-                
+                org_config.pop("snapshot", None)
+
             # Create temporary config file
             tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
             self._tmp_config = tmp.name
