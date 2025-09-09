@@ -226,6 +226,11 @@ class UpdateDependencies(BaseSalesforceTask):
         self.org_config.reset_installed_packages()
 
     def _install_dependency(self, dependency):
+        # Log and short-circuit if dependency version is already present on the org
+        self.logger.info(f"Checking if already installed: {dependency}")
+        if self._is_dependency_already_installed(dependency):
+            self.logger.info(f"{dependency} is already installed; skipping.")
+            return
         if isinstance(
             dependency, (PackageNamespaceVersionDependency, PackageVersionIdDependency)
         ):
@@ -234,6 +239,63 @@ class UpdateDependencies(BaseSalesforceTask):
             )
         else:
             dependency.install(self.project_config, self.org_config)
+
+    def _is_dependency_already_installed(self, dependency) -> bool:
+        """Return True if the resolved managed package dependency is already installed."""
+        if not isinstance(
+            dependency, (PackageNamespaceVersionDependency, PackageVersionIdDependency)
+        ):
+            self.logger.debug("Dependency is unmanaged metadata; no installed check needed.")
+            return False
+
+        try:
+            installed = self.org_config.installed_packages
+        except Exception:
+            self.logger.warning(
+                "Could not retrieve installed packages from org; proceeding with install."
+            )
+            return False
+
+        installed_version_ids_18 = {v.id for versions in installed.values() for v in versions}
+        installed_version_ids_15 = {vid[:15] for vid in installed_version_ids_18}
+
+        if isinstance(dependency, PackageVersionIdDependency):
+            dep_id = dependency.version_id
+            dep_id_15 = dep_id[:15] if dep_id else None
+            is_installed = (
+                dep_id in installed_version_ids_18 or dep_id_15 in installed_version_ids_15
+            )
+            self.logger.info(
+                f"Already-installed check by version_id: {dep_id} (15:{dep_id_15}) -> {is_installed}"
+            )
+            return is_installed
+
+        if isinstance(dependency, PackageNamespaceVersionDependency):
+            if getattr(dependency, "version_id", None):
+                dep_id = dependency.version_id
+                dep_id_15 = dep_id[:15] if dep_id else None
+                is_installed = (
+                    dep_id in installed_version_ids_18 or dep_id_15 in installed_version_ids_15
+                )
+                self.logger.info(
+                    f"Already-installed check by version_id: {dep_id} (15:{dep_id_15}) -> {is_installed}"
+                )
+                return is_installed
+
+            version = dependency.version
+            if "Beta" in version:
+                version_string = version.split(" ")[0]
+                beta = version.split(" ")[-1].strip(")")
+                version = f"{version_string}b{beta}"
+
+            key = f"{dependency.namespace}@{version}"
+            is_installed = key in installed
+            self.logger.info(
+                f"Already-installed check by namespace@version: {key} -> {is_installed}"
+            )
+            return is_installed
+
+        return False
 
     def freeze(self, step):
         if self.options["interactive"]:
