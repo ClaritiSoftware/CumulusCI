@@ -251,6 +251,25 @@ CumulusCI cannot automatically refresh orgs imported from Salesforce CLI
 when they expire.
 ```
 
+## Org Pool Checkout
+
+If your organization uses an external org pool, you can direct CumulusCI to
+check out a scratch org from the pool instead of creating a new one by adding
+`org_pool_id` under the scratch org configuration.
+
+```yaml
+orgs:
+  scratch:
+    dev:
+      config_file: orgs/dev.json
+      days: 7
+      org_pool_id: <POOL-ID>
+```
+
+When `org_pool_id` is set, CumulusCI calls `sf clariti org checkout` using the
+CCI-generated alias (e.g., `<project_name>__<org_name>`) and then imports the
+checked-out org into the CCI keychain. Org creation is skipped in this mode.
+
 ## Use a Non-Default Dev Hub
 
 By default, CumulusCI creates scratch orgs using the DevHub org
