@@ -20,6 +20,17 @@ from cumulusci.oauth.client import (
 )
 from cumulusci.salesforce_api.utils import get_simple_salesforce_connection
 from cumulusci.utils import parse_api_datetime
+from typing import Optional
+
+import click
+
+from cumulusci.utils.clariti import (
+    ClaritiError,
+    build_default_org_name,
+    checkout_org_from_pool,
+    resolve_pool_id,
+    set_sf_alias,
+)
 
 from .runtime import CliRuntime, pass_runtime
 
@@ -235,11 +246,101 @@ def org_default(runtime, org_name, unset):
             click.echo("There is no default org")
 
 
-@org.command(name="import", help="Import an org from Salesforce DX")
-@click.argument("username_or_alias")
-@orgname_option_or_argument(required=True)
+@org.command(name="import", help="Import an org from Salesforce DX or Clariti Org Pooling System")
+@click.argument("username_or_alias", required=False)
+@orgname_option_or_argument(required=False)
+@click.option(
+    "--pool-id",
+    help="Clariti pool id to checkout a persistent org. "
+    "Falls back to .clariti.json if omitted.",
+)
 @pass_runtime(require_keychain=True)
-def org_import(runtime: CliRuntime, username_or_alias: str, org_name: str):
+def org_import(
+    runtime: CliRuntime,
+    username_or_alias: str,
+    org_name: str,
+    pool_id: Optional[str] = None,
+):
+    """Import a Salesforce org into the CCI keychain.
+
+    :param runtime: Active CLI runtime injected by Click.
+    :param username_or_alias: Username or alias to import when not using Clariti.
+    :param org_name: Desired keychain name for the org.
+    :param pool_id: Optional Clariti pool identifier.
+    :raises click.UsageError: if mutually-exclusive arguments are provided.
+    :raises click.ClickException: for Clariti or SFDX import failures.
+    """
+    if pool_id and username_or_alias:
+        raise click.UsageError(
+            "Provide either USERNAME_OR_ALIAS or --pool-id, but not both. "
+            "Use --org to name the Clariti org checkout."
+        )
+
+    if pool_id or not username_or_alias:
+        project_root = (
+            runtime.project_config.repo_root
+            if runtime.project_config is not None
+            else None
+        )
+        try:
+            resolved_pool_id = resolve_pool_id(pool_id, project_root)
+        except ClaritiError as err:
+            raise click.ClickException(str(err)) from err
+
+        if resolved_pool_id:
+            click.echo(
+                f"Checking out org from Clariti pool {resolved_pool_id}..."
+            )
+        else:
+            click.echo(
+                "Checking out org from Clariti pool configured in .clariti.json..."
+            )
+        try:
+            checkout = checkout_org_from_pool(
+                resolved_pool_id,
+                alias=org_name,
+            )
+        except ClaritiError as err:
+            raise click.ClickException(str(err)) from err
+
+        username_or_alias = checkout.username
+
+        if not org_name:
+            org_name = build_default_org_name(
+                checkout.username,
+                checkout.alias,
+            )
+            click.echo(
+                f"No org name provided. Using '{org_name}' for this Clariti org."
+            )
+
+        if checkout.alias and checkout.alias != org_name:
+            click.echo(
+                "Clariti assigned Salesforce alias "
+                f"'{checkout.alias}' to {checkout.username}"
+            )
+
+        alias_success, alias_error = set_sf_alias(org_name, checkout.username)
+        if alias_success:
+            click.echo(
+                f"Set Salesforce CLI alias '{org_name}' "
+                f"for {checkout.username}"
+            )
+        elif alias_error:
+            click.echo(
+                click.style(
+                    f"Warning: Unable to set Salesforce CLI alias '{org_name}': "
+                    f"{alias_error}",
+                    fg="yellow",
+                )
+            )
+
+    if not username_or_alias:
+        raise click.UsageError(
+            "Please provide a username or alias, or specify a Clariti pool id."
+        )
+    if not org_name:
+        raise click.UsageError("Please specify ORGNAME or --org ORGNAME.")
     # Import the org from the SFDX keychain as an SfdxOrgConfig
     # The `sfdx` key ensures we can reload using the right class.
     org_config = SfdxOrgConfig(

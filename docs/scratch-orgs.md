@@ -234,21 +234,47 @@ However, new definitions can be added and referenced under the
 `orgs__scratch` section of the `cumulusci.yml` file to establish org
 configurations that are completely customized for a project.
 
-## Import an Org from the Salesforce CLI
+## Import an Org from Salesforce CLI or Clariti
 
-CumulusCI can import existing orgs from the Salesforce CLI keychain.
+CumulusCI can register existing org authorizations that already live in the
+Salesforce CLI, as well as persistent orgs managed through the Clariti Org
+Pooling System.
+
+### Import from Salesforce CLI
+
+Run `cci org import` with the Salesforce username or alias and the desired
+CumulusCI org name:
 
 ```console
-$ cci org import <sfdx_alias> <cci_alias>
+$ cci org import <sfdx_username_or_alias> --org <cci_alias>
 ```
 
-For `sfdx_alias`, specify the alias or username of the org in the
-Salesforce CLI keychain. For `cci_alias`, provide the name to use in
-CumulusCI's keychain.
+If you omit `--org`, pass the CumulusCI org name as the second positional
+argument instead (`cci org import <username> <cci_alias>`). In both forms the
+alias or username must already exist in the Salesforce CLI keychain.
 
 ```{important}
-CumulusCI cannot automatically refresh orgs imported from Salesforce CLI
+CumulusCI cannot automatically refresh orgs imported from the Salesforce CLI
 when they expire.
+```
+
+### Import from Clariti Org Pools
+
+Use the `--pool-id` option to check out a persistent org from Clariti:
+
+```console
+$ cci org import --pool-id <pool_id> --org <cci_alias>
+```
+
+You may omit `--org` to let CumulusCI derive a name from the Clariti checkout
+details, or omit `--pool-id` when a `.clariti.json` file in the project root
+provides the pool identifier. When a Clariti checkout specifies a Salesforce
+alias, `cci org import` attempts to keep the Salesforce CLI alias synchronized
+with the chosen CumulusCI org name.
+
+```{tip}
+Provide either `--pool-id` **or** a Salesforce username/alias. Supplying both
+causes the command to exit with a usage error.
 ```
 
 ## Use a Non-Default Dev Hub
