@@ -206,7 +206,7 @@ def set_sf_alias(
     stderr = (proc.stderr or "").strip()
     if proc.returncode:
         summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
-        summary = f"Clariti alias failed: {summary}"
+        summary = f"Failed to set SF alias: {summary}"
         if get_debug_mode():
             return False, f"{summary}\nClariti raw response:\n{raw_output}"
         return False, summary
