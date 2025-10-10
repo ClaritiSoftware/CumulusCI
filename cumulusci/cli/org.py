@@ -257,6 +257,12 @@ def org_import(
     org_name: str,
     pool_id: str,
 ):
+    if pool_id and username_or_alias:
+        raise click.UsageError(
+            "Provide either USERNAME_OR_ALIAS or --pool-id, but not both. "
+            "Use --org to name the Clariti org checkout."
+        )
+
     if pool_id or not username_or_alias:
         project_root = (
             runtime.project_config.repo_root

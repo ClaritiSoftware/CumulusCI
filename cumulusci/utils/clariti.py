@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Sequence, Tuple
 
 import subprocess
 
+from cumulusci.core.debug import get_debug_mode
 
 class ClaritiError(Exception):
     """Raised when a Clariti CLI operation fails."""
@@ -102,10 +103,13 @@ def checkout_org_from_pool(
     stdout = (proc.stdout or "").strip()
     stderr = (proc.stderr or "").strip()
     if proc.returncode:
-        message = stderr or stdout
-        if not message:
-            message = f"Command exited with return code {proc.returncode}"
-        raise ClaritiError(message)
+        summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
+        summary = f"Clariti checkout failed: {summary}"
+        if get_debug_mode():
+            raise ClaritiError(
+                f"{summary}\nClariti raw response:\n{raw_output}"
+            )
+        raise ClaritiError(summary)
 
     if not stdout:
         raise ClaritiError("Clariti CLI did not return any data.")
@@ -167,10 +171,11 @@ def set_sf_alias(
     stdout = (proc.stdout or "").strip()
     stderr = (proc.stderr or "").strip()
     if proc.returncode:
-        message = stderr or stdout
-        if not message:
-            message = f"Command exited with return code {proc.returncode}"
-        return False, message
+        summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
+        summary = f"Clariti alias failed: {summary}"
+        if get_debug_mode():
+            return False, f"{summary}\nClariti raw response:\n{raw_output}"
+        return False, summary
 
     return True, None
 
@@ -209,3 +214,33 @@ def build_default_org_name(username: str, alias: Optional[str] = None) -> str:
     candidate = re.sub(r"[^A-Za-z0-9_]+", "_", username)
     candidate = candidate.strip("_") or "clariti_org"
     return candidate[:64]
+
+
+def _summarize_error_output(
+    stdout: str, stderr: str, returncode: int
+) -> Tuple[str, str]:
+    """Produce a concise error description and raw text for Clariti failures."""
+
+    raw_output = stderr or stdout
+    if not raw_output:
+        return (
+            f"Clariti CLI exited with status {returncode} and no message.",
+            "",
+        )
+
+    stripped = raw_output.strip()
+    try:
+        parsed = json.loads(stripped)
+    except json.JSONDecodeError:
+        return stripped, stripped
+
+    if isinstance(parsed, dict):
+        message = parsed.get("message") or parsed.get("error") or parsed.get("msg")
+        code = parsed.get("code") or parsed.get("name") or parsed.get("status")
+        if message and code:
+            return f"{code}: {message}", json.dumps(parsed, indent=2, sort_keys=True)
+        if message:
+            return message, json.dumps(parsed, indent=2, sort_keys=True)
+    return json.dumps(parsed, indent=2, sort_keys=True), json.dumps(
+        parsed, indent=2, sort_keys=True
+    )
