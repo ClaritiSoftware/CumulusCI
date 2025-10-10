@@ -20,6 +20,10 @@ from cumulusci.oauth.client import (
 )
 from cumulusci.salesforce_api.utils import get_simple_salesforce_connection
 from cumulusci.utils import parse_api_datetime
+from typing import Optional
+
+import click
+
 from cumulusci.utils.clariti import (
     ClaritiError,
     build_default_org_name,
@@ -255,8 +259,17 @@ def org_import(
     runtime: CliRuntime,
     username_or_alias: str,
     org_name: str,
-    pool_id: str,
+    pool_id: Optional[str] = None,
 ):
+    """Import a Salesforce org into the CCI keychain.
+
+    :param runtime: Active CLI runtime injected by Click.
+    :param username_or_alias: Username or alias to import when not using Clariti.
+    :param org_name: Desired keychain name for the org.
+    :param pool_id: Optional Clariti pool identifier.
+    :raises click.UsageError: if mutually-exclusive arguments are provided.
+    :raises click.ClickException: for Clariti or SFDX import failures.
+    """
     if pool_id and username_or_alias:
         raise click.UsageError(
             "Provide either USERNAME_OR_ALIAS or --pool-id, but not both. "

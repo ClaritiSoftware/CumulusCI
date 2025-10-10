@@ -6,7 +6,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional, Sequence, Tuple, cast
 
 import subprocess
 
@@ -18,7 +18,16 @@ class ClaritiError(Exception):
 
 @dataclass
 class ClaritiCheckoutResult:
-    """Information returned from a Clariti org checkout."""
+    """Information returned from a Clariti org checkout.
+
+    :ivar username: Username associated with the checked-out org.
+    :ivar alias: Alias assigned by Clariti, when present.
+    :ivar org_id: Salesforce org identifier, if provided.
+    :ivar instance_url: Instance URL for the org, when available.
+    :ivar org_type: Salesforce org type metadata, if returned.
+    :ivar pool_id: Clariti pool identifier for the checkout.
+    :ivar raw: Raw JSON payload returned from the CLI.
+    """
 
     username: str
     alias: Optional[str]
@@ -29,8 +38,18 @@ class ClaritiCheckoutResult:
     raw: Dict[str, Any]
 
 
-def resolve_pool_id(pool_id: Optional[str], project_root: Optional[str]) -> Optional[str]:
-    """Return the explicit pool id, ensuring Clariti config exists when omitted."""
+def resolve_pool_id(
+    pool_id: Optional[str], project_root: Optional[str]
+) -> Optional[str]:
+    """Resolve the Clariti pool identifier for a checkout.
+
+    :param pool_id: Optional pool id provided on the CLI.
+    :param project_root: Path to the project root for locating ``.clariti.json``.
+    :returns: ``pool_id`` when provided; ``None`` after verifying that
+        ``.clariti.json`` exists; otherwise raises :class:`ClaritiError`.
+    :raises ClaritiError: if neither ``pool_id`` is provided nor
+        ``.clariti.json`` is present.
+    """
 
     if pool_id:
         return pool_id
@@ -75,7 +94,16 @@ def checkout_org_from_pool(
     alias: Optional[str] = None,
     env: Optional[Dict[str, str]] = None,
 ) -> ClaritiCheckoutResult:
-    """Checkout an org from the specified Clariti pool using the Salesforce CLI."""
+    """Check out an org from Clariti using the Salesforce CLI.
+
+    :param pool_id: Pool identifier to pass to the Clariti CLI, or ``None`` to
+        defer to ``.clariti.json``.
+    :param alias: Optional alias to set during checkout.
+    :param env: Optional environment variables for the subprocess.
+    :returns: Metadata describing the checked-out org.
+    :raises ClaritiError: if the checkout command fails or returns invalid
+        data.
+    """
 
     command = [
         "sf",
@@ -122,7 +150,7 @@ def checkout_org_from_pool(
             f" Raw output: {stdout}"
         ) from err
 
-    username = _extract_string(payload, _USERNAME_PATHS)
+    username = cast(str, _extract_string(payload, _USERNAME_PATHS))
     alias_value = _extract_string(payload, _ALIAS_PATHS, allow_missing=True)
     org_id_value = _extract_string(
         payload, (("orgId",),), allow_missing=True
@@ -151,7 +179,13 @@ def checkout_org_from_pool(
 def set_sf_alias(
     alias: str, username: str, *, env: Optional[Dict[str, str]] = None
 ) -> Tuple[bool, Optional[str]]:
-    """Set a Salesforce CLI alias for the provided username."""
+    """Set a Salesforce CLI alias for the provided username.
+
+    :param alias: Desired alias name.
+    :param username: Salesforce username to associate with the alias.
+    :param env: Optional environment variables for the subprocess.
+    :returns: Tuple of success flag and optional error message.
+    """
 
     if not alias or not username:
         return False, "Alias and username are required."
@@ -186,7 +220,14 @@ def _extract_string(
     *,
     allow_missing: bool = False,
 ) -> Optional[str]:
-    """Extract the first non-empty string value found for the provided paths."""
+    """Extract the first non-empty string value from the payload.
+
+    :param payload: Data structure returned from Clariti.
+    :param paths: Candidate key paths to inspect.
+    :param allow_missing: Whether to return ``None`` when no value is found.
+    :returns: The first matching string or ``None``.
+    :raises ClaritiError: if no value is found and ``allow_missing`` is false.
+    """
 
     for path in paths:
         value: Any = payload
@@ -206,7 +247,12 @@ def _extract_string(
 
 
 def build_default_org_name(username: str, alias: Optional[str] = None) -> str:
-    """Create a reasonable org name when Clariti checkout omits one."""
+    """Create a reasonable org name when Clariti checkout omits one.
+
+    :param username: Username returned by Clariti checkout.
+    :param alias: Alias returned by Clariti checkout, if any.
+    :returns: Sanitized org name suitable for the CCI keychain.
+    """
 
     if alias and alias.strip():
         return alias.strip()
@@ -219,7 +265,13 @@ def build_default_org_name(username: str, alias: Optional[str] = None) -> str:
 def _summarize_error_output(
     stdout: str, stderr: str, returncode: int
 ) -> Tuple[str, str]:
-    """Produce a concise error description and raw text for Clariti failures."""
+    """Produce a concise error description and raw text for Clariti failures.
+
+    :param stdout: Standard output captured from the Clariti subprocess.
+    :param stderr: Standard error captured from the Clariti subprocess.
+    :param returncode: Exit status of the subprocess.
+    :returns: Tuple of (summary, formatted raw output).
+    """
 
     raw_output = stderr or stdout
     if not raw_output:
