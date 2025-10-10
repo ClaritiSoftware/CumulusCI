@@ -28,39 +28,26 @@ class ClaritiCheckoutResult:
     raw: Dict[str, Any]
 
 
-def resolve_pool_id(pool_id: Optional[str], project_root: Optional[str]) -> str:
-    """Resolve the Clariti pool id from CLI input or project config."""
+def resolve_pool_id(pool_id: Optional[str], project_root: Optional[str]) -> Optional[str]:
+    """Return the explicit pool id, ensuring Clariti config exists when omitted."""
 
     if pool_id:
         return pool_id
 
     if not project_root:
         raise ClaritiError(
-            "No Clariti pool id provided. Provide --pool-id or create a .clariti.json "
-            "file with a poolId value in your project root."
+            "No Clariti pool id provided. Provide --pool-id or add a .clariti.json "
+            "file in the project root."
         )
 
     config_path = Path(project_root) / ".clariti.json"
     if not config_path.exists():
         raise ClaritiError(
-            "No Clariti pool id provided. Provide --pool-id or add a .clariti.json "
-            "file with a poolId value in the project root."
+            "No Clariti pool id provided. Provide --pool-id or ensure .clariti.json "
+            "exists in the project root."
         )
 
-    try:
-        config_data = json.loads(config_path.read_text())
-    except json.JSONDecodeError as err:
-        raise ClaritiError(
-            f"Failed to parse Clariti configuration at {config_path}: {err}"
-        ) from err
-
-    pool_id_value = config_data.get("poolId") or config_data.get("pool_id")
-    if not pool_id_value or not isinstance(pool_id_value, str):
-        raise ClaritiError(
-            f"{config_path} must define a non-empty 'poolId' string value."
-        )
-
-    return pool_id_value
+    return None
 
 
 _USERNAME_PATHS: Sequence[Sequence[str]] = (
@@ -82,25 +69,22 @@ _ALIAS_PATHS: Sequence[Sequence[str]] = (
 
 
 def checkout_org_from_pool(
-    pool_id: str,
+    pool_id: Optional[str],
     *,
     alias: Optional[str] = None,
     env: Optional[Dict[str, str]] = None,
 ) -> ClaritiCheckoutResult:
     """Checkout an org from the specified Clariti pool using the Salesforce CLI."""
 
-    if not pool_id:
-        raise ClaritiError("Clariti pool id is required to checkout an org.")
-
     command = [
         "sf",
         "clariti",
         "org",
         "checkout",
-        "--pool-id",
-        pool_id,
         "--json",
     ]
+    if pool_id:
+        command.extend(["--pool-id", pool_id])
     if alias:
         command.extend(["--alias", alias])
 

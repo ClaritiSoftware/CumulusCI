@@ -268,7 +268,14 @@ def org_import(
         except ClaritiError as err:
             raise click.ClickException(str(err)) from err
 
-        click.echo(f"Checking out org from Clariti pool {resolved_pool_id}...")
+        if resolved_pool_id:
+            click.echo(
+                f"Checking out org from Clariti pool {resolved_pool_id}..."
+            )
+        else:
+            click.echo(
+                "Checking out org from Clariti pool configured in .clariti.json..."
+            )
         try:
             checkout = checkout_org_from_pool(
                 resolved_pool_id,
