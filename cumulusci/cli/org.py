@@ -242,7 +242,7 @@ def org_default(runtime, org_name, unset):
             click.echo("There is no default org")
 
 
-@org.command(name="import", help="Import an org from Salesforce DX or Clariti")
+@org.command(name="import", help="Import an org from Salesforce DX or Clariti Org Pooling System")
 @click.argument("username_or_alias", required=False)
 @orgname_option_or_argument(required=False)
 @click.option(
