@@ -255,7 +255,10 @@ def build_default_org_name(username: str, alias: Optional[str] = None) -> str:
     """
 
     if alias and alias.strip():
-        return alias.strip()
+        cleaned_alias = re.sub(r"[^A-Za-z0-9_]+", "_", alias)
+        cleaned_alias = cleaned_alias.strip("_")
+        if cleaned_alias:
+            return cleaned_alias[:64]
 
     candidate = re.sub(r"[^A-Za-z0-9_]+", "_", username)
     candidate = candidate.strip("_") or "clariti_org"
