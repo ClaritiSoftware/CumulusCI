@@ -331,15 +331,15 @@ class GenerateAndLoadData(BaseSalesforceApiTask):
         # Log summary message
         self.logger.info("")
         if validation_result and validation_result.has_errors():
-            self.logger.error("== VALIDATION FAILED ==")
+            self.logger.error("== Validation Failed ==")
             self.logger.error(f"  Errors: {len(validation_result.errors)}")
             if validation_result.warnings:
                 self.logger.warning(f"  Warnings: {len(validation_result.warnings)}")
         elif validation_result and validation_result.warnings:
-            self.logger.warning("== VALIDATION SUCCESSFUL (WITH WARNINGS) ==")
+            self.logger.warning("== Validation Successful (With Warnings) ==")
             self.logger.warning(f"  Warnings: {len(validation_result.warnings)}")
         else:
-            self.logger.info("== VALIDATION SUCCESSFUL ==")
+            self.logger.info("== Validation Successful ==")
         self.logger.info("")
 
         return validation_result
