@@ -46,6 +46,16 @@ functionality to suit your project's specific needs.
 If you repeatedly specify the same value for an option while running a
 task, you can configure CumulusCI to use that value as a default value.
 
+For example: Let's configure the update_dependencies task to force resolution strategies in sandbox orgs. The task's `force_resolution_strategy` option controls whether to force the use of specified resolution strategies even in persistent orgs:
+
+```yaml
+update_dependencies:
+    options:
+        force_resolution_strategy: True
+```
+
+When True, this allows beta and 2GP resolvers to be used in sandbox orgs, while still enforcing safety checks in production orgs. When False (default), safety checks are enforced in all persistent orgs.
+
 For example: Let's enforce a 90% code coverage requirement for Apex
 code in your project. The `run_tests` task, which executes all Apex
 tests in a target org, can enforce code coverage at a given percentage

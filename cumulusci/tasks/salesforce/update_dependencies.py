@@ -64,6 +64,9 @@ class UpdateDependencies(BaseSalesforceTask):
         "base_package_url_format": {
             "description": "If `interactive` is set to True, display package Ids using a format string ({} will be replaced with the package Id)."
         },
+        "force_resolution_strategy": {
+            "description": "If True, forces the use of the specified resolution_strategy on scratch and sandbox orgs. Defaults to False."
+        },
         **{k: v for k, v in PACKAGE_INSTALL_TASK_OPTIONS.items() if k != "password"},
     }
 
@@ -138,9 +141,22 @@ class UpdateDependencies(BaseSalesforceTask):
             DependencyResolutionStrategy.BETA_RELEASE_TAG,
         ]
 
+        if "force_resolution_strategy" in self.options and self.options["force_resolution_strategy"] is True:
+            self.logger.warning(
+                "The force_resolution_strategy option is turned on and dependency resolution will be forced in scratch on sanbox orgs."
+            )
+
+        force_strategy = process_bool_arg(self.options.get("force_resolution_strategy", False))
+        
         if (
             self.org_config
             and not self.org_config.scratch
+            and (
+                # When force_resolution_strategy is False, check all persistent orgs
+                (not force_strategy)
+                # When force_resolution_strategy is True, only check production orgs
+                or (force_strategy and not self.org_config.is_sandbox)
+            )
             and any(r in self.resolution_strategy for r in unsafe_prod_resolvers)
         ):
             self.logger.warning(
@@ -149,6 +165,10 @@ class UpdateDependencies(BaseSalesforceTask):
             self.resolution_strategy = [
                 r for r in self.resolution_strategy if r not in unsafe_prod_resolvers
             ]
+
+        self.logger.debug(
+            "resolution strategy: {}".format(self.resolution_strategy)  
+        )
 
         if (
             "prefer_2gp_from_release_branch" in self.options
