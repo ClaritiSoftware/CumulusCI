@@ -493,7 +493,7 @@ def org_list(runtime, json_flag, plain):
         json_data[row_data["name"]] = row_data
 
     if json_flag:
-        click.echo(json.dumps(json_data))
+        click.echo(json.dumps(json_data, default=str))
         return
 
     console = Console()
