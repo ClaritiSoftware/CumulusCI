@@ -147,7 +147,7 @@ class UpdateDependencies(BaseSalesforceTask):
             )
 
         force_strategy = process_bool_arg(self.options.get("force_resolution_strategy", False))
-        
+
         if (
             self.org_config
             and not self.org_config.scratch
