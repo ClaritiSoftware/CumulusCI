@@ -165,11 +165,6 @@ class UpdateDependencies(BaseSalesforceTask):
             self.resolution_strategy = [
                 r for r in self.resolution_strategy if r not in unsafe_prod_resolvers
             ]
-
-        self.logger.debug(
-            "resolution strategy: {}".format(self.resolution_strategy)  
-        )
-
         if (
             "prefer_2gp_from_release_branch" in self.options
             or "include_beta" in self.options
