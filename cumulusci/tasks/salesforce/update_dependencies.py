@@ -143,7 +143,7 @@ class UpdateDependencies(BaseSalesforceTask):
 
         if "force_resolution_strategy" in self.options and self.options["force_resolution_strategy"] is True:
             self.logger.warning(
-                "The force_resolution_strategy option is turned on and dependency resolution will be forced in scratch on sanbox orgs."
+                "The force_resolution_strategy option is turned on and dependency resolution will be forced in scratch on sandbox orgs."
             )
 
         force_strategy = process_bool_arg(self.options.get("force_resolution_strategy", False))
