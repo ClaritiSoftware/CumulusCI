@@ -148,17 +148,19 @@ class UpdateDependencies(BaseSalesforceTask):
 
         force_strategy = process_bool_arg(self.options.get("force_resolution_strategy", False))
 
-        if (
-            self.org_config
-            and not self.org_config.scratch
+        # Only remove resolvers for:
+        # 1. Non-scratch production orgs when force_strategy is True
+        # 2. All non-scratch orgs when force_strategy is False
+        should_remove_resolvers = (
+            self.org_config  # Have an org config
+            and not self.org_config.scratch  # Not a scratch org
             and (
-                # When force_resolution_strategy is False, check all persistent orgs
-                (not force_strategy)
-                # When force_resolution_strategy is True, only check production orgs
-                or (force_strategy and not self.org_config.is_sandbox)
+                not force_strategy  # Remove for all non-scratch orgs
+                or (force_strategy and not self.org_config.is_sandbox)  # Remove for production orgs only
             )
-            and any(r in self.resolution_strategy for r in unsafe_prod_resolvers)
-        ):
+        )
+
+        if should_remove_resolvers and any(r in self.resolution_strategy for r in unsafe_prod_resolvers):
             self.logger.warning(
                 "Target org is a persistent org; removing Beta resolvers. Consider selecting the `production` resolver stack."
             )

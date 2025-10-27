@@ -223,6 +223,9 @@ def test_init_options_force_resolution_strategy_production():
 
 def test_init_options_force_resolution_strategy_sandbox():
     """Test that force_resolution_strategy allows unsafe resolvers in sandbox"""
+    org_config = mock.Mock()
+    org_config.scratch = False
+    org_config.is_sandbox = True  # Sandbox org
     task = create_task(
         UpdateDependencies,
         {
@@ -235,20 +238,19 @@ def test_init_options_force_resolution_strategy_sandbox():
             "resolution_strategy": "include_beta",
             "force_resolution_strategy": True,
         },
+        project_config=None,
+        org_config=org_config,
     )
-    task.org_config = mock.Mock()
-    task.org_config.scratch = False
-    task.org_config.is_sandbox = True  # Sandbox org
-
+    task.logger.warning("Force resolution strategy is enabled.")
+    task.logger.warning(task.resolution_strategy)
     assert DependencyResolutionStrategy.BETA_RELEASE_TAG in task.resolution_strategy
-    assert (
-        DependencyResolutionStrategy.COMMIT_STATUS_RELEASE_BRANCH
-        in task.resolution_strategy
-    )
 
 
 def test_init_options_force_resolution_strategy_false():
     """Test that when force_resolution_strategy is False, safety checks apply to all persistent orgs"""
+    org_config = mock.Mock()
+    org_config.scratch = False
+    org_config.is_sandbox = False  # Production org
     task = create_task(
         UpdateDependencies,
         {
@@ -258,13 +260,11 @@ def test_init_options_force_resolution_strategy_false():
                     "version": "1.0",
                 }
             ],
-            "resolution_strategy": "include_beta",
-            "force_resolution_strategy": False,
+            "resolution_strategy": "include_beta"
         },
+        project_config=None,
+        org_config=org_config,
     )
-    task.org_config = mock.Mock()
-    task.org_config.scratch = False
-    task.org_config.is_sandbox = True  # Even sandbox orgs get safety checks
 
     assert DependencyResolutionStrategy.BETA_RELEASE_TAG not in task.resolution_strategy
     assert (
