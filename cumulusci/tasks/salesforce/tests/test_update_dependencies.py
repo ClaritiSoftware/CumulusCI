@@ -241,8 +241,6 @@ def test_init_options_force_resolution_strategy_sandbox():
         project_config=None,
         org_config=org_config,
     )
-    task.logger.warning("Force resolution strategy is enabled.")
-    task.logger.warning(task.resolution_strategy)
     assert DependencyResolutionStrategy.BETA_RELEASE_TAG in task.resolution_strategy
 
 
