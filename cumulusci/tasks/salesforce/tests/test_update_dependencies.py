@@ -186,6 +186,83 @@ def test_init_options_removes_unsafe_resolvers_persistent_org():
     )
     task.org_config = mock.Mock()
     task.org_config.scratch = False
+    task.org_config.is_sandbox = True
+
+    assert DependencyResolutionStrategy.BETA_RELEASE_TAG not in task.resolution_strategy
+    assert (
+        DependencyResolutionStrategy.COMMIT_STATUS_RELEASE_BRANCH
+        not in task.resolution_strategy
+    )
+
+
+def test_init_options_force_resolution_strategy_production():
+    """Test that force_resolution_strategy only checks safety for production orgs"""
+    task = create_task(
+        UpdateDependencies,
+        {
+            "dependencies": [
+                {
+                    "namespace": "ns",
+                    "version": "1.0",
+                }
+            ],
+            "resolution_strategy": "include_beta",
+            "force_resolution_strategy": True,
+        },
+    )
+    task.org_config = mock.Mock()
+    task.org_config.scratch = False
+    task.org_config.is_sandbox = False  # Production org
+
+    assert DependencyResolutionStrategy.BETA_RELEASE_TAG not in task.resolution_strategy
+    assert (
+        DependencyResolutionStrategy.COMMIT_STATUS_RELEASE_BRANCH
+        not in task.resolution_strategy
+    )
+
+
+def test_init_options_force_resolution_strategy_sandbox():
+    """Test that force_resolution_strategy allows unsafe resolvers in sandbox"""
+    org_config = mock.Mock()
+    org_config.scratch = False
+    org_config.is_sandbox = True  # Sandbox org
+    task = create_task(
+        UpdateDependencies,
+        {
+            "dependencies": [
+                {
+                    "namespace": "ns",
+                    "version": "1.0",
+                }
+            ],
+            "resolution_strategy": "include_beta",
+            "force_resolution_strategy": True,
+        },
+        project_config=None,
+        org_config=org_config,
+    )
+    assert DependencyResolutionStrategy.BETA_RELEASE_TAG in task.resolution_strategy
+
+
+def test_init_options_force_resolution_strategy_false():
+    """Test that when force_resolution_strategy is False, safety checks apply to all persistent orgs"""
+    org_config = mock.Mock()
+    org_config.scratch = False
+    org_config.is_sandbox = False  # Production org
+    task = create_task(
+        UpdateDependencies,
+        {
+            "dependencies": [
+                {
+                    "namespace": "ns",
+                    "version": "1.0",
+                }
+            ],
+            "resolution_strategy": "include_beta"
+        },
+        project_config=None,
+        org_config=org_config,
+    )
 
     assert DependencyResolutionStrategy.BETA_RELEASE_TAG not in task.resolution_strategy
     assert (

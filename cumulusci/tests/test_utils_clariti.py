@@ -180,7 +180,7 @@ def test_set_sf_alias_failure(monkeypatch):
     success, message = set_sf_alias("target", "username")
 
     assert success is False
-    assert message is not None and message.startswith("Clariti alias failed")
+    assert message is not None and message.startswith("Failed to set SF alias")
     assert "Alias failure" in message
 
 

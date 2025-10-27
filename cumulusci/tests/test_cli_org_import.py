@@ -14,8 +14,6 @@ class FakeRuntime:
         # Tests bypass actual keychain loading.
         pass
 
-
-def test_org_import_rejects_username_and_pool_id(tmp_path):
 def test_org_import_rejects_username_and_pool_id(tmp_path):
     runner = CliRunner()
     runtime = FakeRuntime()

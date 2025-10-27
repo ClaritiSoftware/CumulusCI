@@ -64,6 +64,9 @@ class UpdateDependencies(BaseSalesforceTask):
         "base_package_url_format": {
             "description": "If `interactive` is set to True, display package Ids using a format string ({} will be replaced with the package Id)."
         },
+        "force_resolution_strategy": {
+            "description": "If True, forces the use of the specified resolution_strategy on scratch and sandbox orgs. Defaults to False."
+        },
         **{k: v for k, v in PACKAGE_INSTALL_TASK_OPTIONS.items() if k != "password"},
     }
 
@@ -138,18 +141,31 @@ class UpdateDependencies(BaseSalesforceTask):
             DependencyResolutionStrategy.BETA_RELEASE_TAG,
         ]
 
-        if (
-            self.org_config
-            and not self.org_config.scratch
-            and any(r in self.resolution_strategy for r in unsafe_prod_resolvers)
-        ):
+        force_strategy = process_bool_arg(self.options.get("force_resolution_strategy", False))
+        if force_strategy:
+            self.logger.warning(
+                "The force_resolution_strategy option is turned on and dependency resolution will be forced on scratch and sandbox orgs."
+            )
+
+        # Only remove resolvers for:
+        # 1. Non-scratch production orgs when force_strategy is True
+        # 2. All non-scratch orgs when force_strategy is False
+        should_remove_resolvers = (
+            self.org_config  # Have an org config
+            and not self.org_config.scratch  # Not a scratch org
+            and (
+                not force_strategy  # Remove for all non-scratch orgs
+                or (force_strategy and not self.org_config.is_sandbox)  # Remove for production orgs only
+            )
+        )
+
+        if should_remove_resolvers and any(r in self.resolution_strategy for r in unsafe_prod_resolvers):
             self.logger.warning(
                 "Target org is a persistent org; removing Beta resolvers. Consider selecting the `production` resolver stack."
             )
             self.resolution_strategy = [
                 r for r in self.resolution_strategy if r not in unsafe_prod_resolvers
             ]
-
         if (
             "prefer_2gp_from_release_branch" in self.options
             or "include_beta" in self.options
