@@ -141,12 +141,11 @@ class UpdateDependencies(BaseSalesforceTask):
             DependencyResolutionStrategy.BETA_RELEASE_TAG,
         ]
 
-        if "force_resolution_strategy" in self.options and self.options["force_resolution_strategy"] is True:
-            self.logger.warning(
-                "The force_resolution_strategy option is turned on and dependency resolution will be forced in scratch on sandbox orgs."
-            )
-
         force_strategy = process_bool_arg(self.options.get("force_resolution_strategy", False))
+        if force_strategy:
+            self.logger.warning(
+                "The force_resolution_strategy option is turned on and dependency resolution will be forced on scratch and sandbox orgs."
+            )
 
         # Only remove resolvers for:
         # 1. Non-scratch production orgs when force_strategy is True
