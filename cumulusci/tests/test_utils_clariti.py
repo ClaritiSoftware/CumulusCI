@@ -1,3 +1,4 @@
+import io
 import json
 from types import SimpleNamespace
 
@@ -11,6 +12,14 @@ from cumulusci.utils.clariti import (
     resolve_pool_id,
     set_sf_alias,
 )
+
+
+def _make_proc(*, stdout: str = "", stderr: str = "", returncode: int = 0):
+    return SimpleNamespace(
+        returncode=returncode,
+        stdout_text=io.StringIO(stdout),
+        stderr_text=io.StringIO(stderr),
+    )
 
 
 def test_resolve_pool_id_prefers_explicit():
@@ -43,12 +52,15 @@ def test_checkout_org_from_pool_parses_username(monkeypatch):
         "poolId": "Pool42",
     }
 
-    def fake_run(command, check, text, capture_output, env):
-        assert command[:4] == ["sf", "clariti", "org", "checkout"]
-        assert "--json" in command
-        return SimpleNamespace(returncode=0, stdout=json.dumps(payload), stderr="")
+    def fake_sfdx(command, **kwargs):
+        assert command == "clariti org checkout"
+        args = kwargs["args"]
+        assert args[0] == "--json"
+        assert "--pool-id" in args and "Pool42" in args
+        assert "--alias" in args and "MyAlias" in args
+        return _make_proc(stdout=json.dumps(payload))
 
-    monkeypatch.setattr("cumulusci.utils.clariti.subprocess.run", fake_run)
+    monkeypatch.setattr("cumulusci.utils.clariti.sfdx", fake_sfdx)
 
     result = checkout_org_from_pool("Pool42", alias="MyAlias")
 
@@ -68,11 +80,11 @@ def test_checkout_org_from_pool_reads_nested_username(monkeypatch):
         },
     }
 
-    def fake_run(command, check, text, capture_output, env):
-        assert "--pool-id" in command
-        return SimpleNamespace(returncode=0, stdout=json.dumps(payload), stderr="")
+    def fake_sfdx(command, **kwargs):
+        assert "--pool-id" in kwargs["args"]
+        return _make_proc(stdout=json.dumps(payload))
 
-    monkeypatch.setattr("cumulusci.utils.clariti.subprocess.run", fake_run)
+    monkeypatch.setattr("cumulusci.utils.clariti.sfdx", fake_sfdx)
 
     result = checkout_org_from_pool("PoolNested")
 
@@ -86,11 +98,11 @@ def test_checkout_org_from_pool_without_pool_id(monkeypatch):
         "poolId": "Pool-From-Config",
     }
 
-    def fake_run(command, check, text, capture_output, env):
-        assert "--pool-id" not in command
-        return SimpleNamespace(returncode=0, stdout=json.dumps(payload), stderr="")
+    def fake_sfdx(command, **kwargs):
+        assert "--pool-id" not in kwargs["args"]
+        return _make_proc(stdout=json.dumps(payload))
 
-    monkeypatch.setattr("cumulusci.utils.clariti.subprocess.run", fake_run)
+    monkeypatch.setattr("cumulusci.utils.clariti.sfdx", fake_sfdx)
 
     result = checkout_org_from_pool(None)
 
@@ -98,10 +110,10 @@ def test_checkout_org_from_pool_without_pool_id(monkeypatch):
 
 
 def test_checkout_org_from_pool_handles_failure(monkeypatch):
-    def fake_run(command, check, text, capture_output, env):
-        return SimpleNamespace(returncode=1, stdout="", stderr="No orgs available")
+    def fake_sfdx(command, **kwargs):
+        return _make_proc(stdout="", stderr="No orgs available", returncode=1)
 
-    monkeypatch.setattr("cumulusci.utils.clariti.subprocess.run", fake_run)
+    monkeypatch.setattr("cumulusci.utils.clariti.sfdx", fake_sfdx)
 
     with pytest.raises(ClaritiError) as exc:
         checkout_org_from_pool("EmptyPool")
@@ -117,12 +129,10 @@ def test_checkout_org_from_pool_formats_json_error(monkeypatch):
         "message": "Failed to get org from pool: No healthy orgs available in this pool",
     }
 
-    def fake_run(command, check, text, capture_output, env):
-        return SimpleNamespace(
-            returncode=1, stdout=json.dumps(payload), stderr=""
-        )
+    def fake_sfdx(command, **kwargs):
+        return _make_proc(stdout=json.dumps(payload), stderr="", returncode=1)
 
-    monkeypatch.setattr("cumulusci.utils.clariti.subprocess.run", fake_run)
+    monkeypatch.setattr("cumulusci.utils.clariti.sfdx", fake_sfdx)
 
     with pytest.raises(ClaritiError) as exc:
         checkout_org_from_pool("Pool42")
@@ -139,12 +149,10 @@ def test_checkout_org_from_pool_formats_json_error_debug(monkeypatch):
         "message": "Failed", "extra": "details",
     }
 
-    def fake_run(command, check, text, capture_output, env):
-        return SimpleNamespace(
-            returncode=1, stdout=json.dumps(payload), stderr=""
-        )
+    def fake_sfdx(command, **kwargs):
+        return _make_proc(stdout=json.dumps(payload), stderr="", returncode=1)
 
-    monkeypatch.setattr("cumulusci.utils.clariti.subprocess.run", fake_run)
+    monkeypatch.setattr("cumulusci.utils.clariti.sfdx", fake_sfdx)
 
     from cumulusci.core.debug import set_debug_mode
 
@@ -159,11 +167,12 @@ def test_checkout_org_from_pool_formats_json_error_debug(monkeypatch):
 
 
 def test_set_sf_alias_success(monkeypatch):
-    def fake_run(command, check, text, capture_output, env):
-        assert command == ["sf", "alias", "set", "target=user@example.com"]
-        return SimpleNamespace(returncode=0, stdout="", stderr="")
+    def fake_sfdx(command, **kwargs):
+        assert command == "alias set"
+        assert kwargs["args"] == ["target=user@example.com"]
+        return _make_proc()
 
-    monkeypatch.setattr("cumulusci.utils.clariti.subprocess.run", fake_run)
+    monkeypatch.setattr("cumulusci.utils.clariti.sfdx", fake_sfdx)
 
     success, message = set_sf_alias("target", "user@example.com")
 
@@ -172,10 +181,10 @@ def test_set_sf_alias_success(monkeypatch):
 
 
 def test_set_sf_alias_failure(monkeypatch):
-    def fake_run(command, check, text, capture_output, env):
-        return SimpleNamespace(returncode=1, stdout="", stderr="Alias failure")
+    def fake_sfdx(command, **kwargs):
+        return _make_proc(stdout="", stderr="Alias failure", returncode=1)
 
-    monkeypatch.setattr("cumulusci.utils.clariti.subprocess.run", fake_run)
+    monkeypatch.setattr("cumulusci.utils.clariti.sfdx", fake_sfdx)
 
     success, message = set_sf_alias("target", "username")
 
