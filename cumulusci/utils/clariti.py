@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence, Tuple, cast
 
-import subprocess
+from cumulusci.core.sfdx import sfdx
 
 from cumulusci.core.debug import get_debug_mode
 
@@ -105,38 +105,33 @@ def checkout_org_from_pool(
         data.
     """
 
-    command = [
-        "sf",
-        "clariti",
-        "org",
-        "checkout",
-        "--json",
-    ]
+    command_args = ["--json"]
     if pool_id:
-        command.extend(["--pool-id", pool_id])
+        command_args.extend(["--pool-id", pool_id])
     if alias:
-        command.extend(["--alias", alias])
+        command_args.extend(["--alias", alias])
 
     try:
-        proc = subprocess.run(
-            command,
-            check=False,
-            text=True,
-            capture_output=True,
+        proc = sfdx(
+            "clariti org checkout",
+            args=command_args,
             env=env,
+            capture_output=True,
+            check_return=False,
         )
     except FileNotFoundError as err:
         raise ClaritiError("Salesforce CLI 'sf' was not found on PATH.") from err
+    except OSError as err:
+        raise ClaritiError("Failed to execute Salesforce CLI 'sf'.") from err
 
-    stdout = (proc.stdout or "").strip()
-    stderr = (proc.stderr or "").strip()
+    stdout = _read_process_stream(proc, "stdout_text", "stdout")
+    stderr = _read_process_stream(proc, "stderr_text", "stderr")
+
     if proc.returncode:
         summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
         summary = f"Clariti checkout failed: {summary}"
         if get_debug_mode():
-            raise ClaritiError(
-                f"{summary}\nClariti raw response:\n{raw_output}"
-            )
+            raise ClaritiError(f"{summary}\nClariti raw response:\n{raw_output}")
         raise ClaritiError(summary)
 
     if not stdout:
@@ -152,18 +147,12 @@ def checkout_org_from_pool(
 
     username = cast(str, _extract_string(payload, _USERNAME_PATHS))
     alias_value = _extract_string(payload, _ALIAS_PATHS, allow_missing=True)
-    org_id_value = _extract_string(
-        payload, (("orgId",),), allow_missing=True
-    )
+    org_id_value = _extract_string(payload, (("orgId",),), allow_missing=True)
     instance_url_value = _extract_string(
         payload, (("instanceUrl",),), allow_missing=True
     )
-    org_type_value = _extract_string(
-        payload, (("orgType",),), allow_missing=True
-    )
-    pool_id_value = _extract_string(
-        payload, (("poolId",),), allow_missing=True
-    )
+    org_type_value = _extract_string(payload, (("orgType",),), allow_missing=True)
+    pool_id_value = _extract_string(payload, (("poolId",),), allow_missing=True)
 
     return ClaritiCheckoutResult(
         username=username,
@@ -190,20 +179,21 @@ def set_sf_alias(
     if not alias or not username:
         return False, "Alias and username are required."
 
-    command = ["sf", "alias", "set", f"{alias}={username}"]
     try:
-        proc = subprocess.run(
-            command,
-            check=False,
-            text=True,
-            capture_output=True,
+        proc = sfdx(
+            "alias set",
+            args=[f"{alias}={username}"],
             env=env,
+            capture_output=True,
+            check_return=False,
         )
     except FileNotFoundError:
         return False, "Salesforce CLI 'sf' was not found on PATH."
+    except OSError:
+        return False, "Failed to execute Salesforce CLI 'sf'."
 
-    stdout = (proc.stdout or "").strip()
-    stderr = (proc.stderr or "").strip()
+    stdout = _read_process_stream(proc, "stdout_text", "stdout")
+    stderr = _read_process_stream(proc, "stderr_text", "stderr")
     if proc.returncode:
         summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
         summary = f"Failed to set SF alias: {summary}"
@@ -212,6 +202,47 @@ def set_sf_alias(
         return False, summary
 
     return True, None
+
+
+def _read_process_stream(proc: Any, text_attr: str, raw_attr: str) -> str:
+    """Normalize subprocess output attributes into plain text."""
+
+    value = getattr(proc, text_attr, None)
+    text = _coerce_stream_value(value)
+    if not text:
+        text = _coerce_stream_value(getattr(proc, raw_attr, None))
+    return text.strip()
+
+
+def _coerce_stream_value(value: Any) -> str:
+    """Return a string representation from subprocess output containers."""
+
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (bytes, bytearray)):
+        return value.decode()
+    getvalue = getattr(value, "getvalue", None)
+    if callable(getvalue):
+        result = getvalue()
+        if isinstance(result, str):
+            return result
+        if isinstance(result, (bytes, bytearray)):
+            return result.decode()
+        return str(result)
+    read = getattr(value, "read", None)
+    if callable(read):
+        position = value.tell() if hasattr(value, "tell") else None
+        result = read()
+        if position is not None and hasattr(value, "seek"):
+            value.seek(position)
+        if isinstance(result, str):
+            return result
+        if isinstance(result, (bytes, bytearray)):
+            return result.decode()
+        return str(result) if result is not None else ""
+    return str(value)
 
 
 def _extract_string(
