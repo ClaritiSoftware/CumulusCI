@@ -124,10 +124,14 @@ def checkout_org_from_pool(
     except OSError as err:
         raise ClaritiError("Failed to execute Salesforce CLI 'sf'.") from err
 
-    stdout_stream = getattr(proc, "stdout_text", None)
-    stderr_stream = getattr(proc, "stderr_text", None)
-    stdout = stdout_stream.read().strip() if stdout_stream else ""
-    stderr = stderr_stream.read().strip() if stderr_stream else ""
+    stdout = getattr(proc, "stdout_text", None)
+    stderr = getattr(proc, "stderr_text", None)
+    if stdout is None and getattr(proc, "stdout", None) is not None:
+        stdout = proc.stdout.decode() if isinstance(proc.stdout, bytes) else proc.stdout
+    if stderr is None and getattr(proc, "stderr", None) is not None:
+        stderr = proc.stderr.decode() if isinstance(proc.stderr, bytes) else proc.stderr
+    stdout = stdout.strip() if stdout else ""
+    stderr = stderr.strip() if stderr else ""
 
     if proc.returncode:
         summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
@@ -194,10 +198,14 @@ def set_sf_alias(
     except OSError:
         return False, "Failed to execute Salesforce CLI 'sf'."
 
-    stdout_stream = getattr(proc, "stdout_text", None)
-    stderr_stream = getattr(proc, "stderr_text", None)
-    stdout = stdout_stream.read().strip() if stdout_stream else ""
-    stderr = stderr_stream.read().strip() if stderr_stream else ""
+    stdout = getattr(proc, "stdout_text", None)
+    stderr = getattr(proc, "stderr_text", None)
+    if stdout is None and getattr(proc, "stdout", None) is not None:
+        stdout = proc.stdout.decode() if isinstance(proc.stdout, bytes) else proc.stdout
+    if stderr is None and getattr(proc, "stderr", None) is not None:
+        stderr = proc.stderr.decode() if isinstance(proc.stderr, bytes) else proc.stderr
+    stdout = stdout.strip() if stdout else ""
+    stderr = stderr.strip() if stderr else ""
     if proc.returncode:
         summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
         summary = f"Failed to set SF alias: {summary}"
