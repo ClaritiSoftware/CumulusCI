@@ -124,14 +124,8 @@ def checkout_org_from_pool(
     except OSError as err:
         raise ClaritiError("Failed to execute Salesforce CLI 'sf'.") from err
 
-    stdout = getattr(proc, "stdout_text", None)
-    stderr = getattr(proc, "stderr_text", None)
-    if stdout is None and getattr(proc, "stdout", None) is not None:
-        stdout = proc.stdout.decode() if isinstance(proc.stdout, bytes) else proc.stdout
-    if stderr is None and getattr(proc, "stderr", None) is not None:
-        stderr = proc.stderr.decode() if isinstance(proc.stderr, bytes) else proc.stderr
-    stdout = stdout.strip() if stdout else ""
-    stderr = stderr.strip() if stderr else ""
+    stdout = _read_process_stream(proc, "stdout_text", "stdout")
+    stderr = _read_process_stream(proc, "stderr_text", "stderr")
 
     if proc.returncode:
         summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
@@ -198,14 +192,8 @@ def set_sf_alias(
     except OSError:
         return False, "Failed to execute Salesforce CLI 'sf'."
 
-    stdout = getattr(proc, "stdout_text", None)
-    stderr = getattr(proc, "stderr_text", None)
-    if stdout is None and getattr(proc, "stdout", None) is not None:
-        stdout = proc.stdout.decode() if isinstance(proc.stdout, bytes) else proc.stdout
-    if stderr is None and getattr(proc, "stderr", None) is not None:
-        stderr = proc.stderr.decode() if isinstance(proc.stderr, bytes) else proc.stderr
-    stdout = stdout.strip() if stdout else ""
-    stderr = stderr.strip() if stderr else ""
+    stdout = _read_process_stream(proc, "stdout_text", "stdout")
+    stderr = _read_process_stream(proc, "stderr_text", "stderr")
     if proc.returncode:
         summary, raw_output = _summarize_error_output(stdout, stderr, proc.returncode)
         summary = f"Failed to set SF alias: {summary}"
@@ -214,6 +202,47 @@ def set_sf_alias(
         return False, summary
 
     return True, None
+
+
+def _read_process_stream(proc: Any, text_attr: str, raw_attr: str) -> str:
+    """Normalize subprocess output attributes into plain text."""
+
+    value = getattr(proc, text_attr, None)
+    text = _coerce_stream_value(value)
+    if not text:
+        text = _coerce_stream_value(getattr(proc, raw_attr, None))
+    return text.strip()
+
+
+def _coerce_stream_value(value: Any) -> str:
+    """Return a string representation from subprocess output containers."""
+
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (bytes, bytearray)):
+        return value.decode()
+    getvalue = getattr(value, "getvalue", None)
+    if callable(getvalue):
+        result = getvalue()
+        if isinstance(result, str):
+            return result
+        if isinstance(result, (bytes, bytearray)):
+            return result.decode()
+        return str(result)
+    read = getattr(value, "read", None)
+    if callable(read):
+        position = value.tell() if hasattr(value, "tell") else None
+        result = read()
+        if position is not None and hasattr(value, "seek"):
+            value.seek(position)
+        if isinstance(result, str):
+            return result
+        if isinstance(result, (bytes, bytearray)):
+            return result.decode()
+        return str(result) if result is not None else ""
+    return str(value)
 
 
 def _extract_string(
