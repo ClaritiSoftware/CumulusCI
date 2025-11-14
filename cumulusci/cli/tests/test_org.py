@@ -15,7 +15,6 @@ from cumulusci.core.config import (
     ServiceConfig,
     UniversalConfig,
 )
-from cumulusci.core.config.sfdx_org_config import SfdxOrgConfig
 from cumulusci.core.exceptions import (
     OrgNotFound,
     ScratchOrgException,
@@ -374,22 +373,21 @@ class TestOrgCommands:
 
         runtime.keychain.unset_default_org.assert_called_once()
 
-    @mock.patch("sarge.Command")
-    def test_org_import(self, cmd):
+    @mock.patch("cumulusci.cli.org.import_sfdx_org_to_keychain")
+    def test_org_import(self, helper):
         runtime = mock.Mock()
-        result = b"""{
-            "result": {
-                "createdDate": "1970-01-01T00:00:00.000Z",
-                "expirationDate": "1970-01-01",
-                "instanceUrl": "url",
-                "accessToken": "OODxxxxxxxxxxxx!token",
-                "username": "test@test.org",
-                "password": "password"
-            }
-        }"""
-        cmd.return_value = mock.Mock(
-            stderr=io.BytesIO(b""), stdout=io.BytesIO(result), returncode=0
-        )
+        scratch_org = mock.Mock()
+        scratch_org.scratch = True
+        scratch_org.sfdx_info = {
+            "org_id": "OODxxxxxxxxxxxx",
+            "username": "test@test.org",
+        }
+
+        def fake_import(keychain, username_or_alias, org_name, global_org=False):
+            keychain.set_org(scratch_org, global_org)
+            return scratch_org
+
+        helper.side_effect = fake_import
 
         out = []
         with mock.patch("click.echo", out.append):
@@ -399,49 +397,28 @@ class TestOrgCommands:
                 org_name="test",
                 runtime=runtime,
             )
-            runtime.keychain.set_org.assert_called_once()
+            runtime.keychain.set_org.assert_called_once_with(scratch_org, False)
         assert (
             "Imported scratch org: OODxxxxxxxxxxxx, username: test@test.org"
             in "".join(out)
         )
 
-    @mock.patch("sarge.Command")
-    @responses.activate
-    def test_org_import__persistent_org(self, cmd):
+    @mock.patch("cumulusci.cli.org.import_sfdx_org_to_keychain")
+    def test_org_import__persistent_org(self, helper):
         runtime = mock.Mock()
-        result = b"""{
-            "result": {
-                "id": "OODxxxxxxxxxxxx",
-                "createdDate": null,
-                "instanceUrl": "https://instance",
-                "accessToken": "OODxxxxxxxxxxxx!token",
-                "username": "test@test.org",
-                "password": "password"
-            }
-        }"""
-        cmd.return_value = mock.Mock(
-            stderr=io.BytesIO(b""), stdout=io.BytesIO(result), returncode=0
-        )
+        persistent_org = mock.Mock()
+        persistent_org.scratch = False
+        persistent_org.sfdx_info = {
+            "org_id": "OODxxxxxxxxxxxx",
+            "username": "test@test.org",
+        }
+        persistent_org.config = {"sfdx": True, "expires": "Persistent"}
 
-        # Mock the call to get the Organization sObject
-        responses.add(
-            method="GET",
-            url="https://instance/services/data",
-            status=200,
-            json=[{"version": CURRENT_SF_API_VERSION}],
-        )
-        responses.add(
-            method="GET",
-            url=f"https://instance/services/data/v{CURRENT_SF_API_VERSION}/sobjects/Organization/OODxxxxxxxxxxxx",
-            json={
-                "TrialExpirationDate": None,
-                "OrganizationType": "Developer Edition",
-                "IsSandbox": True,
-                "InstanceName": "CS420",
-                "NamespacePrefix": None,
-            },
-            status=200,
-        )
+        def fake_import(keychain, username_or_alias, org_name, global_org=False):
+            keychain.set_org(persistent_org, global_org)
+            return persistent_org
+
+        helper.side_effect = fake_import
 
         out = []
         with mock.patch("click.echo", out.append):
@@ -451,52 +428,30 @@ class TestOrgCommands:
                 org_name="test",
                 runtime=runtime,
             )
-            runtime.keychain.set_org.assert_called_once()
-            created_org = runtime.keychain.set_org.call_args[0][0]
-            assert isinstance(created_org, SfdxOrgConfig)
-            assert created_org.config["sfdx"]
-        assert created_org.config["expires"] == "Persistent"
-
+            runtime.keychain.set_org.assert_called_once_with(persistent_org, False)
+        assert persistent_org.config["expires"] == "Persistent"
         assert "Imported org: OODxxxxxxxxxxxx, username: test@test.org" in "".join(out)
 
-    @mock.patch("sarge.Command")
-    @responses.activate
-    def test_org_import__trial_org(self, cmd):
+    @mock.patch("cumulusci.cli.org.import_sfdx_org_to_keychain")
+    def test_org_import__trial_org(self, helper):
         runtime = mock.Mock()
-        result = b"""{
-            "result": {
-                "id": "OODxxxxxxxxxxxx",
-                "createdDate": null,
-                "instanceUrl": "https://instance",
-                "accessToken": "OODxxxxxxxxxxxx!token",
-                "username": "test@test.org",
-                "password": "password"
-            }
-        }"""
-        cmd.return_value = mock.Mock(
-            stderr=io.BytesIO(b""), stdout=io.BytesIO(result), returncode=0
-        )
-
-        # Mock the call to get the Organization sObject
         api_datetime = "2030-08-07T16:00:56.000+0000"
-        responses.add(
-            method="GET",
-            url="https://instance/services/data",
-            status=200,
-            json=[{"version": CURRENT_SF_API_VERSION}],
-        )
-        responses.add(
-            method="GET",
-            url=f"https://instance/services/data/v{CURRENT_SF_API_VERSION}/sobjects/Organization/OODxxxxxxxxxxxx",
-            json={
-                "TrialExpirationDate": api_datetime,
-                "OrganizationType": "Developer Edition",
-                "IsSandbox": True,
-                "InstanceName": "CS420",
-                "NamespacePrefix": None,
-            },
-            status=200,
-        )
+        trial_org = mock.Mock()
+        trial_org.scratch = False
+        trial_org.sfdx_info = {
+            "org_id": "OODxxxxxxxxxxxx",
+            "username": "test@test.org",
+        }
+        trial_org.config = {
+            "sfdx": True,
+            "expires": parse_api_datetime(api_datetime).date(),
+        }
+
+        def fake_import(keychain, username_or_alias, org_name, global_org=False):
+            keychain.set_org(trial_org, global_org)
+            return trial_org
+
+        helper.side_effect = fake_import
 
         out = []
         with mock.patch("click.echo", out.append):
@@ -506,12 +461,9 @@ class TestOrgCommands:
                 org_name="test",
                 runtime=runtime,
             )
-            runtime.keychain.set_org.assert_called_once()
-            created_org = runtime.keychain.set_org.call_args[0][0]
-            assert isinstance(created_org, SfdxOrgConfig)
-            assert created_org.config["sfdx"]
+            runtime.keychain.set_org.assert_called_once_with(trial_org, False)
             assert (
-                created_org.config["expires"] == parse_api_datetime(api_datetime).date()
+                trial_org.config["expires"] == parse_api_datetime(api_datetime).date()
             )
 
         assert "Imported org: OODxxxxxxxxxxxx, username: test@test.org" in "".join(out)

@@ -1,7 +1,8 @@
 import datetime
 import json
 import os
-from typing import List, NoReturn, Optional
+import tempfile
+from typing import List, NoReturn, Optional, TYPE_CHECKING
 
 import sarge
 
@@ -13,8 +14,21 @@ from cumulusci.core.exceptions import (
     ServiceNotConfigured,
 )
 from cumulusci.core.sfdx import sfdx
+from cumulusci.utils.clariti import ClaritiError, checkout_org_from_pool, set_sf_alias
 
-import tempfile
+if TYPE_CHECKING:  # pragma: no cover
+    from cumulusci.core.org_import import import_sfdx_org_to_keychain as _Importer
+
+import_sfdx_org_to_keychain = None  # type: ignore
+
+
+def _get_org_importer():
+    global import_sfdx_org_to_keychain
+    if import_sfdx_org_to_keychain is None:
+        from cumulusci.core.org_import import import_sfdx_org_to_keychain as helper
+
+        import_sfdx_org_to_keychain = helper
+    return import_sfdx_org_to_keychain
 
 class ScratchOrgConfig(SfdxOrgConfig):
     """Salesforce DX Scratch org configuration"""
@@ -26,6 +40,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
     devhub: str
     release: str
     snapshot: str
+    org_pool_id: str
 
     createable: bool = True
 
@@ -65,85 +80,179 @@ class ScratchOrgConfig(SfdxOrgConfig):
     def create_org(self) -> None:
         """Uses sf org create scratch  to create the org"""
         try:
-            if not self.config_file:
-                raise ScratchOrgException(
-                    f"Scratch org config {self.name} is missing a config_file"
-                )
-            if not self.scratch_org_type:
-                self.config["scratch_org_type"] = "workspace"
+            if self._try_checkout_pooled_org():
+                return
+            self._create_org_via_sfdx()
+        finally:
+            self._cleanup_tmp_config()
 
-            args: List[str] = self._build_org_create_args()
-            extra_args = os.environ.get("SFDX_ORG_CREATE_ARGS", "")
-            p: sarge.Command = sfdx(
-                f"org create scratch --json {extra_args}",
-                args=args,
-                username=None,
-                log_note="Creating scratch org",
+    def _create_org_via_sfdx(self) -> None:
+        if not self.config_file:
+            raise ScratchOrgException(
+                f"Scratch org config {self.name} is missing a config_file"
             )
-            stdout = p.stdout_text.read()
-            stderr = p.stderr_text.read()
+        if not self.scratch_org_type:
+            self.config["scratch_org_type"] = "workspace"
 
-            def raise_error() -> NoReturn:
-                message = f"{FAILED_TO_CREATE_SCRATCH_ORG}: \n{stdout}\n{stderr}"
-                try:
-                    output = json.loads(stdout)
-                    if (
-                        output.get("message") == "The requested resource does not exist"
-                        and output.get("name") == "NOT_FOUND"
-                    ):
-                        raise ScratchOrgException(
-                            "The Salesforce CLI was unable to create a scratch org. Ensure you are connected using a valid API version on an active Dev Hub."
-                        )
-                except json.decoder.JSONDecodeError:
-                    raise ScratchOrgException(message)
+        args: List[str] = self._build_org_create_args()
+        extra_args = os.environ.get("SFDX_ORG_CREATE_ARGS", "")
+        p: sarge.Command = sfdx(
+            f"org create scratch --json {extra_args}",
+            args=args,
+            username=None,
+            log_note="Creating scratch org",
+        )
+        stdout = p.stdout_text.read()
+        stderr = p.stderr_text.read()
 
+        def raise_error() -> NoReturn:
+            message = f"{FAILED_TO_CREATE_SCRATCH_ORG}: \n{stdout}\n{stderr}"
+            try:
+                output = json.loads(stdout)
+                if (
+                    output.get("message") == "The requested resource does not exist"
+                    and output.get("name") == "NOT_FOUND"
+                ):
+                    raise ScratchOrgException(
+                        "The Salesforce CLI was unable to create a scratch org. Ensure you are connected using a valid API version on an active Dev Hub."
+                    )
+            except json.decoder.JSONDecodeError:
                 raise ScratchOrgException(message)
 
-            result = {}  # for type checker.
-            if p.returncode:
-                raise_error()
-            try:
-                result = json.loads(stdout)
+            raise ScratchOrgException(message)
 
-            except json.decoder.JSONDecodeError:
-                raise_error()
+        result = {}  # for type checker.
+        if p.returncode:
+            raise_error()
+        try:
+            result = json.loads(stdout)
+        except json.decoder.JSONDecodeError:
+            raise_error()
 
-            if (
-                not (res := result.get("result"))
-                or ("username" not in res)
-                or ("orgId" not in res)
-            ):
-                raise_error()
+        if (
+            not (res := result.get("result"))
+            or ("username" not in res)
+            or ("orgId" not in res)
+        ):
+            raise_error()
 
-            if res["username"] is None:
-                raise ScratchOrgException(
-                    "SFDX claimed to be successful but there was no username "
-                    "in the output...maybe there was a gack?"
-                )
-
-            self.config["org_id"] = res["orgId"]
-            self.config["username"] = res["username"]
-
-            self.config["date_created"] = datetime.datetime.utcnow()
-
-            self.logger.error(stderr)
-
-            self.logger.info(
-                f"Created: OrgId: {self.config['org_id']}, Username:{self.config['username']}"
+        if res["username"] is None:
+            raise ScratchOrgException(
+                "SFDX claimed to be successful but there was no username "
+                "in the output...maybe there was a gack?"
             )
 
-            if self.config.get("set_password"):
-                self.generate_password()
+        self.config["org_id"] = res["orgId"]
+        self.config["username"] = res["username"]
+        self.config["date_created"] = datetime.datetime.utcnow()
 
-            # Flag that this org has been created
-            self.config["created"] = True
-        finally:
-            # Clean up temporary config file if it exists
-            if hasattr(self, '_tmp_config') and self._tmp_config and os.path.exists(self._tmp_config):
-                try:
-                    os.unlink(self._tmp_config)
-                except Exception as e:
-                    self.logger.warning(f"Failed to clean up temporary config file: {e}")
+        self.logger.error(stderr)
+        self.logger.info(
+            f"Created: OrgId: {self.config['org_id']}, Username:{self.config['username']}"
+        )
+
+        if self.config.get("set_password"):
+            self.generate_password()
+
+        self.config["created"] = True
+
+    def _try_checkout_pooled_org(self) -> bool:
+        pool_id = self.config.get("org_pool_id")
+        if not pool_id or not self.keychain:
+            return False
+
+        alias = self.sfdx_alias
+        if not alias:
+            project_name = getattr(
+                getattr(self.keychain, "project_config", None), "project__name", ""
+            )
+            alias = f"{project_name}__{self.name}".strip("_") or self.name
+
+        try:
+            checkout = checkout_org_from_pool(pool_id, alias=alias)
+        except ClaritiError as err:
+            self.logger.warning(
+                "Failed to checkout pooled org%s: %s. "
+                "Falling back to scratch creation.",
+                f" from {pool_id}" if pool_id else "",
+                err,
+            )
+            return False
+
+        username = checkout.username
+        if not username:
+            self.logger.warning(
+                "Clariti checkout did not return a username. "
+                "Falling back to scratch creation."
+            )
+            return False
+
+        if alias:
+            success, alias_error = set_sf_alias(alias, username)
+            if not success and alias_error:
+                self.logger.warning(alias_error)
+
+        importer = _get_org_importer()
+        try:
+            imported_org = importer(
+                self.keychain, username, self.name, global_org=False
+            )
+        except Exception as err:
+            self.logger.warning(
+                "Failed to import Clariti org '%s': %s. "
+                "Falling back to scratch creation.",
+                username,
+                err,
+            )
+            return False
+
+        if isinstance(imported_org, ScratchOrgConfig) and imported_org.expired:
+            self.logger.warning(
+                "Clariti provided an expired org for '%s'. "
+                "Falling back to scratch creation.",
+                username,
+            )
+            return False
+
+        self._configure_from_imported_org(imported_org, username)
+
+        if self.default and alias:
+            try:
+                sfdx(sarge.shell_format("force config set target-org={}", alias))
+            except Exception as exc:
+                self.logger.warning(
+                    "Failed to set Salesforce CLI default org '%s': %s",
+                    alias,
+                    exc,
+                )
+
+        return True
+
+    def _configure_from_imported_org(self, imported_org, username: str) -> None:
+        self.config["created"] = True
+        self.config["username"] = imported_org.config.get("username") or username
+        for key in ("org_id", "instance_url", "days", "date_created", "password"):
+            if key in imported_org.config and imported_org.config[key] is not None:
+                self.config[key] = imported_org.config[key]
+
+        self.logger.info(
+            "Checked out pooled org: OrgId: %s, Username:%s",
+            self.config.get("org_id"),
+            self.config.get("username"),
+        )
+
+    def _cleanup_tmp_config(self) -> None:
+        tmp_path = getattr(self, "_tmp_config", None)
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except Exception as exc:
+                self.logger.warning(
+                    "Failed to clean up temporary config file %s: %s",
+                    tmp_path,
+                    exc,
+                )
+        self._tmp_config = None
 
     def _build_org_create_args(self) -> List[str]:
         config_file = self.config_file

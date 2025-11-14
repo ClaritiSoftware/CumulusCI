@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -24,6 +25,7 @@ from cumulusci.core.exceptions import (
     SfdxOrgException,
 )
 from cumulusci.utils import cd, temporary_dir
+from cumulusci.utils.clariti import ClaritiError
 
 __location__ = os.path.dirname(os.path.realpath(__file__))
 
@@ -837,3 +839,95 @@ class TestScratchOrgConfigPytest:
         # run this in a separate process to not confuse
         # the module table
         assert os.system(f"pytest {filename}") == 0
+
+    @mock.patch("cumulusci.core.config.scratch_org_config.import_sfdx_org_to_keychain")
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    @mock.patch("cumulusci.core.config.scratch_org_config.set_sf_alias")
+    def test_create_org_uses_pooled_org(
+        self,
+        mock_set_alias,
+        mock_checkout,
+        mock_import,
+    ):
+        mock_keychain = mock.Mock()
+        mock_keychain.project_config = mock.Mock(project__name="Project")
+        config = ScratchOrgConfig(
+            {
+                "config_file": "tmp.json",
+                "org_pool_id": "Pool42",
+                "sfdx_alias": "Project__dev",
+            },
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        mock_checkout.return_value = SimpleNamespace(
+            username="user@example.com", alias="Alias"
+        )
+        imported_org = mock.Mock(spec=ScratchOrgConfig)
+        imported_org.config = {
+            "username": "user@example.com",
+            "org_id": "00D000000000123",
+            "instance_url": "https://example.com",
+            "days": 7,
+            "date_created": datetime.utcnow(),
+        }
+        imported_org.expired = False
+        mock_import.return_value = imported_org
+        mock_set_alias.return_value = (True, None)
+
+        config.create_org()
+
+        mock_checkout.assert_called_once_with("Pool42", alias="Project__dev")
+        mock_import.assert_called_once()
+        config._create_org_via_sfdx.assert_not_called()
+        assert config.config["created"] is True
+        assert config.config["username"] == "user@example.com"
+
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    def test_create_org_falls_back_when_checkout_fails(self, mock_checkout):
+        mock_checkout.side_effect = ClaritiError("No pooled orgs available")
+        mock_keychain = mock.Mock()
+        mock_keychain.project_config = mock.Mock(project__name="Project")
+        config = ScratchOrgConfig(
+            {"config_file": "tmp.json", "org_pool_id": "Pool42"},
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        config.create_org()
+
+        config._create_org_via_sfdx.assert_called_once()
+
+    @mock.patch("cumulusci.core.config.scratch_org_config.import_sfdx_org_to_keychain")
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    @mock.patch("cumulusci.core.config.scratch_org_config.set_sf_alias")
+    def test_create_org_falls_back_on_expired_pool_org(
+        self,
+        mock_set_alias,
+        mock_checkout,
+        mock_import,
+    ):
+        mock_keychain = mock.Mock()
+        mock_keychain.project_config = mock.Mock(project__name="Project")
+        config = ScratchOrgConfig(
+            {"config_file": "tmp.json", "org_pool_id": "Pool42"},
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        mock_checkout.return_value = SimpleNamespace(
+            username="user@example.com", alias=None
+        )
+        imported_org = mock.Mock(spec=ScratchOrgConfig)
+        imported_org.config = {"username": "user@example.com"}
+        imported_org.expired = True
+        mock_import.return_value = imported_org
+        mock_set_alias.return_value = (True, None)
+
+        config.create_org()
+
+        config._create_org_via_sfdx.assert_called_once()
