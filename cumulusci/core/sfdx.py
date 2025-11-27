@@ -36,14 +36,14 @@ def _capture_to_text_stream(stream: T.Any, encoding: str) -> io.StringIO:
     if callable(getter):
         try:
             data = getter()
-        except Exception:
+        except (AttributeError, IOError, OSError, ValueError):
             data = None
     if data is None:
         reader = getattr(stream, "read", None)
         if callable(reader):
             try:
                 data = reader()
-            except Exception:
+            except (AttributeError, IOError, OSError, ValueError):
                 data = None
 
     if data is None:
