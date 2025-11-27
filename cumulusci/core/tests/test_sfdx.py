@@ -46,6 +46,26 @@ class TestSfdx:
             sfdx("cmd", check_return=True)
         assert str(exc_info.value) == "Command exited with return code 1:\nEgads!"
 
+    @mock.patch("sarge.Command")
+    def test_capture_without_flush_is_wrapped(self, Command):
+        class DummyCapture:
+            def __init__(self, payload):
+                self._payload = payload
+
+            def read(self, *_args, **_kwargs):
+                return self._payload
+
+        Command.return_value.returncode = 0
+        Command.return_value.stdout = DummyCapture(b"ok")
+        Command.return_value.stderr = DummyCapture(b"")
+
+        result = sfdx("cmd")
+
+        assert isinstance(result.stdout_text, io.StringIO)
+        assert result.stdout_text.read() == "ok"
+        result.stdout_text.seek(0)
+        assert list(result.stdout_text) == ["ok"]
+
 
 @mock.patch("sarge.Command")
 def test_get_default_devhub_username(Command):

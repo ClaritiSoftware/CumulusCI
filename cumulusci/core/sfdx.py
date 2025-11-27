@@ -19,6 +19,42 @@ from cumulusci.utils import temporary_dir
 logger = logging.getLogger(__name__)
 
 
+def _capture_to_text_stream(stream: T.Any, encoding: str) -> io.StringIO:
+    """Convert a capture stream into a readable text buffer.
+
+    sarge's Capture objects do not always implement ``flush`` on Windows,
+    which breaks ``io.TextIOWrapper``. This helper normalizes the stream
+    into an in-memory text buffer that supports the APIs the rest of CCI
+    expects (``read``, iteration, etc.) without relying on ``flush``.
+    """
+
+    if stream is None:
+        return io.StringIO("")
+
+    data: T.Any = None
+    getter = getattr(stream, "getvalue", None)
+    if callable(getter):
+        try:
+            data = getter()
+        except Exception:
+            data = None
+    if data is None:
+        reader = getattr(stream, "read", None)
+        if callable(reader):
+            try:
+                data = reader()
+            except Exception:
+                data = None
+
+    if data is None:
+        return io.StringIO("")
+    if isinstance(data, str):
+        return io.StringIO(data)
+    if isinstance(data, (bytes, bytearray)):
+        return io.StringIO(data.decode(encoding, errors="replace"))
+    return io.StringIO(str(data))
+
+
 def sfdx(
     command,
     username=None,
@@ -56,8 +92,9 @@ def sfdx(
     )
     p.run()
     if capture_output:
-        p.stdout_text = io.TextIOWrapper(p.stdout, encoding=sys.stdout.encoding)
-        p.stderr_text = io.TextIOWrapper(p.stderr, encoding=sys.stdout.encoding)
+        encoding = sys.stdout.encoding or sys.getdefaultencoding() or "utf-8"
+        p.stdout_text = _capture_to_text_stream(p.stdout, encoding)
+        p.stderr_text = _capture_to_text_stream(p.stderr, encoding)
     if check_return and p.returncode:
         message = f"Command exited with return code {p.returncode}"
         if capture_output:
