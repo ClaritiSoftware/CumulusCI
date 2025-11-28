@@ -855,6 +855,7 @@ class TestScratchOrgConfigPytest:
             {
                 "config_file": "tmp.json",
                 "org_pool_id": "Pool42",
+                "config_name": "dev",
                 "sfdx_alias": "Project__dev",
             },
             "dev",
@@ -885,6 +886,11 @@ class TestScratchOrgConfigPytest:
         assert config.config["created"] is True
         assert config.config["username"] == "user@example.com"
         assert config.config["org_id"] == "00D000000000123"
+        mock_keychain.set_org.assert_called_once()
+        saved_config = mock_keychain.set_org.call_args[0][0].config
+        assert saved_config["config_name"] == "dev"
+        assert saved_config["org_pool_id"] == "Pool42"
+        assert saved_config["days"] == imported_org.config["days"]
 
     @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
     def test_create_org_falls_back_when_checkout_fails(self, mock_checkout):

@@ -235,6 +235,14 @@ class ScratchOrgConfig(SfdxOrgConfig):
             return False
 
         self._configure_from_imported_org(imported_org, username, checkout.org_id)
+        # Persist the original scratch config (including metadata like config_name
+        # and org_pool_id) after copying over the imported org details. The import
+        # path writes a minimal SFDX config to the keychain, so we re-save the
+        # full config here to avoid losing scratch metadata.
+        if hasattr(imported_org, "_sfdx_info"):
+            self._sfdx_info = imported_org._sfdx_info
+            self._sfdx_info_date = getattr(imported_org, "_sfdx_info_date", None)
+        self.save()
 
         if self.default and alias:
             try:
