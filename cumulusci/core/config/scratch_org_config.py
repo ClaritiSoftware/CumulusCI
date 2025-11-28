@@ -145,7 +145,10 @@ class ScratchOrgConfig(SfdxOrgConfig):
         try:
             result = json.loads(stdout)
         except json.decoder.JSONDecodeError as e:
-            raise_error()
+            try:
+                raise_error()
+            except ScratchOrgException as exc:
+                raise exc from e
 
         if (
             not (res := result.get("result"))
