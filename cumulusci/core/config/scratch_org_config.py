@@ -167,7 +167,8 @@ class ScratchOrgConfig(SfdxOrgConfig):
         self.config["username"] = res["username"]
         self.config["date_created"] = datetime.datetime.utcnow()
 
-        self.logger.error(stderr)
+        if stderr.strip():
+            self.logger.debug("SFDX stderr: %s", stderr)
         self.logger.info(
             f"Created: OrgId: {self.config['org_id']}, Username:{self.config['username']}"
         )
@@ -220,9 +221,11 @@ class ScratchOrgConfig(SfdxOrgConfig):
             )
         except Exception as err:
             self.logger.warning(
-                "Failed to import Clariti org '%s': %s. Falling back to scratch creation.",
+                "Failed to import Clariti org '%s': %s (%s). "
+                "Falling back to scratch creation.",
                 username,
                 err,
+                type(err).__name__,
             )
             return False
 
