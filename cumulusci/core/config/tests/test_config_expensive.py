@@ -940,9 +940,10 @@ class TestScratchOrgConfigPytest:
         config._create_org_via_sfdx.assert_called_once()
 
     @mock.patch("cumulusci.core.config.scratch_org_config.import_sfdx_org_to_keychain")
+    @mock.patch("cumulusci.core.config.scratch_org_config.set_sf_alias")
     @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
     def test_checkout_uses_pool_org_id_when_import_missing(
-        self, mock_checkout, mock_import
+        self, mock_checkout, mock_set_alias, mock_import
     ):
         mock_keychain = mock.Mock()
         config = ScratchOrgConfig(
@@ -961,6 +962,7 @@ class TestScratchOrgConfigPytest:
         imported_org.config = {"username": "user@example.com"}
         imported_org.expired = False
         mock_import.return_value = imported_org
+        mock_set_alias.return_value = (True, None)
 
         assert config.create_org() is None
         assert config.config["org_id"] == "00DPOOL"
