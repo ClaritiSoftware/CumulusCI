@@ -232,9 +232,15 @@ class ScratchOrgConfig(SfdxOrgConfig):
                 "creation.",
                 username,
             )
+            setter = getattr(self.keychain, "_set_org", None)
+            if callable(setter):
+                setter(self, self.global_org, save=False)
             return False
 
         self._configure_from_imported_org(imported_org, username, checkout.org_id)
+        setter = getattr(self.keychain, "_set_org", None)
+        if callable(setter):
+            setter(self, self.global_org)
         # Persist the original scratch config (including metadata like config_name
         # and org_pool_id) after copying over the imported org details. The import
         # path writes a minimal SFDX config to the keychain, so we re-save the
