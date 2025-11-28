@@ -295,7 +295,9 @@ orgs:
 When `org_pool_id` is set, CumulusCI calls `sf clariti org checkout` using the
 CCI-generated alias (for example, `<project_name>__<org_name>`) and then imports
 the checked-out org into the CCI keychain. The command falls back to creating a
-fresh scratch org if the checkout fails or the pooled org is already expired.
+fresh scratch org if the checkout fails or the pooled org is already expired. Set
+`CCI_DISABLE_SCRATCH_FALLBACK=1` while you debug checkout issues to prevent new
+scratch orgs from being created.
 
 ## Use a Non-Default Dev Hub
 
