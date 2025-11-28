@@ -2,7 +2,7 @@ import io
 import os
 import shutil
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -872,7 +872,7 @@ class TestScratchOrgConfigPytest:
             "org_id": "00D000000000123",
             "instance_url": "https://example.com",
             "days": 7,
-            "date_created": datetime.utcnow(),
+            "date_created": datetime.now(timezone.utc),
         }
         imported_org.expired = False
         mock_import.return_value = imported_org
