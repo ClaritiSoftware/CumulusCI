@@ -82,6 +82,24 @@ class ScratchOrgConfig(SfdxOrgConfig):
         try:
             if self._try_checkout_pooled_org():
                 return
+            if (
+                self.config.get("org_pool_id")
+                and os.getenv("CCI_DISABLE_SCRATCH_FALLBACK", "").lower()
+                in ("1", "true", "yes", "on")
+            ):
+                self.logger.info(
+                    "Clariti checkout failed and scratch org fallback is disabled via "
+                    "CCI_DISABLE_SCRATCH_FALLBACK."
+                )
+                raise ScratchOrgException(
+                    "Clariti checkout failed and scratch org fallback is disabled via "
+                    "CCI_DISABLE_SCRATCH_FALLBACK."
+                )
+            if self.config.get("org_pool_id"):
+                self.logger.info(
+                    "Proceeding to create a new scratch org after Clariti checkout "
+                    "failure."
+                )
             self._create_org_via_sfdx()
         finally:
             self._cleanup_tmp_config()
@@ -171,10 +189,10 @@ class ScratchOrgConfig(SfdxOrgConfig):
         try:
             checkout = checkout_org_from_pool(pool_id, alias=alias)
         except ClaritiError as err:
+            suffix = f" from {pool_id}" if pool_id else ""
             self.logger.warning(
-                "Failed to checkout pooled org%s: %s. "
-                "Falling back to scratch creation.",
-                f" from {pool_id}" if pool_id else "",
+                "Failed to checkout pooled org%s: %s. Falling back to scratch creation.",
+                suffix,
                 err,
             )
             return False
@@ -199,8 +217,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
             )
         except Exception as err:
             self.logger.warning(
-                "Failed to import Clariti org '%s': %s. "
-                "Falling back to scratch creation.",
+                "Failed to import Clariti org '%s': %s. Falling back to scratch creation.",
                 username,
                 err,
             )
@@ -208,13 +225,13 @@ class ScratchOrgConfig(SfdxOrgConfig):
 
         if isinstance(imported_org, ScratchOrgConfig) and imported_org.expired:
             self.logger.warning(
-                "Clariti provided an expired org for '%s'. "
-                "Falling back to scratch creation.",
+                "Clariti provided an expired org for '%s'. Falling back to scratch "
+                "creation.",
                 username,
             )
             return False
 
-        self._configure_from_imported_org(imported_org, username)
+        self._configure_from_imported_org(imported_org, username, checkout.org_id)
 
         if self.default and alias:
             try:
@@ -228,12 +245,16 @@ class ScratchOrgConfig(SfdxOrgConfig):
 
         return True
 
-    def _configure_from_imported_org(self, imported_org, username: str) -> None:
+    def _configure_from_imported_org(
+        self, imported_org, username: str, checkout_org_id: Optional[str] = None
+    ) -> None:
         self.config["created"] = True
         self.config["username"] = imported_org.config.get("username") or username
         for key in ("org_id", "instance_url", "days", "date_created", "password"):
             if key in imported_org.config and imported_org.config[key] is not None:
                 self.config[key] = imported_org.config[key]
+        if checkout_org_id and not self.config.get("org_id"):
+            self.config["org_id"] = checkout_org_id
 
         self.logger.info(
             "Checked out pooled org: OrgId: %s, Username:%s",

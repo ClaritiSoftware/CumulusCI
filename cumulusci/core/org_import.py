@@ -35,6 +35,8 @@ def import_sfdx_org_to_keychain(
         global_org,
     )
 
+    # Suppress noisy logging while we hydrate from the Salesforce CLI keychain.
+    org_config.print_json = False
     info = org_config.sfdx_info
     if info.get("created_date"):
         org_config = ScratchOrgConfig(

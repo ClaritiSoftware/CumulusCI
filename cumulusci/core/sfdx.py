@@ -73,7 +73,12 @@ def sfdx(
     command = f"sf {command}"
     if args is not None:
         for arg in args:
-            command += " " + shell_quote(arg)
+            if arg is None:
+                raise SfdxOrgException(
+                    "sfdx command received a None argument; "
+                    "ensure all arguments are defined strings."
+                )
+            command += " " + shell_quote(str(arg))
     if username:
         command += f" -o {shell_quote(username)}"
     if log_note:
