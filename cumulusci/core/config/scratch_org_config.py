@@ -116,8 +116,8 @@ class ScratchOrgConfig(SfdxOrgConfig):
                     raise ScratchOrgException(
                         "The Salesforce CLI was unable to create a scratch org. Ensure you are connected using a valid API version on an active Dev Hub."
                     )
-            except json.decoder.JSONDecodeError:
-                raise ScratchOrgException(message)
+            except json.decoder.JSONDecodeError as e:
+                raise ScratchOrgException(message) from e
 
             raise ScratchOrgException(message)
 
@@ -126,7 +126,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
             raise_error()
         try:
             result = json.loads(stdout)
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as e:
             raise_error()
 
         if (
@@ -218,7 +218,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
 
         if self.default and alias:
             try:
-                sfdx(sarge.shell_format("force config set target-org={}", alias))
+                sfdx(sarge.shell_format("config set target-org={}", alias))
             except Exception as exc:
                 self.logger.warning(
                     "Failed to set Salesforce CLI default org '%s': %s",
