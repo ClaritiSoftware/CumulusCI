@@ -59,7 +59,7 @@ def sfdx(
     username=None,
     log_note=None,
     access_token=None,
-    args: T.Optional[T.List[str]] = None,
+    args: T.Optional[T.Sequence[T.Any]] = None,
     env=None,
     capture_output=True,
     check_return=False,
