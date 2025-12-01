@@ -2,7 +2,6 @@ import code
 import json
 import runpy
 import webbrowser
-from datetime import datetime
 from urllib.parse import urlencode, urlparse
 
 import click
@@ -10,8 +9,11 @@ from rich.console import Console
 
 from cumulusci.cli.ui import CliTable, SimpleSalesforceUIHelpers
 from cumulusci.core.config import OrgConfig, ScratchOrgConfig
-from cumulusci.core.config.sfdx_org_config import SfdxOrgConfig
-from cumulusci.core.exceptions import OrgNotFound
+from cumulusci.core.exceptions import CumulusCIException, OrgNotFound
+from cumulusci.core.org_import import (
+    import_sfdx_org_to_keychain,
+    calculate_org_days as _core_calculate_org_days,
+)
 from cumulusci.oauth.client import (
     PROD_LOGIN_URL,
     SANDBOX_LOGIN_URL,
@@ -19,10 +21,7 @@ from cumulusci.oauth.client import (
     OAuth2ClientConfig,
 )
 from cumulusci.salesforce_api.utils import get_simple_salesforce_connection
-from cumulusci.utils import parse_api_datetime
 from typing import Optional
-
-import click
 
 from cumulusci.utils.clariti import (
     ClaritiError,
@@ -341,61 +340,28 @@ def org_import(
         )
     if not org_name:
         raise click.UsageError("Please specify ORGNAME or --org ORGNAME.")
-    # Import the org from the SFDX keychain as an SfdxOrgConfig
-    # The `sfdx` key ensures we can reload using the right class.
-    org_config = SfdxOrgConfig(
-        {"username": username_or_alias, "sfdx": True},
-        org_name,
-        runtime.keychain,
-        global_org=False,
-    )
-
-    # Determine if we received a locally-created scratch org
-    # or some other org (which we'll treat as persistent)
-
-    info = org_config.sfdx_info
-    if info.get("created_date"):
-        # This is a locally-created scratch org.
-        # Re-import accordingly.
-        org_config = ScratchOrgConfig(
-            {"username": username_or_alias},
-            org_name,
+    try:
+        org_config = import_sfdx_org_to_keychain(
             runtime.keychain,
+            username_or_alias,
+            org_name,
             global_org=False,
         )
-        org_config._sfdx_info = info
-        # Set `created` so we don't try to rebuild it.
-        org_config.config["created"] = True
+    except CumulusCIException as err:
+        raise click.ClickException(str(err)) from err
 
-        org_config.config["days"] = calculate_org_days(info)
-        org_config.config["date_created"] = parse_api_datetime(info["created_date"])
-
-        org_config.save()
-        click.echo(
-            "Imported scratch org: {org_id}, username: {username}".format(
-                **org_config.sfdx_info
-            )
-        )
-    else:
-        # This is either a persistent org or a scratch org imported into the
-        # sfdx keychain via OAuth login.
-        org_config.populate_expiration_date()
-        org_config.save()
-        click.echo(
-            "Imported org: {org_id}, username: {username}".format(
-                **org_config.sfdx_info
-            )
-        )
+    message = (
+        "Imported scratch org: {org_id}, username: {username}"
+        if getattr(org_config, "scratch", False)
+        else "Imported org: {org_id}, username: {username}"
+    )
+    click.echo(message.format(**org_config.sfdx_info))
 
 
 def calculate_org_days(info):
-    """Returns the difference in days between created_date (ISO 8601),
-    and expiration_date (%Y-%m-%d)"""
-    if not info.get("created_date") or not info.get("expiration_date"):
-        return 1
-    created_date = parse_api_datetime(info["created_date"]).date()
-    expires_date = datetime.strptime(info["expiration_date"], "%Y-%m-%d").date()
-    return abs((expires_date - created_date).days)
+    """Backwards-compatible shim for legacy imports."""
+
+    return _core_calculate_org_days(info)
 
 
 @org.command(name="info", help="Display information for a connected org")

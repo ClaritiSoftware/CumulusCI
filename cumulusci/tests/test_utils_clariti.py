@@ -77,6 +77,7 @@ def test_checkout_org_from_pool_reads_nested_username(monkeypatch):
         "status": 0,
         "result": {
             "org": {"username": "nested@example.com"},
+            "orgId": "00DNested",
         },
     }
 
@@ -89,6 +90,7 @@ def test_checkout_org_from_pool_reads_nested_username(monkeypatch):
     result = checkout_org_from_pool("PoolNested")
 
     assert result.username == "nested@example.com"
+    assert result.org_id == "00DNested"
     assert result.alias is None
 
 

@@ -152,6 +152,7 @@ class ScratchOrg(CCIDictModel):
     noancestors: bool = None
     release: Literal["preview", "previous"] = None
     snapshot: str = None
+    org_pool_id: str = None
 
 
 class Orgs(CCIDictModel):

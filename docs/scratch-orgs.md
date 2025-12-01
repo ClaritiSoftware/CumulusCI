@@ -277,6 +277,28 @@ Provide either `--pool-id` **or** a Salesforce username/alias. Supplying both
 causes the command to exit with a usage error.
 ```
 
+## Org Pool Checkout
+
+If your organization uses an external org pool, you can configure a scratch org
+definition to check out from the pool instead of creating a new org by adding
+`org_pool_id` under the scratch org configuration:
+
+```yaml
+orgs:
+  scratch:
+    dev:
+      config_file: orgs/dev.json
+      days: 7
+      org_pool_id: <POOL-ID>
+```
+
+When `org_pool_id` is set, CumulusCI calls `sf clariti org checkout` using the
+CCI-generated alias (for example, `<project_name>__<org_name>`) and then imports
+the checked-out org into the CCI keychain. The command falls back to creating a
+fresh scratch org if the checkout fails or the pooled org is already expired. Set
+`CCI_DISABLE_SCRATCH_FALLBACK=1` while you debug checkout issues to prevent new
+scratch orgs from being created.
+
 ## Use a Non-Default Dev Hub
 
 By default, CumulusCI creates scratch orgs using the DevHub org

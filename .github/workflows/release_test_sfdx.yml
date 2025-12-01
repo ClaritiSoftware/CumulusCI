@@ -37,7 +37,7 @@ env:
 jobs:
     test_release:
         name: "Test SFDX CLI"
-        runs-on: SFDO-Tooling-Ubuntu
+        runs-on: ubuntu-latest
         concurrency: release
         steps:
             - uses: actions/checkout@v4

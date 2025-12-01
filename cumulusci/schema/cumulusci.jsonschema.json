@@ -439,6 +439,10 @@
                 "snapshot": {
                     "title": "Snapshot",
                     "type": "string"
+                },
+                "org_pool_id": {
+                    "title": "Org Pool Id",
+                    "type": "string"
                 }
             },
             "additionalProperties": false

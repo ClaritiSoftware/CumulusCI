@@ -2,8 +2,9 @@ import io
 import os
 import shutil
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -24,6 +25,7 @@ from cumulusci.core.exceptions import (
     SfdxOrgException,
 )
 from cumulusci.utils import cd, temporary_dir
+from cumulusci.utils.clariti import ClaritiError
 
 __location__ = os.path.dirname(os.path.realpath(__file__))
 
@@ -837,3 +839,168 @@ class TestScratchOrgConfigPytest:
         # run this in a separate process to not confuse
         # the module table
         assert os.system(f"pytest {filename}") == 0
+
+    @mock.patch("cumulusci.core.config.scratch_org_config.import_sfdx_org_to_keychain")
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    @mock.patch("cumulusci.core.config.scratch_org_config.set_sf_alias")
+    def test_create_org_uses_pooled_org(
+        self,
+        mock_set_alias,
+        mock_checkout,
+        mock_import,
+    ):
+        mock_keychain = mock.Mock()
+        mock_keychain.project_config = mock.Mock(project__name="Project")
+        config = ScratchOrgConfig(
+            {
+                "config_file": "tmp.json",
+                "org_pool_id": "Pool42",
+                "config_name": "dev",
+                "sfdx_alias": "Project__dev",
+            },
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        mock_checkout.return_value = SimpleNamespace(
+            username="user@example.com", alias="Alias", org_id="00D000000000123"
+        )
+        imported_org = ScratchOrgConfig(
+            {
+                "config_file": "tmp.json",
+                "username": "user@example.com",
+                "org_id": "00D000000000123",
+                "instance_url": "https://example.com",
+                "days": 7,
+                "date_created": datetime.now(timezone.utc),
+            },
+            "pooled-import",
+            mock_keychain,
+        )
+        assert not imported_org.expired
+        mock_import.return_value = imported_org
+        mock_set_alias.return_value = (True, None)
+
+        config.create_org()
+
+        mock_checkout.assert_called_once_with("Pool42", alias="Project__dev")
+        mock_import.assert_called_once()
+        config._create_org_via_sfdx.assert_not_called()
+        assert config.config["created"] is True
+        assert config.config["username"] == "user@example.com"
+        assert config.config["org_id"] == "00D000000000123"
+        mock_keychain.set_org.assert_called_once()
+        saved_config = mock_keychain.set_org.call_args[0][0].config
+        assert saved_config["config_name"] == "dev"
+        assert saved_config["org_pool_id"] == "Pool42"
+        assert saved_config["days"] == imported_org.config["days"]
+
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    def test_create_org_falls_back_when_checkout_fails(self, mock_checkout):
+        mock_checkout.side_effect = ClaritiError("No pooled orgs available")
+        mock_keychain = mock.Mock()
+        mock_keychain.project_config = mock.Mock(project__name="Project")
+        config = ScratchOrgConfig(
+            {"config_file": "tmp.json", "org_pool_id": "Pool42"},
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        config.create_org()
+
+        config._create_org_via_sfdx.assert_called_once()
+
+    @mock.patch("cumulusci.core.config.scratch_org_config.import_sfdx_org_to_keychain")
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    @mock.patch("cumulusci.core.config.scratch_org_config.set_sf_alias")
+    def test_create_org_falls_back_on_expired_pool_org(
+        self,
+        mock_set_alias,
+        mock_checkout,
+        mock_import,
+    ):
+        mock_keychain = mock.Mock()
+        mock_keychain.project_config = mock.Mock(project__name="Project")
+        config = ScratchOrgConfig(
+            {"config_file": "tmp.json", "org_pool_id": "Pool42"},
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        mock_checkout.return_value = SimpleNamespace(
+            username="user@example.com", alias=None
+        )
+        imported_org = ScratchOrgConfig(
+            {
+                "config_file": "tmp.json",
+                "username": "user@example.com",
+                "date_created": datetime.now(timezone.utc) - timedelta(days=8),
+                "days": 1,
+            },
+            "expired-import",
+            mock_keychain,
+        )
+        assert imported_org.expired
+        mock_import.return_value = imported_org
+        mock_set_alias.return_value = (True, None)
+
+        config.create_org()
+
+        config._create_org_via_sfdx.assert_called_once()
+
+    @mock.patch("cumulusci.core.config.scratch_org_config.import_sfdx_org_to_keychain")
+    @mock.patch("cumulusci.core.config.scratch_org_config.set_sf_alias")
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    def test_checkout_uses_pool_org_id_when_import_missing(
+        self, mock_checkout, mock_set_alias, mock_import
+    ):
+        mock_keychain = mock.Mock()
+        config = ScratchOrgConfig(
+            {"config_file": "tmp.json", "org_pool_id": "Pool42"},
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        mock_checkout.return_value = SimpleNamespace(
+            username="user@example.com",
+            alias="Alias",
+            org_id="00DPOOL",
+        )
+        imported_org = ScratchOrgConfig(
+            {
+                "config_file": "tmp.json",
+                "username": "user@example.com",
+                "date_created": datetime.now(timezone.utc),
+                "days": 3,
+            },
+            "pooled-import",
+            mock_keychain,
+        )
+        assert not imported_org.expired
+        mock_import.return_value = imported_org
+        mock_set_alias.return_value = (True, None)
+
+        assert config.create_org() is None
+        assert config.config["org_id"] == "00DPOOL"
+
+    @mock.patch.dict(os.environ, {"CCI_DISABLE_SCRATCH_FALLBACK": "1"})
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    def test_create_org_does_not_fallback_when_disabled(self, mock_checkout):
+        mock_checkout.side_effect = ClaritiError("No pooled orgs available")
+        mock_keychain = mock.Mock()
+        mock_keychain.project_config = mock.Mock(project__name="Project")
+        config = ScratchOrgConfig(
+            {"config_file": "tmp.json", "org_pool_id": "Pool42"},
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        with pytest.raises(ScratchOrgException):
+            config.create_org()
+
+        config._create_org_via_sfdx.assert_not_called()

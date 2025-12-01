@@ -87,6 +87,12 @@ _ALIAS_PATHS: Sequence[Sequence[str]] = (
     ("result", "org", "alias"),
 )
 
+_ORG_ID_PATHS: Sequence[Sequence[str]] = (
+    ("orgId",),
+    ("result", "orgId"),
+    ("result", "org", "orgId"),
+)
+
 
 def checkout_org_from_pool(
     pool_id: Optional[str],
@@ -147,7 +153,7 @@ def checkout_org_from_pool(
 
     username = cast(str, _extract_string(payload, _USERNAME_PATHS))
     alias_value = _extract_string(payload, _ALIAS_PATHS, allow_missing=True)
-    org_id_value = _extract_string(payload, (("orgId",),), allow_missing=True)
+    org_id_value = _extract_string(payload, _ORG_ID_PATHS, allow_missing=True)
     instance_url_value = _extract_string(
         payload, (("instanceUrl",),), allow_missing=True
     )
