@@ -8,7 +8,7 @@ on:
 jobs:
     test_artifacts:
         name: "Test Package Artifacts"
-        runs-on: SFDO-Tooling-Ubuntu
+        runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
             - name: Set up Python 3.11

@@ -16,7 +16,7 @@ jobs:
     docs:
         name: Build Docs
         if: ${{ github.event_name == 'pull_request' }}
-        runs-on: SFDO-Tooling-Ubuntu
+        runs-on: ubuntu-latest
         steps:
             - name: "Checkout"
               uses: actions/checkout@v4
@@ -89,7 +89,7 @@ jobs:
 
     robot_api:
         name: "Robot: No browser"
-        runs-on: SFDO-Tooling-Ubuntu
+        runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
             - name: Set up Python 3.11
