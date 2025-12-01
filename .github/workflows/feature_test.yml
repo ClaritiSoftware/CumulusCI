@@ -45,7 +45,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [macos-latest, SFDO-Tooling-Ubuntu, SFDO-Tooling-Windows]
+                os: [macos-latest, ubuntu-latest, windows-latest]
                 python-version: ["3.11", "3.12", "3.13"]
         steps:
             - uses: actions/checkout@v4
@@ -69,7 +69,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [macos-latest, SFDO-Tooling-Ubuntu, SFDO-Tooling-Windows]
+                os: [macos-latest, ubuntu-latest, windows-latest]
                 python-version: ["3.11", "3.12", "3.13"]
         steps:
             - uses: actions/checkout@v4
