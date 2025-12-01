@@ -1,9 +1,0 @@
-Upsert Contacts:
-    api: rest
-    sf_object: Contact
-    action: smart_upsert
-    update_key: FirstName
-    fields:
-        - FirstName
-        - LastName
-        - Email

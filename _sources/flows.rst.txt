@@ -1,0 +1,885 @@
+Flow Reference
+==========================================
+
+CumulusCI's suite of standard flows are grouped into various categories depending on their intended purpose.
+
+
+
+Org Setup
+---------
+These are the primary flows for doing full setup of an org.
+They typically include a flow from the Dependency Management group,
+a flow from either the Deployment or Install / Uninstall group,
+and a flow from the Post-Install Configuration group.
+
+[12/01/25 12:59:02] Optional dependencies are missing. Handling high volumes of records for the 'select' functionality will be significantly slower, as optimizations for this feature are currently disabled. To enable  
+                    optimized performance, install all required dependencies using: pip install --upgrade cumulusci[select]                                                                                               
+                                                                                                                                                                                                                          
+.. _dev-org:
+
+dev_org
+^^^^^^^
+
+**Description:** Set up an org as a development environment for unmanaged metadata
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) flow: deploy_unmanaged
+	    0) task: dx_convert_from
+	       when: project_config.project__source_format == "sfdx" and not org_config.scratch
+	    1) task: unschedule_apex
+	    2) task: update_package_xml
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3) task: deploy
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3.1) task: deploy
+	         when: project_config.project__source_format == "sfdx" and org_config.scratch
+	    4) task: uninstall_packaged_incremental
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    5) task: snapshot_changes
+	3) flow: config_dev
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+	4) task: snapshot_changes
+
+.. _dev-org-beta-deps:
+
+dev_org_beta_deps
+^^^^^^^^^^^^^^^^^
+
+**Description:** This flow is deprecated. Please use dev_org instead.
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) flow: deploy_unmanaged
+	    0) task: dx_convert_from
+	       when: project_config.project__source_format == "sfdx" and not org_config.scratch
+	    1) task: unschedule_apex
+	    2) task: update_package_xml
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3) task: deploy
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3.1) task: deploy
+	         when: project_config.project__source_format == "sfdx" and org_config.scratch
+	    4) task: uninstall_packaged_incremental
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    5) task: snapshot_changes
+	3) flow: config_dev
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+
+.. _dev-org-namespaced:
+
+dev_org_namespaced
+^^^^^^^^^^^^^^^^^^
+
+**Description:** Set up a namespaced scratch org as a development environment for unmanaged metadata
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) flow: deploy_unmanaged
+	    0) task: dx_convert_from
+	       when: project_config.project__source_format == "sfdx" and not org_config.scratch
+	    1) task: unschedule_apex
+	    2) task: update_package_xml
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3) task: deploy
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3.1) task: deploy
+	         when: project_config.project__source_format == "sfdx" and org_config.scratch
+	    4) task: uninstall_packaged_incremental
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    5) task: snapshot_changes
+	3) flow: config_dev
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+	4) task: snapshot_changes
+
+.. _install-beta:
+
+install_beta
+^^^^^^^^^^^^
+
+**Description:** Install and configure the latest beta version
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) task: install_managed_beta
+	3) flow: config_managed
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+	4) task: snapshot_changes
+
+.. _install-prod:
+
+install_prod
+^^^^^^^^^^^^
+
+**Description:** Install and configure the latest production version
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) task: install_managed
+	3) flow: config_managed
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+	4) task: snapshot_changes
+
+.. _qa-org:
+
+qa_org
+^^^^^^
+
+**Description:** Set up an org as a QA environment for unmanaged metadata
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) flow: deploy_unmanaged
+	    0) task: dx_convert_from
+	       when: project_config.project__source_format == "sfdx" and not org_config.scratch
+	    1) task: unschedule_apex
+	    2) task: update_package_xml
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3) task: deploy
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3.1) task: deploy
+	         when: project_config.project__source_format == "sfdx" and org_config.scratch
+	    4) task: uninstall_packaged_incremental
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    5) task: snapshot_changes
+	3) flow: config_qa
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+	4) task: snapshot_changes
+
+.. _qa-org-2gp:
+
+qa_org_2gp
+^^^^^^^^^^
+
+**Description:** Set up an org as a QA environment using a second-generation package
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: install_2gp_commit
+	    1) task: github_package_data
+	    2) flow: dependencies
+	        1) task: update_dependencies
+	        2) task: deploy_pre
+	    3) task: install_managed
+	2) flow: config_qa
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+	3) task: snapshot_changes
+
+.. _qa-org-unlocked:
+
+qa_org_unlocked
+^^^^^^^^^^^^^^^
+
+**Description:** Set up an org as a QA environment using an unlocked package
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: install_unlocked_commit
+	    1) task: github_package_data
+	    2) flow: dependencies
+	        1) task: update_dependencies
+	        2) task: deploy_pre
+	    3) task: install_managed
+	2) flow: config_qa
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+	3) task: snapshot_changes
+
+.. _regression-org:
+
+regression_org
+^^^^^^^^^^^^^^
+
+**Description:** Simulates an org that has been upgraded from the latest release of to the current beta and its dependencies, but deploys any unmanaged metadata from the current beta.
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: install_regression
+	    1) flow: dependencies
+	        1) task: update_dependencies
+	        2) task: deploy_pre
+	    2) task: install_managed
+	    3) task: install_managed_beta
+	2) flow: config_regression
+	    1) flow: config_managed
+	        1) task: deploy_post
+	        2) task: update_admin_profile
+	        90) task: load_sample_data
+	3) task: snapshot_changes
+
+Dependency Management
+---------------------
+These flows deploy dependencies (base packages and unmanaged metadata) to a target org environment.
+
+.. _beta-dependencies:
+
+beta_dependencies
+^^^^^^^^^^^^^^^^^
+
+**Description:** This flow is deprecated. Please use the `dependencies` flow and set the `include_beta` option on the first task, `update_dependencies`. Deploy the latest (beta) version of dependencies to prepare the org environment for the package metadata
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: update_dependencies
+	2) task: deploy_pre
+
+.. _dependencies:
+
+dependencies
+^^^^^^^^^^^^
+
+**Description:** Deploy dependencies to prepare the org environment for the package metadata
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: update_dependencies
+	2) task: deploy_pre
+
+Deployment
+----------
+These flows deploy the main package metadata to a target org environment.
+
+.. _deploy-packaging:
+
+deploy_packaging
+^^^^^^^^^^^^^^^^
+
+**Description:** Process and deploy the package metadata to the packaging org
+
+**Flow Steps**
+
+.. code-block:: console
+
+	0) task: dx_convert_from
+	   when: project_config.project__source_format == "sfdx"
+	1) task: unschedule_apex
+	2) task: create_managed_src
+	3) task: update_package_xml
+	4) task: deploy
+	5) task: revert_managed_src
+	6) task: uninstall_packaged_incremental
+
+.. _deploy-unmanaged:
+
+deploy_unmanaged
+^^^^^^^^^^^^^^^^
+
+**Description:** Deploy the unmanaged metadata from the package
+
+**Flow Steps**
+
+.. code-block:: console
+
+	0) task: dx_convert_from
+	   when: project_config.project__source_format == "sfdx" and not org_config.scratch
+	1) task: unschedule_apex
+	2) task: update_package_xml
+	   when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	3) task: deploy
+	   when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	3.1) task: deploy
+	     when: project_config.project__source_format == "sfdx" and org_config.scratch
+	4) task: uninstall_packaged_incremental
+	   when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	5) task: snapshot_changes
+
+.. _deploy-unmanaged-ee:
+
+deploy_unmanaged_ee
+^^^^^^^^^^^^^^^^^^^
+
+**Description:** Deploy the unmanaged metadata from the package to an Enterprise Edition org
+
+**Flow Steps**
+
+.. code-block:: console
+
+	0) task: dx_convert_from
+	   when: project_config.project__source_format == "sfdx"
+	1) task: unschedule_apex
+	2) task: update_package_xml
+	3) task: create_unmanaged_ee_src
+	4) task: deploy
+	5) task: revert_unmanaged_ee_src
+	6) task: uninstall_packaged_incremental
+
+.. _unmanaged-ee:
+
+unmanaged_ee
+^^^^^^^^^^^^
+
+**Description:** Deploy the unmanaged package metadata and all dependencies to the target EE org
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) flow: deploy_unmanaged_ee
+	    0) task: dx_convert_from
+	       when: project_config.project__source_format == "sfdx"
+	    1) task: unschedule_apex
+	    2) task: update_package_xml
+	    3) task: create_unmanaged_ee_src
+	    4) task: deploy
+	    5) task: revert_unmanaged_ee_src
+	    6) task: uninstall_packaged_incremental
+
+Install / Uninstall
+-------------------
+These flows handle package installation and uninstallation in particular scenarios.
+
+.. _install-2gp-commit:
+
+install_2gp_commit
+^^^^^^^^^^^^^^^^^^
+
+**Description:** Install the 2GP package for the current commit
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: github_package_data
+	2) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	3) task: install_managed
+
+.. _install-prod-no-config:
+
+install_prod_no_config
+^^^^^^^^^^^^^^^^^^^^^^
+
+**Description:** Install but do not configure the latest production version
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) task: install_managed
+	3) task: deploy_post
+
+.. _install-regression:
+
+install_regression
+^^^^^^^^^^^^^^^^^^
+
+**Description:** Install the latest beta dependencies and upgrade to the latest beta version from the most recent production version
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) task: install_managed
+	3) task: install_managed_beta
+
+.. _install-unlocked-commit:
+
+install_unlocked_commit
+^^^^^^^^^^^^^^^^^^^^^^^
+
+**Description:** Install the unlocked package for the current commit
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: github_package_data
+	2) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	3) task: install_managed
+
+.. _uninstall-managed:
+
+uninstall_managed
+^^^^^^^^^^^^^^^^^
+
+**Description:** Uninstall the installed managed version of the package.  Run this before install_beta or install_prod if a version is already installed in the target org.
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: uninstall_post
+	2) task: uninstall_managed
+
+Post-Install Configuration
+--------------------------
+These flows perform configuration after the main package has been installed or deployed.
+
+.. _config-apextest:
+
+config_apextest
+^^^^^^^^^^^^^^^
+
+**Description:** Configure an org to run apex tests after package metadata is deployed
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: deploy_post
+	2) task: update_admin_profile
+
+.. _config-dev:
+
+config_dev
+^^^^^^^^^^
+
+**Description:** Configure an org for use as a dev org after package metadata is deployed
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: deploy_post
+	2) task: update_admin_profile
+	90) task: load_sample_data
+
+.. _config-managed:
+
+config_managed
+^^^^^^^^^^^^^^
+
+**Description:** Configure an org for use after the managed package has been installed.
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: deploy_post
+	2) task: update_admin_profile
+	90) task: load_sample_data
+
+.. _config-packaging:
+
+config_packaging
+^^^^^^^^^^^^^^^^
+
+**Description:** Configure packaging org for upload after package metadata is deployed
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: update_admin_profile
+
+.. _config-qa:
+
+config_qa
+^^^^^^^^^
+
+**Description:** Configure an org for use as a QA org after package metadata is deployed
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: deploy_post
+	2) task: update_admin_profile
+	90) task: load_sample_data
+
+.. _config-regression:
+
+config_regression
+^^^^^^^^^^^^^^^^^
+
+**Description:** Configure an org for QA regression after the package is installed
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: config_managed
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+
+Continuous Integration
+----------------------
+These flows are designed to be run automatically by a continuous integration (CI) system
+in response to new commits. They typically set up an org and run Apex tests.
+
+.. _ci-beta:
+
+ci_beta
+^^^^^^^
+
+**Description:** Install the latest beta version and runs apex tests from the managed package
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: install_beta
+	    1) flow: dependencies
+	        1) task: update_dependencies
+	        2) task: deploy_pre
+	    2) task: install_managed_beta
+	    3) flow: config_managed
+	        1) task: deploy_post
+	        2) task: update_admin_profile
+	        90) task: load_sample_data
+	    4) task: snapshot_changes
+	2) task: run_tests
+
+.. _ci-feature:
+
+ci_feature
+^^^^^^^^^^
+
+**Description:** Prepare an unmanaged metadata test org and run Apex tests. Intended for use against feature branch commits.
+
+**Flow Steps**
+
+.. code-block:: console
+
+	0.5) task: github_parent_pr_notes
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) flow: deploy_unmanaged
+	    0) task: dx_convert_from
+	       when: project_config.project__source_format == "sfdx" and not org_config.scratch
+	    1) task: unschedule_apex
+	    2) task: update_package_xml
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3) task: deploy
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3.1) task: deploy
+	         when: project_config.project__source_format == "sfdx" and org_config.scratch
+	    4) task: uninstall_packaged_incremental
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    5) task: snapshot_changes
+	3) flow: config_apextest
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	4) task: run_tests
+	5) task: github_automerge_feature
+	   when: project_config.repo_branch and project_config.repo_branch.startswith(project_config.project__git__prefix_feature)
+
+.. _ci-feature-2gp:
+
+ci_feature_2gp
+^^^^^^^^^^^^^^
+
+**Description:** Install as a managed 2gp package and run Apex tests. Intended for use after build_feature_test_package.
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: install_2gp_commit
+	    1) task: github_package_data
+	    2) flow: dependencies
+	        1) task: update_dependencies
+	        2) task: deploy_pre
+	    3) task: install_managed
+	2) flow: config_apextest
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	3) task: run_tests
+
+.. _ci-feature-beta-deps:
+
+ci_feature_beta_deps
+^^^^^^^^^^^^^^^^^^^^
+
+**Description:** This flow is deprecated. Please use ci_feature instead.
+
+**Flow Steps**
+
+.. code-block:: console
+
+	0.5) task: github_parent_pr_notes
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) flow: deploy_unmanaged
+	    0) task: dx_convert_from
+	       when: project_config.project__source_format == "sfdx" and not org_config.scratch
+	    1) task: unschedule_apex
+	    2) task: update_package_xml
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3) task: deploy
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    3.1) task: deploy
+	         when: project_config.project__source_format == "sfdx" and org_config.scratch
+	    4) task: uninstall_packaged_incremental
+	       when: project_config.project__source_format != "sfdx" or not org_config.scratch
+	    5) task: snapshot_changes
+	3) flow: config_apextest
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	4) task: run_tests
+	5) task: github_automerge_feature
+	   when: project_config.repo_branch and project_config.repo_branch.startswith(project_config.project__git__prefix_feature)
+
+.. _ci-master:
+
+ci_master
+^^^^^^^^^
+
+**Description:** Deploy the package metadata to the packaging org and prepare for managed package version upload.  Intended for use against main branch commits.
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) flow: deploy_packaging
+	    0) task: dx_convert_from
+	       when: project_config.project__source_format == "sfdx"
+	    1) task: unschedule_apex
+	    2) task: create_managed_src
+	    3) task: update_package_xml
+	    4) task: deploy
+	    5) task: revert_managed_src
+	    6) task: uninstall_packaged_incremental
+	3) flow: config_packaging
+	    1) task: update_admin_profile
+
+.. _ci-release:
+
+ci_release
+^^^^^^^^^^
+
+**Description:** Install a production release version and runs tests from the managed package
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: install_prod
+	    1) flow: dependencies
+	        1) task: update_dependencies
+	        2) task: deploy_pre
+	    2) task: install_managed
+	    3) flow: config_managed
+	        1) task: deploy_post
+	        2) task: update_admin_profile
+	        90) task: load_sample_data
+	    4) task: snapshot_changes
+	2) task: run_tests
+
+Release Operations
+------------------
+These flows are used to release new package versions.
+
+.. _build-feature-test-package:
+
+build_feature_test_package
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Description:** Create a 2gp managed package version
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: update_package_xml
+	   when: project_config.project__source_format != "sfdx"
+	2) task: create_package_version
+
+.. _build-unlocked-test-package:
+
+build_unlocked_test_package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Description:** Create an Unlocked package version
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: update_package_xml
+	   when: project_config.project__source_format != "sfdx"
+	2) task: create_package_version
+	3) task: promote_package_version
+
+.. _release-2gp-beta:
+
+release_2gp_beta
+^^^^^^^^^^^^^^^^
+
+**Description:** Upload and release a beta 2gp managed package version
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: create_package_version
+	2) task: github_release
+	3) task: github_release_notes
+	4) task: github_automerge_main
+
+.. _release-2gp-production:
+
+release_2gp_production
+^^^^^^^^^^^^^^^^^^^^^^
+
+**Description:** Promote the latest beta 2gp managed package version and create a new release in GitHub
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: promote_package_version
+	2) task: github_release
+	3) task: github_release_notes
+
+.. _release-beta:
+
+release_beta
+^^^^^^^^^^^^
+
+**Description:** Upload and release a beta version of the metadata currently in packaging
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: upload_beta
+	2) task: github_release
+	3) task: github_release_notes
+	4) task: github_automerge_main
+
+.. _release-production:
+
+release_production
+^^^^^^^^^^^^^^^^^^
+
+**Description:** Upload and release a production version of the metadata currently in packaging
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: upload_production
+	2) task: github_release
+	3) task: github_release_notes
+
+.. _release-unlocked-beta:
+
+release_unlocked_beta
+^^^^^^^^^^^^^^^^^^^^^
+
+**Description:** Upload and release a beta 2gp unlocked package version
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: create_package_version
+	2) task: github_release
+	3) task: github_release_notes
+	4) task: github_automerge_main
+
+.. _release-unlocked-production:
+
+release_unlocked_production
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Description:** Promote the latest beta 2GP unlocked package version and create a new release in GitHub
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) task: promote_package_version
+	2) task: github_release
+	3) task: github_release_notes
+
+Other
+-----
+This is a catch-all group for any flows without a designated "group" attribute in ``cumulusci.yml``.
+
+.. _push-upgrade-org:
+
+push_upgrade_org
+^^^^^^^^^^^^^^^^
+
+**Description:** 
+
+**Flow Steps**
+
+.. code-block:: console
+
+	1) flow: dependencies
+	    1) task: update_dependencies
+	    2) task: deploy_pre
+	2) task: install_managed
+	3) task: update_dependencies
+	4) task: install_managed_beta
+	5) flow: config_qa
+	    1) task: deploy_post
+	    2) task: update_admin_profile
+	    90) task: load_sample_data
+

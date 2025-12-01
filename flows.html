@@ -1,0 +1,1109 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="about.html" /><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Environment Variables" href="env-var-reference.html" /><link rel="prev" title="Cheat Sheet" href="cheat-sheet.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>Flow Reference - CumulusCI 4.6.0.dev1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">CumulusCI 4.6.0.dev1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">CumulusCI 4.6.0.dev1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Key Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get-started.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">The <code class="docutils literal notranslate"><span class="pre">cci</span></code> Command Line</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="config.html">Configure CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Configure CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="deploy.html">Configure Metadata Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scratch-orgs.html">Manage Scratch Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connected-orgs.html">Connect Persistent Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Develop a Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Automate Data Operations</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="robot.html">Acceptance Testing with Robot Framework</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Acceptance Testing with Robot Framework</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="robot-locators.html">Managing Locators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-advanced.html">Robot Advanced Topics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-tutorial.html">Robot Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-debugger.html">Robot Debugger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-playwright.html">Playwright Technology Preview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="continuous-integration.html">Continuous Integration</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Continuous Integration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cumulusci-flow.html">CumulusCI Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="github-actions.html">Run CumulusCI from GitHub Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="2gp-testing.html">Testing with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="headless.html">Run CumulusCI Headlessly</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="packaging.html">Release Managed and Unlocked Packages</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Release Managed and Unlocked Packages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="managed-package.html">Release a First-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="managed-2gp.html">Release a Second-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unlocked-package.html">Release an Unlocked Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="npsp-eda-2gp.html">Extend NPSP and EDA with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-notes.html">Generate Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-upgrades.html">Manage Push Upgrades</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="unpackaged.html">Manage Unpackaged Configuration</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Manage Unpackaged Configuration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="metadata-etl.html">Metadata ETL</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="reference.html">Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cheat-sheet.html">Cheat Sheet</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Flow Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env-var-reference.html">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="org_config-reference.html">org_config Object Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="about.html">About CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of About CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contribute to CumulusCI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/flows.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="flow-reference">
+<h1>Flow Reference<a class="headerlink" href="#flow-reference" title="Link to this heading">¶</a></h1>
+<p>CumulusCI’s suite of standard flows are grouped into various categories depending on their intended purpose.</p>
+<section id="org-setup">
+<h2>Org Setup<a class="headerlink" href="#org-setup" title="Link to this heading">¶</a></h2>
+<p>These are the primary flows for doing full setup of an org.
+They typically include a flow from the Dependency Management group,
+a flow from either the Deployment or Install / Uninstall group,
+and a flow from the Post-Install Configuration group.</p>
+<dl class="simple">
+<dt>[12/01/25 12:59:02] Optional dependencies are missing. Handling high volumes of records for the ‘select’ functionality will be significantly slower, as optimizations for this feature are currently disabled. To enable</dt><dd><p>optimized performance, install all required dependencies using: pip install –upgrade cumulusci[select]</p>
+</dd>
+</dl>
+<section id="dev-org">
+<span id="id1"></span><h3>dev_org<a class="headerlink" href="#dev-org" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Set up an org as a development environment for unmanaged metadata</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) flow: deploy_unmanaged</span>
+<span class="go">    0) task: dx_convert_from</span>
+<span class="go">       when: project_config.project__source_format == &quot;sfdx&quot; and not org_config.scratch</span>
+<span class="go">    1) task: unschedule_apex</span>
+<span class="go">    2) task: update_package_xml</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3) task: deploy</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3.1) task: deploy</span>
+<span class="go">         when: project_config.project__source_format == &quot;sfdx&quot; and org_config.scratch</span>
+<span class="go">    4) task: uninstall_packaged_incremental</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    5) task: snapshot_changes</span>
+<span class="go">3) flow: config_dev</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+<span class="go">4) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+<section id="dev-org-beta-deps">
+<span id="id2"></span><h3>dev_org_beta_deps<a class="headerlink" href="#dev-org-beta-deps" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> This flow is deprecated. Please use dev_org instead.</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) flow: deploy_unmanaged</span>
+<span class="go">    0) task: dx_convert_from</span>
+<span class="go">       when: project_config.project__source_format == &quot;sfdx&quot; and not org_config.scratch</span>
+<span class="go">    1) task: unschedule_apex</span>
+<span class="go">    2) task: update_package_xml</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3) task: deploy</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3.1) task: deploy</span>
+<span class="go">         when: project_config.project__source_format == &quot;sfdx&quot; and org_config.scratch</span>
+<span class="go">    4) task: uninstall_packaged_incremental</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    5) task: snapshot_changes</span>
+<span class="go">3) flow: config_dev</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+</pre></div>
+</div>
+</section>
+<section id="dev-org-namespaced">
+<span id="id3"></span><h3>dev_org_namespaced<a class="headerlink" href="#dev-org-namespaced" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Set up a namespaced scratch org as a development environment for unmanaged metadata</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) flow: deploy_unmanaged</span>
+<span class="go">    0) task: dx_convert_from</span>
+<span class="go">       when: project_config.project__source_format == &quot;sfdx&quot; and not org_config.scratch</span>
+<span class="go">    1) task: unschedule_apex</span>
+<span class="go">    2) task: update_package_xml</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3) task: deploy</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3.1) task: deploy</span>
+<span class="go">         when: project_config.project__source_format == &quot;sfdx&quot; and org_config.scratch</span>
+<span class="go">    4) task: uninstall_packaged_incremental</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    5) task: snapshot_changes</span>
+<span class="go">3) flow: config_dev</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+<span class="go">4) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+<section id="install-beta">
+<span id="id4"></span><h3>install_beta<a class="headerlink" href="#install-beta" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install and configure the latest beta version</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) task: install_managed_beta</span>
+<span class="go">3) flow: config_managed</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+<span class="go">4) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+<section id="install-prod">
+<span id="id5"></span><h3>install_prod<a class="headerlink" href="#install-prod" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install and configure the latest production version</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) task: install_managed</span>
+<span class="go">3) flow: config_managed</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+<span class="go">4) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+<section id="qa-org">
+<span id="id6"></span><h3>qa_org<a class="headerlink" href="#qa-org" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Set up an org as a QA environment for unmanaged metadata</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) flow: deploy_unmanaged</span>
+<span class="go">    0) task: dx_convert_from</span>
+<span class="go">       when: project_config.project__source_format == &quot;sfdx&quot; and not org_config.scratch</span>
+<span class="go">    1) task: unschedule_apex</span>
+<span class="go">    2) task: update_package_xml</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3) task: deploy</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3.1) task: deploy</span>
+<span class="go">         when: project_config.project__source_format == &quot;sfdx&quot; and org_config.scratch</span>
+<span class="go">    4) task: uninstall_packaged_incremental</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    5) task: snapshot_changes</span>
+<span class="go">3) flow: config_qa</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+<span class="go">4) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+<section id="qa-org-2gp">
+<span id="id7"></span><h3>qa_org_2gp<a class="headerlink" href="#qa-org-2gp" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Set up an org as a QA environment using a second-generation package</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: install_2gp_commit</span>
+<span class="go">    1) task: github_package_data</span>
+<span class="go">    2) flow: dependencies</span>
+<span class="go">        1) task: update_dependencies</span>
+<span class="go">        2) task: deploy_pre</span>
+<span class="go">    3) task: install_managed</span>
+<span class="go">2) flow: config_qa</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+<span class="go">3) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+<section id="qa-org-unlocked">
+<span id="id8"></span><h3>qa_org_unlocked<a class="headerlink" href="#qa-org-unlocked" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Set up an org as a QA environment using an unlocked package</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: install_unlocked_commit</span>
+<span class="go">    1) task: github_package_data</span>
+<span class="go">    2) flow: dependencies</span>
+<span class="go">        1) task: update_dependencies</span>
+<span class="go">        2) task: deploy_pre</span>
+<span class="go">    3) task: install_managed</span>
+<span class="go">2) flow: config_qa</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+<span class="go">3) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+<section id="regression-org">
+<span id="id9"></span><h3>regression_org<a class="headerlink" href="#regression-org" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Simulates an org that has been upgraded from the latest release of to the current beta and its dependencies, but deploys any unmanaged metadata from the current beta.</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: install_regression</span>
+<span class="go">    1) flow: dependencies</span>
+<span class="go">        1) task: update_dependencies</span>
+<span class="go">        2) task: deploy_pre</span>
+<span class="go">    2) task: install_managed</span>
+<span class="go">    3) task: install_managed_beta</span>
+<span class="go">2) flow: config_regression</span>
+<span class="go">    1) flow: config_managed</span>
+<span class="go">        1) task: deploy_post</span>
+<span class="go">        2) task: update_admin_profile</span>
+<span class="go">        90) task: load_sample_data</span>
+<span class="go">3) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="dependency-management">
+<h2>Dependency Management<a class="headerlink" href="#dependency-management" title="Link to this heading">¶</a></h2>
+<p>These flows deploy dependencies (base packages and unmanaged metadata) to a target org environment.</p>
+<section id="beta-dependencies">
+<span id="id10"></span><h3>beta_dependencies<a class="headerlink" href="#beta-dependencies" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> This flow is deprecated. Please use the <cite>dependencies</cite> flow and set the <cite>include_beta</cite> option on the first task, <cite>update_dependencies</cite>. Deploy the latest (beta) version of dependencies to prepare the org environment for the package metadata</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: update_dependencies</span>
+<span class="go">2) task: deploy_pre</span>
+</pre></div>
+</div>
+</section>
+<section id="dependencies">
+<span id="id11"></span><h3>dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Deploy dependencies to prepare the org environment for the package metadata</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: update_dependencies</span>
+<span class="go">2) task: deploy_pre</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Link to this heading">¶</a></h2>
+<p>These flows deploy the main package metadata to a target org environment.</p>
+<section id="deploy-packaging">
+<span id="id12"></span><h3>deploy_packaging<a class="headerlink" href="#deploy-packaging" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Process and deploy the package metadata to the packaging org</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">0) task: dx_convert_from</span>
+<span class="go">   when: project_config.project__source_format == &quot;sfdx&quot;</span>
+<span class="go">1) task: unschedule_apex</span>
+<span class="go">2) task: create_managed_src</span>
+<span class="go">3) task: update_package_xml</span>
+<span class="go">4) task: deploy</span>
+<span class="go">5) task: revert_managed_src</span>
+<span class="go">6) task: uninstall_packaged_incremental</span>
+</pre></div>
+</div>
+</section>
+<section id="deploy-unmanaged">
+<span id="id13"></span><h3>deploy_unmanaged<a class="headerlink" href="#deploy-unmanaged" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Deploy the unmanaged metadata from the package</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">0) task: dx_convert_from</span>
+<span class="go">   when: project_config.project__source_format == &quot;sfdx&quot; and not org_config.scratch</span>
+<span class="go">1) task: unschedule_apex</span>
+<span class="go">2) task: update_package_xml</span>
+<span class="go">   when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">3) task: deploy</span>
+<span class="go">   when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">3.1) task: deploy</span>
+<span class="go">     when: project_config.project__source_format == &quot;sfdx&quot; and org_config.scratch</span>
+<span class="go">4) task: uninstall_packaged_incremental</span>
+<span class="go">   when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">5) task: snapshot_changes</span>
+</pre></div>
+</div>
+</section>
+<section id="deploy-unmanaged-ee">
+<span id="id14"></span><h3>deploy_unmanaged_ee<a class="headerlink" href="#deploy-unmanaged-ee" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Deploy the unmanaged metadata from the package to an Enterprise Edition org</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">0) task: dx_convert_from</span>
+<span class="go">   when: project_config.project__source_format == &quot;sfdx&quot;</span>
+<span class="go">1) task: unschedule_apex</span>
+<span class="go">2) task: update_package_xml</span>
+<span class="go">3) task: create_unmanaged_ee_src</span>
+<span class="go">4) task: deploy</span>
+<span class="go">5) task: revert_unmanaged_ee_src</span>
+<span class="go">6) task: uninstall_packaged_incremental</span>
+</pre></div>
+</div>
+</section>
+<section id="unmanaged-ee">
+<span id="id15"></span><h3>unmanaged_ee<a class="headerlink" href="#unmanaged-ee" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Deploy the unmanaged package metadata and all dependencies to the target EE org</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) flow: deploy_unmanaged_ee</span>
+<span class="go">    0) task: dx_convert_from</span>
+<span class="go">       when: project_config.project__source_format == &quot;sfdx&quot;</span>
+<span class="go">    1) task: unschedule_apex</span>
+<span class="go">    2) task: update_package_xml</span>
+<span class="go">    3) task: create_unmanaged_ee_src</span>
+<span class="go">    4) task: deploy</span>
+<span class="go">    5) task: revert_unmanaged_ee_src</span>
+<span class="go">    6) task: uninstall_packaged_incremental</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="install-uninstall">
+<h2>Install / Uninstall<a class="headerlink" href="#install-uninstall" title="Link to this heading">¶</a></h2>
+<p>These flows handle package installation and uninstallation in particular scenarios.</p>
+<section id="install-2gp-commit">
+<span id="id16"></span><h3>install_2gp_commit<a class="headerlink" href="#install-2gp-commit" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install the 2GP package for the current commit</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: github_package_data</span>
+<span class="go">2) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">3) task: install_managed</span>
+</pre></div>
+</div>
+</section>
+<section id="install-prod-no-config">
+<span id="id17"></span><h3>install_prod_no_config<a class="headerlink" href="#install-prod-no-config" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install but do not configure the latest production version</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) task: install_managed</span>
+<span class="go">3) task: deploy_post</span>
+</pre></div>
+</div>
+</section>
+<section id="install-regression">
+<span id="id18"></span><h3>install_regression<a class="headerlink" href="#install-regression" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install the latest beta dependencies and upgrade to the latest beta version from the most recent production version</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) task: install_managed</span>
+<span class="go">3) task: install_managed_beta</span>
+</pre></div>
+</div>
+</section>
+<section id="install-unlocked-commit">
+<span id="id19"></span><h3>install_unlocked_commit<a class="headerlink" href="#install-unlocked-commit" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install the unlocked package for the current commit</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: github_package_data</span>
+<span class="go">2) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">3) task: install_managed</span>
+</pre></div>
+</div>
+</section>
+<section id="uninstall-managed">
+<span id="id20"></span><h3>uninstall_managed<a class="headerlink" href="#uninstall-managed" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Uninstall the installed managed version of the package.  Run this before install_beta or install_prod if a version is already installed in the target org.</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: uninstall_post</span>
+<span class="go">2) task: uninstall_managed</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="post-install-configuration">
+<h2>Post-Install Configuration<a class="headerlink" href="#post-install-configuration" title="Link to this heading">¶</a></h2>
+<p>These flows perform configuration after the main package has been installed or deployed.</p>
+<section id="config-apextest">
+<span id="id21"></span><h3>config_apextest<a class="headerlink" href="#config-apextest" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Configure an org to run apex tests after package metadata is deployed</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: deploy_post</span>
+<span class="go">2) task: update_admin_profile</span>
+</pre></div>
+</div>
+</section>
+<section id="config-dev">
+<span id="id22"></span><h3>config_dev<a class="headerlink" href="#config-dev" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Configure an org for use as a dev org after package metadata is deployed</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: deploy_post</span>
+<span class="go">2) task: update_admin_profile</span>
+<span class="go">90) task: load_sample_data</span>
+</pre></div>
+</div>
+</section>
+<section id="config-managed">
+<span id="id23"></span><h3>config_managed<a class="headerlink" href="#config-managed" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Configure an org for use after the managed package has been installed.</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: deploy_post</span>
+<span class="go">2) task: update_admin_profile</span>
+<span class="go">90) task: load_sample_data</span>
+</pre></div>
+</div>
+</section>
+<section id="config-packaging">
+<span id="id24"></span><h3>config_packaging<a class="headerlink" href="#config-packaging" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Configure packaging org for upload after package metadata is deployed</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: update_admin_profile</span>
+</pre></div>
+</div>
+</section>
+<section id="config-qa">
+<span id="id25"></span><h3>config_qa<a class="headerlink" href="#config-qa" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Configure an org for use as a QA org after package metadata is deployed</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: deploy_post</span>
+<span class="go">2) task: update_admin_profile</span>
+<span class="go">90) task: load_sample_data</span>
+</pre></div>
+</div>
+</section>
+<section id="config-regression">
+<span id="id26"></span><h3>config_regression<a class="headerlink" href="#config-regression" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Configure an org for QA regression after the package is installed</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: config_managed</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="continuous-integration">
+<h2>Continuous Integration<a class="headerlink" href="#continuous-integration" title="Link to this heading">¶</a></h2>
+<p>These flows are designed to be run automatically by a continuous integration (CI) system
+in response to new commits. They typically set up an org and run Apex tests.</p>
+<section id="ci-beta">
+<span id="id27"></span><h3>ci_beta<a class="headerlink" href="#ci-beta" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install the latest beta version and runs apex tests from the managed package</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: install_beta</span>
+<span class="go">    1) flow: dependencies</span>
+<span class="go">        1) task: update_dependencies</span>
+<span class="go">        2) task: deploy_pre</span>
+<span class="go">    2) task: install_managed_beta</span>
+<span class="go">    3) flow: config_managed</span>
+<span class="go">        1) task: deploy_post</span>
+<span class="go">        2) task: update_admin_profile</span>
+<span class="go">        90) task: load_sample_data</span>
+<span class="go">    4) task: snapshot_changes</span>
+<span class="go">2) task: run_tests</span>
+</pre></div>
+</div>
+</section>
+<section id="ci-feature">
+<span id="id28"></span><h3>ci_feature<a class="headerlink" href="#ci-feature" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Prepare an unmanaged metadata test org and run Apex tests. Intended for use against feature branch commits.</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">0.5) task: github_parent_pr_notes</span>
+<span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) flow: deploy_unmanaged</span>
+<span class="go">    0) task: dx_convert_from</span>
+<span class="go">       when: project_config.project__source_format == &quot;sfdx&quot; and not org_config.scratch</span>
+<span class="go">    1) task: unschedule_apex</span>
+<span class="go">    2) task: update_package_xml</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3) task: deploy</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3.1) task: deploy</span>
+<span class="go">         when: project_config.project__source_format == &quot;sfdx&quot; and org_config.scratch</span>
+<span class="go">    4) task: uninstall_packaged_incremental</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    5) task: snapshot_changes</span>
+<span class="go">3) flow: config_apextest</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">4) task: run_tests</span>
+<span class="go">5) task: github_automerge_feature</span>
+<span class="go">   when: project_config.repo_branch and project_config.repo_branch.startswith(project_config.project__git__prefix_feature)</span>
+</pre></div>
+</div>
+</section>
+<section id="ci-feature-2gp">
+<span id="id29"></span><h3>ci_feature_2gp<a class="headerlink" href="#ci-feature-2gp" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install as a managed 2gp package and run Apex tests. Intended for use after build_feature_test_package.</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: install_2gp_commit</span>
+<span class="go">    1) task: github_package_data</span>
+<span class="go">    2) flow: dependencies</span>
+<span class="go">        1) task: update_dependencies</span>
+<span class="go">        2) task: deploy_pre</span>
+<span class="go">    3) task: install_managed</span>
+<span class="go">2) flow: config_apextest</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">3) task: run_tests</span>
+</pre></div>
+</div>
+</section>
+<section id="ci-feature-beta-deps">
+<span id="id30"></span><h3>ci_feature_beta_deps<a class="headerlink" href="#ci-feature-beta-deps" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> This flow is deprecated. Please use ci_feature instead.</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">0.5) task: github_parent_pr_notes</span>
+<span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) flow: deploy_unmanaged</span>
+<span class="go">    0) task: dx_convert_from</span>
+<span class="go">       when: project_config.project__source_format == &quot;sfdx&quot; and not org_config.scratch</span>
+<span class="go">    1) task: unschedule_apex</span>
+<span class="go">    2) task: update_package_xml</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3) task: deploy</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    3.1) task: deploy</span>
+<span class="go">         when: project_config.project__source_format == &quot;sfdx&quot; and org_config.scratch</span>
+<span class="go">    4) task: uninstall_packaged_incremental</span>
+<span class="go">       when: project_config.project__source_format != &quot;sfdx&quot; or not org_config.scratch</span>
+<span class="go">    5) task: snapshot_changes</span>
+<span class="go">3) flow: config_apextest</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">4) task: run_tests</span>
+<span class="go">5) task: github_automerge_feature</span>
+<span class="go">   when: project_config.repo_branch and project_config.repo_branch.startswith(project_config.project__git__prefix_feature)</span>
+</pre></div>
+</div>
+</section>
+<section id="ci-master">
+<span id="id31"></span><h3>ci_master<a class="headerlink" href="#ci-master" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Deploy the package metadata to the packaging org and prepare for managed package version upload.  Intended for use against main branch commits.</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) flow: deploy_packaging</span>
+<span class="go">    0) task: dx_convert_from</span>
+<span class="go">       when: project_config.project__source_format == &quot;sfdx&quot;</span>
+<span class="go">    1) task: unschedule_apex</span>
+<span class="go">    2) task: create_managed_src</span>
+<span class="go">    3) task: update_package_xml</span>
+<span class="go">    4) task: deploy</span>
+<span class="go">    5) task: revert_managed_src</span>
+<span class="go">    6) task: uninstall_packaged_incremental</span>
+<span class="go">3) flow: config_packaging</span>
+<span class="go">    1) task: update_admin_profile</span>
+</pre></div>
+</div>
+</section>
+<section id="ci-release">
+<span id="id32"></span><h3>ci_release<a class="headerlink" href="#ci-release" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Install a production release version and runs tests from the managed package</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: install_prod</span>
+<span class="go">    1) flow: dependencies</span>
+<span class="go">        1) task: update_dependencies</span>
+<span class="go">        2) task: deploy_pre</span>
+<span class="go">    2) task: install_managed</span>
+<span class="go">    3) flow: config_managed</span>
+<span class="go">        1) task: deploy_post</span>
+<span class="go">        2) task: update_admin_profile</span>
+<span class="go">        90) task: load_sample_data</span>
+<span class="go">    4) task: snapshot_changes</span>
+<span class="go">2) task: run_tests</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="release-operations">
+<h2>Release Operations<a class="headerlink" href="#release-operations" title="Link to this heading">¶</a></h2>
+<p>These flows are used to release new package versions.</p>
+<section id="build-feature-test-package">
+<span id="id33"></span><h3>build_feature_test_package<a class="headerlink" href="#build-feature-test-package" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Create a 2gp managed package version</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: update_package_xml</span>
+<span class="go">   when: project_config.project__source_format != &quot;sfdx&quot;</span>
+<span class="go">2) task: create_package_version</span>
+</pre></div>
+</div>
+</section>
+<section id="build-unlocked-test-package">
+<span id="id34"></span><h3>build_unlocked_test_package<a class="headerlink" href="#build-unlocked-test-package" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Create an Unlocked package version</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: update_package_xml</span>
+<span class="go">   when: project_config.project__source_format != &quot;sfdx&quot;</span>
+<span class="go">2) task: create_package_version</span>
+<span class="go">3) task: promote_package_version</span>
+</pre></div>
+</div>
+</section>
+<section id="release-2gp-beta">
+<span id="id35"></span><h3>release_2gp_beta<a class="headerlink" href="#release-2gp-beta" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Upload and release a beta 2gp managed package version</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: create_package_version</span>
+<span class="go">2) task: github_release</span>
+<span class="go">3) task: github_release_notes</span>
+<span class="go">4) task: github_automerge_main</span>
+</pre></div>
+</div>
+</section>
+<section id="release-2gp-production">
+<span id="id36"></span><h3>release_2gp_production<a class="headerlink" href="#release-2gp-production" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Promote the latest beta 2gp managed package version and create a new release in GitHub</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: promote_package_version</span>
+<span class="go">2) task: github_release</span>
+<span class="go">3) task: github_release_notes</span>
+</pre></div>
+</div>
+</section>
+<section id="release-beta">
+<span id="id37"></span><h3>release_beta<a class="headerlink" href="#release-beta" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Upload and release a beta version of the metadata currently in packaging</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: upload_beta</span>
+<span class="go">2) task: github_release</span>
+<span class="go">3) task: github_release_notes</span>
+<span class="go">4) task: github_automerge_main</span>
+</pre></div>
+</div>
+</section>
+<section id="release-production">
+<span id="id38"></span><h3>release_production<a class="headerlink" href="#release-production" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Upload and release a production version of the metadata currently in packaging</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: upload_production</span>
+<span class="go">2) task: github_release</span>
+<span class="go">3) task: github_release_notes</span>
+</pre></div>
+</div>
+</section>
+<section id="release-unlocked-beta">
+<span id="id39"></span><h3>release_unlocked_beta<a class="headerlink" href="#release-unlocked-beta" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Upload and release a beta 2gp unlocked package version</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: create_package_version</span>
+<span class="go">2) task: github_release</span>
+<span class="go">3) task: github_release_notes</span>
+<span class="go">4) task: github_automerge_main</span>
+</pre></div>
+</div>
+</section>
+<section id="release-unlocked-production">
+<span id="id40"></span><h3>release_unlocked_production<a class="headerlink" href="#release-unlocked-production" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong> Promote the latest beta 2GP unlocked package version and create a new release in GitHub</p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) task: promote_package_version</span>
+<span class="go">2) task: github_release</span>
+<span class="go">3) task: github_release_notes</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="other">
+<h2>Other<a class="headerlink" href="#other" title="Link to this heading">¶</a></h2>
+<p>This is a catch-all group for any flows without a designated “group” attribute in <code class="docutils literal notranslate"><span class="pre">cumulusci.yml</span></code>.</p>
+<section id="push-upgrade-org">
+<span id="id41"></span><h3>push_upgrade_org<a class="headerlink" href="#push-upgrade-org" title="Link to this heading">¶</a></h3>
+<p><strong>Description:</strong></p>
+<p><strong>Flow Steps</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1) flow: dependencies</span>
+<span class="go">    1) task: update_dependencies</span>
+<span class="go">    2) task: deploy_pre</span>
+<span class="go">2) task: install_managed</span>
+<span class="go">3) task: update_dependencies</span>
+<span class="go">4) task: install_managed_beta</span>
+<span class="go">5) flow: config_qa</span>
+<span class="go">    1) task: deploy_post</span>
+<span class="go">    2) task: update_admin_profile</span>
+<span class="go">    90) task: load_sample_data</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="env-var-reference.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Environment Variables</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="cheat-sheet.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Cheat Sheet</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Salesforce.org
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Flow Reference</a><ul>
+<li><a class="reference internal" href="#org-setup">Org Setup</a><ul>
+<li><a class="reference internal" href="#dev-org">dev_org</a></li>
+<li><a class="reference internal" href="#dev-org-beta-deps">dev_org_beta_deps</a></li>
+<li><a class="reference internal" href="#dev-org-namespaced">dev_org_namespaced</a></li>
+<li><a class="reference internal" href="#install-beta">install_beta</a></li>
+<li><a class="reference internal" href="#install-prod">install_prod</a></li>
+<li><a class="reference internal" href="#qa-org">qa_org</a></li>
+<li><a class="reference internal" href="#qa-org-2gp">qa_org_2gp</a></li>
+<li><a class="reference internal" href="#qa-org-unlocked">qa_org_unlocked</a></li>
+<li><a class="reference internal" href="#regression-org">regression_org</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dependency-management">Dependency Management</a><ul>
+<li><a class="reference internal" href="#beta-dependencies">beta_dependencies</a></li>
+<li><a class="reference internal" href="#dependencies">dependencies</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#deployment">Deployment</a><ul>
+<li><a class="reference internal" href="#deploy-packaging">deploy_packaging</a></li>
+<li><a class="reference internal" href="#deploy-unmanaged">deploy_unmanaged</a></li>
+<li><a class="reference internal" href="#deploy-unmanaged-ee">deploy_unmanaged_ee</a></li>
+<li><a class="reference internal" href="#unmanaged-ee">unmanaged_ee</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#install-uninstall">Install / Uninstall</a><ul>
+<li><a class="reference internal" href="#install-2gp-commit">install_2gp_commit</a></li>
+<li><a class="reference internal" href="#install-prod-no-config">install_prod_no_config</a></li>
+<li><a class="reference internal" href="#install-regression">install_regression</a></li>
+<li><a class="reference internal" href="#install-unlocked-commit">install_unlocked_commit</a></li>
+<li><a class="reference internal" href="#uninstall-managed">uninstall_managed</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#post-install-configuration">Post-Install Configuration</a><ul>
+<li><a class="reference internal" href="#config-apextest">config_apextest</a></li>
+<li><a class="reference internal" href="#config-dev">config_dev</a></li>
+<li><a class="reference internal" href="#config-managed">config_managed</a></li>
+<li><a class="reference internal" href="#config-packaging">config_packaging</a></li>
+<li><a class="reference internal" href="#config-qa">config_qa</a></li>
+<li><a class="reference internal" href="#config-regression">config_regression</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#continuous-integration">Continuous Integration</a><ul>
+<li><a class="reference internal" href="#ci-beta">ci_beta</a></li>
+<li><a class="reference internal" href="#ci-feature">ci_feature</a></li>
+<li><a class="reference internal" href="#ci-feature-2gp">ci_feature_2gp</a></li>
+<li><a class="reference internal" href="#ci-feature-beta-deps">ci_feature_beta_deps</a></li>
+<li><a class="reference internal" href="#ci-master">ci_master</a></li>
+<li><a class="reference internal" href="#ci-release">ci_release</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#release-operations">Release Operations</a><ul>
+<li><a class="reference internal" href="#build-feature-test-package">build_feature_test_package</a></li>
+<li><a class="reference internal" href="#build-unlocked-test-package">build_unlocked_test_package</a></li>
+<li><a class="reference internal" href="#release-2gp-beta">release_2gp_beta</a></li>
+<li><a class="reference internal" href="#release-2gp-production">release_2gp_production</a></li>
+<li><a class="reference internal" href="#release-beta">release_beta</a></li>
+<li><a class="reference internal" href="#release-production">release_production</a></li>
+<li><a class="reference internal" href="#release-unlocked-beta">release_unlocked_beta</a></li>
+<li><a class="reference internal" href="#release-unlocked-production">release_unlocked_production</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#other">Other</a><ul>
+<li><a class="reference internal" href="#push-upgrade-org">push_upgrade_org</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=dac0bbfe"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

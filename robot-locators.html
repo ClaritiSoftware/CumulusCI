@@ -1,0 +1,538 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="about.html" /><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Robot Advanced Topics" href="robot-advanced.html" /><link rel="prev" title="Acceptance Testing with Robot Framework" href="robot.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>Managing Locators - CumulusCI 4.6.0.dev1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">CumulusCI 4.6.0.dev1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">CumulusCI 4.6.0.dev1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Key Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get-started.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">The <code class="docutils literal notranslate"><span class="pre">cci</span></code> Command Line</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="config.html">Configure CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Configure CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="deploy.html">Configure Metadata Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scratch-orgs.html">Manage Scratch Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connected-orgs.html">Connect Persistent Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Develop a Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Automate Data Operations</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="robot.html">Acceptance Testing with Robot Framework</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Acceptance Testing with Robot Framework</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Managing Locators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-advanced.html">Robot Advanced Topics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-tutorial.html">Robot Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-debugger.html">Robot Debugger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-playwright.html">Playwright Technology Preview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="continuous-integration.html">Continuous Integration</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Continuous Integration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cumulusci-flow.html">CumulusCI Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="github-actions.html">Run CumulusCI from GitHub Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="2gp-testing.html">Testing with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="headless.html">Run CumulusCI Headlessly</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="packaging.html">Release Managed and Unlocked Packages</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Release Managed and Unlocked Packages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="managed-package.html">Release a First-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="managed-2gp.html">Release a Second-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unlocked-package.html">Release an Unlocked Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="npsp-eda-2gp.html">Extend NPSP and EDA with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-notes.html">Generate Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-upgrades.html">Manage Push Upgrades</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="unpackaged.html">Manage Unpackaged Configuration</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Manage Unpackaged Configuration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="metadata-etl.html">Metadata ETL</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cheat-sheet.html">Cheat Sheet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flows.html">Flow Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env-var-reference.html">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="org_config-reference.html">org_config Object Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="about.html">About CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of About CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contribute to CumulusCI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/robot-locators.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="managing-locators">
+<h1>Managing Locators<a class="headerlink" href="#managing-locators" title="Link to this heading">¶</a></h1>
+<p>The keywords that come with CumulusCI are based on the open source
+keyword library
+<a class="reference external" href="http://robotframework.org/SeleniumLibrary/SeleniumLibrary.html">SeleniumLibrary</a>.
+This library supports multiple ways to reference an element: by XPath,
+by CSS selector, by id, by text, and so on. SeleniumLibrary calls these
+<em>location strategies.</em></p>
+<p>You can specify a strategy by providing a prefix to the locator. For
+example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id:123</span></code> specifies an element with an id of 123</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xpath://div[text()='Hello,</span> <span class="pre">world']</span></code> lets you specify an element by
+an xpath expression</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">css:div.slds-spinner</span></code> defines an object by its css path</p></li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can find the full list of supported locator strategies in the
+section titled <a class="reference external" href="https://robotframework.org/SeleniumLibrary/SeleniumLibrary.html#Explicit%20locator%20strategy">Explicit locator
+strategy</a>
+in the SeleniumLibrary documentation.</p>
+</div>
+<p>In this section, we’ll show how to create a project-specific locator
+strategy by storing locators in a dictionary and then associating them
+with a custom prefix.</p>
+<section id="storing-locators-in-a-dictionary">
+<h2>Storing locators in a dictionary<a class="headerlink" href="#storing-locators-in-a-dictionary" title="Link to this heading">¶</a></h2>
+<p>The first step toward creating custom locator strategies with the
+locator manager is to define your project’s locators in a dictionary. If
+you have just a handful of locators you can define them directly in a
+keyword library. You can also save them in a separate file.</p>
+<p>If you need to be able to run tests against a prerelease org you might
+want to store your locators in two files: one for the current release
+and one for the prerelease. You can then import the appropriate version
+at runtime.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In order to keep the examples short we’re only going to focus on
+supporting one release at a time in this documentation.</p>
+</div>
+<p>The locator dictionary can include nested dictionaries, so you can
+organize locators into logical groups. Each leaf node can be any locator
+string supported by SeleniumLibrary. Notice that these locator strings
+can include locators of different types.</p>
+<p>For example, consider the following set of locators which we might find
+in a library of keywords for dealing with the calendar tab:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">locators</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;sidebar&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;options button&quot;</span><span class="p">:</span> <span class="s2">&quot;css:a[role=&#39;button&#39;][title=&#39;Calendar Options&#39;]&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;new button&quot;</span><span class="p">:</span> <span class="s2">&quot;css:a[role=&#39;menuitem&#39;][title=&#39;New Calendar&#39;]&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;modal&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;window&quot;</span><span class="p">:</span> <span class="s2">&quot;xpath://div[@role=&#39;dialog&#39;][.//h2[.=&#39;Create Calendar&#39;]]&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;next button&quot;</span><span class="p">:</span> <span class="s2">&quot;css:a.wzButtonSaveAndNext&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>We’ve organized the locators into two logical groupings: one related to
+elements on the sidebar, and one related to elements of a modal window.
+Notice also that three of the locators are CSS selectors and one is an
+XPath.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Dictionaries can be nested as deeply as you want, but it’s rarely
+necessary to have locators more than a couple of levels deep.</p>
+</div>
+</section>
+<section id="registering-the-locator-dictionary">
+<h2>Registering the locator dictionary<a class="headerlink" href="#registering-the-locator-dictionary" title="Link to this heading">¶</a></h2>
+<p>SeleniumLibrary provides a way to register <a class="reference external" href="http://robotframework.org/SeleniumLibrary/SeleniumLibrary.html#Custom%20locators">custom location
+strategies</a>
+via the <a class="reference external" href="http://robotframework.org/SeleniumLibrary/SeleniumLibrary.html#Add%20Location%20Strategy">Add Location
+Strategy</a>
+keyword. While it’s possible to write your own strategies using
+keywords, the locator manager makes it easy to associate a locator
+prefix with a dictionary of locators.</p>
+<p>This registration is done via the <code class="docutils literal notranslate"><span class="pre">register_locators</span></code> method of the
+locator manager, and should be done in the <code class="docutils literal notranslate"><span class="pre">__init__</span></code> method of a
+keyword library.</p>
+<p>For example, here is what it might look like for a library that contains
+keywords for the calendar tab.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">robot.libraries.BuiltIn</span><span class="w"> </span><span class="kn">import</span> <span class="n">BuiltIn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cumulusci.robotframework</span><span class="w"> </span><span class="kn">import</span> <span class="n">locator_manager</span>
+
+<span class="n">locators</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span>  <span class="c1">## see previous example</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CalendarLibrary</span><span class="p">:</span>
+    <span class="n">ROBOT_LIBRARY_SCOPE</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">locator_manager</span><span class="o">.</span><span class="n">register_locators</span><span class="p">(</span><span class="s2">&quot;calendar&quot;</span><span class="p">,</span> <span class="n">locators</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When this library is imported into a test case file, the prefix
+“calendar” is registered with SeleniumLibrary as a custom locator
+strategy.</p>
+</section>
+<section id="using-custom-locators">
+<h2>Using custom locators<a class="headerlink" href="#using-custom-locators" title="Link to this heading">¶</a></h2>
+<p>Once the dictionary has been defined and has been registered with a
+prefix, the locators work very similarly to any other locator. If the
+dictionaries are nested, you can separate the levels with a period (ie:
+dot notation).</p>
+<p>For example, with our example locators the options button locator can be
+used like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Click</span> <span class="n">element</span>   <span class="n">calendar</span><span class="p">:</span><span class="n">sidebar</span><span class="o">.</span><span class="n">options</span> <span class="n">button</span>
+</pre></div>
+</div>
+<p>The following table shows how the locator is parsed:</p>
+<hr class="docutils" />
+<p><code class="docutils literal notranslate"><span class="pre">calendar:</span></code> locator prefix</p>
+<p><code class="docutils literal notranslate"><span class="pre">sidebar</span></code> first level of the dictionary (eg: <code class="docutils literal notranslate"><span class="pre">locators['sidebar']</span></code>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">.</span></code> a level separator</p>
+<p><code class="docutils literal notranslate"><span class="pre">options</span> <span class="pre">button</span></code> the next level of a nested dictionary (eg:
+<code class="docutils literal notranslate"><span class="pre">locators['sidebar']['options_button']</span></code>)</p>
+</section>
+<hr class="docutils" />
+<section id="parameterized-locators">
+<h2>Parameterized Locators<a class="headerlink" href="#parameterized-locators" title="Link to this heading">¶</a></h2>
+<p>Sometimes the only difference between multiple elements on a page is the
+text displayed in that element. For example, the html markup for a save,
+edit, and cancel button may be identical except for the word “Save”,
+“Edit”, or “Cancel”.</p>
+<p>While you can create a separate locator for each button, it’s better to
+use a single parameterized locator for multiple buttons, which gives you
+more flexibility.</p>
+<p>Notice in our calendar locators we have one locator for a <code class="docutils literal notranslate"><span class="pre">menuitem</span></code>
+with the title of ‘New Calendar’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">locators</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">...</span>
+    <span class="s2">&quot;new_button&quot;</span><span class="p">:</span> <span class="s2">&quot;css:a[role=&#39;menuitem&#39;][title=&#39;New Calendar&#39;]&quot;</span><span class="p">,</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For a calendar menu with multiple menuitems, you can use a unique
+locator for each, or a single parameterized locator so that you only
+need to maintain one locator.</p>
+<p>To create a locator with one or more parameters, replace a portion of
+the locator with [{}]{.title-ref} like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">locators</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">...</span>
+    <span class="s2">&quot;menu_item&quot;</span><span class="p">:</span> <span class="s2">&quot;css:a[role=&#39;menuitem&#39;][title=&#39;</span><span class="si">{}</span><span class="s2">&#39;]&quot;</span><span class="p">,</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>When you use the locator, you can pass one or more parameters by
+specfying a comma separated list of values after a colon. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Click</span> <span class="n">element</span>  <span class="n">calendar</span><span class="p">:</span><span class="n">sidebar</span><span class="o">.</span><span class="n">menu_item</span><span class="p">:</span><span class="n">New</span> <span class="n">Calendar</span>
+</pre></div>
+</div>
+<p>The [{}]{.title-ref} placeholders are replaced with the parameter
+values, in order. For example, the title in the above example becomes
+[New Calendar]{.title-ref}.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your locator has more than one parameter (ie: more than one instance
+of [{}]{.title-ref} within the locator definition), parameters will be
+replaced in the order in which they are supplied. The first parameter
+after the [:]{.title-ref} and before a comma will be used in place of
+the first [{}]{.title-ref}, the next parameter will be used in place of
+the next [{}]{.title-ref}, and so on.</p>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="robot-advanced.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Robot Advanced Topics</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="robot.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Acceptance Testing with Robot Framework</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Salesforce.org
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Managing Locators</a><ul>
+<li><a class="reference internal" href="#storing-locators-in-a-dictionary">Storing locators in a dictionary</a></li>
+<li><a class="reference internal" href="#registering-the-locator-dictionary">Registering the locator dictionary</a></li>
+<li><a class="reference internal" href="#using-custom-locators">Using custom locators</a></li>
+<li><a class="reference internal" href="#parameterized-locators">Parameterized Locators</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=dac0bbfe"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

@@ -1,0 +1,684 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="about.html" /><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Connect Persistent Orgs" href="connected-orgs.html" /><link rel="prev" title="Configure Metadata Deployment" href="deploy.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>Manage Scratch Orgs - CumulusCI 4.6.0.dev1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">CumulusCI 4.6.0.dev1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">CumulusCI 4.6.0.dev1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Key Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get-started.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">The <code class="docutils literal notranslate"><span class="pre">cci</span></code> Command Line</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="config.html">Configure CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Configure CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="deploy.html">Configure Metadata Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Manage Scratch Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connected-orgs.html">Connect Persistent Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Develop a Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Automate Data Operations</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="robot.html">Acceptance Testing with Robot Framework</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Acceptance Testing with Robot Framework</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="robot-locators.html">Managing Locators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-advanced.html">Robot Advanced Topics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-tutorial.html">Robot Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-debugger.html">Robot Debugger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-playwright.html">Playwright Technology Preview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="continuous-integration.html">Continuous Integration</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Continuous Integration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cumulusci-flow.html">CumulusCI Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="github-actions.html">Run CumulusCI from GitHub Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="2gp-testing.html">Testing with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="headless.html">Run CumulusCI Headlessly</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="packaging.html">Release Managed and Unlocked Packages</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Release Managed and Unlocked Packages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="managed-package.html">Release a First-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="managed-2gp.html">Release a Second-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unlocked-package.html">Release an Unlocked Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="npsp-eda-2gp.html">Extend NPSP and EDA with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-notes.html">Generate Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-upgrades.html">Manage Push Upgrades</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="unpackaged.html">Manage Unpackaged Configuration</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Manage Unpackaged Configuration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="metadata-etl.html">Metadata ETL</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cheat-sheet.html">Cheat Sheet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flows.html">Flow Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env-var-reference.html">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="org_config-reference.html">org_config Object Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="about.html">About CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of About CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contribute to CumulusCI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/scratch-orgs.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="manage-scratch-orgs">
+<h1>Manage Scratch Orgs<a class="headerlink" href="#manage-scratch-orgs" title="Link to this heading">¶</a></h1>
+<p>Scratch orgs are temporary Salesforce orgs that can be quickly set up
+“from scratch,” and which last for no more than 30 days. There are
+several reasons why scratch orgs are encouraged for development and
+testing over sandboxes or Developer Edition orgs. Scratch orgs:</p>
+<ul class="simple">
+<li><p>Provide a repeatable starting point without the challenge of
+managing persistent orgs’ state over time.</p></li>
+<li><p>Are scalable and ensure that individual, customized environments are
+available to everyone in the development lifecycle.</p></li>
+<li><p>Facilitate a fully source-driven development process built around
+best practices.</p></li>
+</ul>
+<p>CumulusCI offers tools for working with all types of Salesforce orgs,
+but provides the most value when working with scratch orgs. CumulusCI
+automation helps realize the promise of scratch orgs as low cost,
+repeatable, source-driven environments for every phase of the product
+lifecycle.</p>
+<p>This section focuses on managing scratch orgs in a CumulusCI project. To
+learn about managing persistent orgs, such as sandboxes, production
+orgs, and packaging orgs, visit the
+<a class="reference internal" href="connected-orgs.html"><span class="doc std std-doc">Connect Persistent Orgs</span></a> section.</p>
+<section id="what-is-an-org-in-cumulusci">
+<h2>What Is an Org in CumulusCI?<a class="headerlink" href="#what-is-an-org-in-cumulusci" title="Link to this heading">¶</a></h2>
+<p>An org in CumulusCI’s keychain starts out as a named configuration,
+tailored for a specific purpose within the lifecycle of the project
+(such as development, QA, beta testing, and so on). CumulusCI creates
+and uses scratch orgs based on these configurations on demand. In fact,
+a scratch org is only generated the first time you use the scratch org.
+When it’s expired or been deleted, a new one can be created again with
+the same configuration.</p>
+<p>CumulusCI offers tools that make it easy to discover predefined org
+configurations, create scratch orgs based on those configurations, and
+define new orgs and new configurations.</p>
+</section>
+<section id="set-up-the-salesforce-cli">
+<h2>Set Up the Salesforce CLI<a class="headerlink" href="#set-up-the-salesforce-cli" title="Link to this heading">¶</a></h2>
+<p>Scratch orgs in CumulusCI allow teams to be confident that the orgs they
+develop and test in are as close to their production environments as
+possible. We recommend working with scratch orgs created by Salesforce
+DX.</p>
+<p>See the <a class="reference internal" href="get-started.html#set-up-sfdx"><span class="std std-ref">Set Up SFDX</span></a> section for instructions.</p>
+</section>
+<section id="predefined-orgs">
+<h2>Predefined Orgs<a class="headerlink" href="#predefined-orgs" title="Link to this heading">¶</a></h2>
+<p>CumulusCI comes with predefined org configurations. Every project’s
+keychain starts with these configurations ready and available to be
+turned into a live scratch org.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Org</p></th>
+<th class="head"><p>Role</p></th>
+<th class="head"><p>Definition File</p></th>
+<th class="head"><p>Lifespan</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dev</span></code></p></td>
+<td><p>Development workflows</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">orgs/dev.json</span></code></p></td>
+<td><p>7 days</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qa</span></code></p></td>
+<td><p>Testing workflows</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">orgs/dev.json</span></code></p></td>
+<td><p>7 days</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature</span></code></p></td>
+<td><p>Continuous integration</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">orgs/dev.json</span></code></p></td>
+<td><p>1 day</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">beta</span></code></p></td>
+<td><p>Continuous integration<br><br>Hands-on testing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">orgs/beta.json</span></code></p></td>
+<td><p>1 day</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">release</span></code></p></td>
+<td><p>Continuous integration<br><br>Hands-on testing<br><br>Product demos</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">orgs/release.json</span></code></p></td>
+<td><p>1 day</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>To see the predefined orgs in your project:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>list
+</pre></div>
+</div>
+<p>If your project has customized org configurations, your listing can
+include more configurations than shown in the previous table, and your
+project’s versions of the standard configurations can be different.</p>
+</section>
+<section id="create-a-scratch-org">
+<h2>Create a Scratch Org<a class="headerlink" href="#create-a-scratch-org" title="Link to this heading">¶</a></h2>
+<p>To create a scratch org from a configuration, use it as the target of a
+command, task, or flow. CumulusCI automatically initializes orgs when
+they’re first used.</p>
+<p>You can create a scratch org from the <code class="docutils literal notranslate"><span class="pre">dev</span></code> configuration and review
+information about the created org with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>info<span class="w"> </span>dev
+</pre></div>
+</div>
+<p>When the org is created, it’s associated with the name <code class="docutils literal notranslate"><span class="pre">dev</span></code> in the
+CumulusCI keychain and can be used with other commands until it expires.
+When an org expires or is removed, its associated configuration is left
+in place, and can be recreated whenever needed.</p>
+<p>It’s possible to create new orgs in the keychain that inherit their
+configuration from a built-in org.</p>
+<p>Here we create a new org that uses the same configuration as the
+built-in org <code class="docutils literal notranslate"><span class="pre">dev</span></code> and has the alias <code class="docutils literal notranslate"><span class="pre">myDevOrg</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cci org scratch dev myDevOrg
+</pre></div>
+</div>
+<p>Verify that there is now an org with the name of <code class="docutils literal notranslate"><span class="pre">&lt;org_name&gt;</span></code> that is
+associated with the <code class="docutils literal notranslate"><span class="pre">dev</span></code> configuration by running <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">org</span> <span class="pre">list</span></code>.</p>
+<p>You can have as many named orgs as you wish, or none at all. Many
+CumulusCI users work only with built-in orgs.</p>
+<section id="scratch-org-limits">
+<h3>Scratch Org Limits<a class="headerlink" href="#scratch-org-limits" title="Link to this heading">¶</a></h3>
+<p>Each scratch org you create is counted against limits in your Dev Hub.
+Scratch orgs count against an <em>active</em> scratch org limit, which controls
+how many orgs can exist at the same time, and a <em>daily</em> scratch org
+limit, which controls how many total orgs can be created per day.</p>
+<p>Scratch org limits are based on your Dev Hub’s edition and your
+Salesforce contract. To review limits and consumption, run the command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sf<span class="w"> </span>org<span class="w"> </span>list<span class="w"> </span>limits<span class="w"> </span>--target-org<span class="w"> </span>&lt;username&gt;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;username&gt;</span></code> is your Dev Hub username. The limit names are
+<code class="docutils literal notranslate"><span class="pre">ActiveScratchOrgs</span></code> and <code class="docutils literal notranslate"><span class="pre">DailyScratchOrgs</span></code>.</p>
+</section>
+</section>
+<section id="list-orgs">
+<h2>List Orgs<a class="headerlink" href="#list-orgs" title="Link to this heading">¶</a></h2>
+<p>When inside a project repository, run <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">org</span> <span class="pre">list</span></code> to see all the orgs
+you have configured or connected.</p>
+</section>
+<section id="set-a-default-org">
+<span id="id1"></span><h2>Set a Default Org<a class="headerlink" href="#set-a-default-org" title="Link to this heading">¶</a></h2>
+<p>When you run a task or flow that performs work on an org, specify the
+org with the <code class="docutils literal notranslate"><span class="pre">--org</span></code> option.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>flow<span class="w"> </span>run<span class="w"> </span>dev_org<span class="w"> </span>--org<span class="w"> </span>dev
+</pre></div>
+</div>
+<p>To run many commands against the same org, set a default.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>default<span class="w"> </span>dev
+<span class="gp">$ </span>cci<span class="w"> </span>flow<span class="w"> </span>run<span class="w"> </span>dev_org
+</pre></div>
+</div>
+<p>Alternately, set a default org when creating a new named configuration
+by passing the <code class="docutils literal notranslate"><span class="pre">--default</span></code> flag.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>scratch<span class="w"> </span>dev<span class="w"> </span>&lt;org_name&gt;<span class="w"> </span>--default
+</pre></div>
+</div>
+<p>To remove the existing default org:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>default<span class="w"> </span>dev<span class="w"> </span>--unset
+</pre></div>
+</div>
+</section>
+<section id="open-orgs-in-the-browser">
+<h2>Open Orgs in the Browser<a class="headerlink" href="#open-orgs-in-the-browser" title="Link to this heading">¶</a></h2>
+<p>Run <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">org</span> <span class="pre">browser</span> <span class="pre">&lt;org_name&gt;</span></code> to log into any org in the keychain in
+a new browser tab.</p>
+</section>
+<section id="delete-scratch-orgs">
+<h2>Delete Scratch Orgs<a class="headerlink" href="#delete-scratch-orgs" title="Link to this heading">¶</a></h2>
+<p>If an org defined in the keychain has created a scratch org, you can
+delete the scratch org but leave the configuration in the keychain to
+reuse it later.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>scratch_delete<span class="w"> </span>&lt;org_name&gt;
+</pre></div>
+</div>
+<p>Using <code class="docutils literal notranslate"><span class="pre">scratch_delete</span></code> doesn’t remove the org <code class="docutils literal notranslate"><span class="pre">&lt;org_name&gt;</span></code> from your
+org list. This default behavior lets you easily recreate scratch orgs
+from a stored, standardized configuration.</p>
+<p>To permanently remove an org from the org list, and also delete the
+associated scratch org:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>remove<span class="w"> </span>&lt;org_name&gt;
+</pre></div>
+</div>
+<p>It’s not necessary to explicitly remove or delete expired orgs.
+CumulusCI recreates an expired org the first time you attempt to use it.
+To clean up expired orgs from the keychain:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>prune
+</pre></div>
+</div>
+</section>
+<section id="configure-predefined-orgs">
+<h2>Configure Predefined Orgs<a class="headerlink" href="#configure-predefined-orgs" title="Link to this heading">¶</a></h2>
+<p>Projects can customize the set of configurations available out of the
+box, and add further predefined orgs to meet project-specific needs.</p>
+<p>An org configuration has a name, such as <code class="docutils literal notranslate"><span class="pre">dev</span></code> or <code class="docutils literal notranslate"><span class="pre">qa</span></code>, and is defined
+by options set in the <code class="docutils literal notranslate"><span class="pre">cumulusci.yml</span></code> file as well as in the contents of
+a specific <code class="docutils literal notranslate"><span class="pre">.json</span></code> scratch org definition file in the <code class="docutils literal notranslate"><span class="pre">orgs</span></code> directory.
+For orgs like <code class="docutils literal notranslate"><span class="pre">dev</span></code> and <code class="docutils literal notranslate"><span class="pre">qa</span></code> that are predefined for all projects, the
+configuration is located in the CumulusCI standard library, but can be
+customized by projects in the <code class="docutils literal notranslate"><span class="pre">cumulusci.yml</span></code> file.</p>
+<p>When developing a managed package project, it is often useful to test
+inside of a namespaced scratch org. Many projects configure an org
+called <code class="docutils literal notranslate"><span class="pre">dev_namespaced</span></code>, a developer org that has a namespace. This org
+is defined under the <code class="docutils literal notranslate"><span class="pre">orgs__scratch</span></code> section in the <code class="docutils literal notranslate"><span class="pre">cumulusci.yml</span></code>
+file.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">orgs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scratch</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">dev_namespaced</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">orgs/dev.json</span>
+<span class="w">            </span><span class="nt">days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7</span>
+<span class="w">            </span><span class="nt">namespaced</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+</div>
+<p>This org uses the same scratch org definition file as the <code class="docutils literal notranslate"><span class="pre">dev</span></code> org, but
+has a different configuration in the <code class="docutils literal notranslate"><span class="pre">cumulusci.yml</span></code> file, resulting in
+a different org shape and a different use case. The key facets of the
+org shape that are defined in the <code class="docutils literal notranslate"><span class="pre">cumulusci.yml</span></code> file are whether or
+not the org has a namespace, and the length of the org’s lifespan.</p>
+<p>Org definition files stored in the <code class="docutils literal notranslate"><span class="pre">orgs</span></code> directory are configured as
+specified in the <a class="reference external" href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch-orgs_def_file.htm">Salesforce DX Developer
+Guide</a>.</p>
+<p>Many projects never add a new org definition <code class="docutils literal notranslate"><span class="pre">.json</span></code> file, and instead
+add specific features and settings to the files shipped with CumulusCI.
+However, new definitions can be added and referenced under the
+<code class="docutils literal notranslate"><span class="pre">orgs__scratch</span></code> section of the <code class="docutils literal notranslate"><span class="pre">cumulusci.yml</span></code> file to establish org
+configurations that are completely customized for a project.</p>
+</section>
+<section id="import-an-org-from-salesforce-cli-or-clariti">
+<h2>Import an Org from Salesforce CLI or Clariti<a class="headerlink" href="#import-an-org-from-salesforce-cli-or-clariti" title="Link to this heading">¶</a></h2>
+<p>CumulusCI can register existing org authorizations that already live in the
+Salesforce CLI, as well as persistent orgs managed through the Clariti Org
+Pooling System.</p>
+<section id="import-from-salesforce-cli">
+<h3>Import from Salesforce CLI<a class="headerlink" href="#import-from-salesforce-cli" title="Link to this heading">¶</a></h3>
+<p>Run <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">org</span> <span class="pre">import</span></code> with the Salesforce username or alias and the desired
+CumulusCI org name:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>import<span class="w"> </span>&lt;sfdx_username_or_alias&gt;<span class="w"> </span>--org<span class="w"> </span>&lt;cci_alias&gt;
+</pre></div>
+</div>
+<p>If you omit <code class="docutils literal notranslate"><span class="pre">--org</span></code>, pass the CumulusCI org name as the second positional
+argument instead (<code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">org</span> <span class="pre">import</span> <span class="pre">&lt;username&gt;</span> <span class="pre">&lt;cci_alias&gt;</span></code>). In both forms the
+alias or username must already exist in the Salesforce CLI keychain.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>CumulusCI cannot automatically refresh orgs imported from the Salesforce CLI
+when they expire.</p>
+</div>
+</section>
+<section id="import-from-clariti-org-pools">
+<h3>Import from Clariti Org Pools<a class="headerlink" href="#import-from-clariti-org-pools" title="Link to this heading">¶</a></h3>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">--pool-id</span></code> option to check out a persistent org from Clariti:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>org<span class="w"> </span>import<span class="w"> </span>--pool-id<span class="w"> </span>&lt;pool_id&gt;<span class="w"> </span>--org<span class="w"> </span>&lt;cci_alias&gt;
+</pre></div>
+</div>
+<p>You may omit <code class="docutils literal notranslate"><span class="pre">--org</span></code> to let CumulusCI derive a name from the Clariti checkout
+details, or omit <code class="docutils literal notranslate"><span class="pre">--pool-id</span></code> when a <code class="docutils literal notranslate"><span class="pre">.clariti.json</span></code> file in the project root
+provides the pool identifier. When a Clariti checkout specifies a Salesforce
+alias, <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">org</span> <span class="pre">import</span></code> attempts to keep the Salesforce CLI alias synchronized
+with the chosen CumulusCI org name.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Provide either <code class="docutils literal notranslate"><span class="pre">--pool-id</span></code> <strong>or</strong> a Salesforce username/alias. Supplying both
+causes the command to exit with a usage error.</p>
+</div>
+</section>
+</section>
+<section id="org-pool-checkout">
+<h2>Org Pool Checkout<a class="headerlink" href="#org-pool-checkout" title="Link to this heading">¶</a></h2>
+<p>If your organization uses an external org pool, you can configure a scratch org
+definition to check out from the pool instead of creating a new org by adding
+<code class="docutils literal notranslate"><span class="pre">org_pool_id</span></code> under the scratch org configuration:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">orgs</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">scratch</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">dev</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">orgs/dev.json</span>
+<span class="w">      </span><span class="nt">days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7</span>
+<span class="w">      </span><span class="nt">org_pool_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;POOL-ID&gt;</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">org_pool_id</span></code> is set, CumulusCI calls <code class="docutils literal notranslate"><span class="pre">sf</span> <span class="pre">clariti</span> <span class="pre">org</span> <span class="pre">checkout</span></code> using the
+CCI-generated alias (for example, <code class="docutils literal notranslate"><span class="pre">&lt;project_name&gt;__&lt;org_name&gt;</span></code>) and then imports
+the checked-out org into the CCI keychain. The command falls back to creating a
+fresh scratch org if the checkout fails or the pooled org is already expired. Set
+<code class="docutils literal notranslate"><span class="pre">CCI_DISABLE_SCRATCH_FALLBACK=1</span></code> while you debug checkout issues to prevent new
+scratch orgs from being created.</p>
+</section>
+<section id="use-a-non-default-dev-hub">
+<h2>Use a Non-Default Dev Hub<a class="headerlink" href="#use-a-non-default-dev-hub" title="Link to this heading">¶</a></h2>
+<p>By default, CumulusCI creates scratch orgs using the DevHub org
+configured as the <code class="docutils literal notranslate"><span class="pre">defaultdevhubusername</span></code> in <code class="docutils literal notranslate"><span class="pre">sfdx</span></code>. Switch to a
+different DevHub org within a project by configuring the <code class="docutils literal notranslate"><span class="pre">devhub</span></code>
+service.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>service<span class="w"> </span>connect<span class="w"> </span>devhub<span class="w"> </span>mydevhub<span class="w"> </span>--project
+<span class="go">Username: &lt;DevHub username&gt;</span>
+<span class="go">devhub is now configured for this project.</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="connected-orgs.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Connect Persistent Orgs</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="deploy.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Configure Metadata Deployment</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Salesforce.org
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Manage Scratch Orgs</a><ul>
+<li><a class="reference internal" href="#what-is-an-org-in-cumulusci">What Is an Org in CumulusCI?</a></li>
+<li><a class="reference internal" href="#set-up-the-salesforce-cli">Set Up the Salesforce CLI</a></li>
+<li><a class="reference internal" href="#predefined-orgs">Predefined Orgs</a></li>
+<li><a class="reference internal" href="#create-a-scratch-org">Create a Scratch Org</a><ul>
+<li><a class="reference internal" href="#scratch-org-limits">Scratch Org Limits</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#list-orgs">List Orgs</a></li>
+<li><a class="reference internal" href="#set-a-default-org">Set a Default Org</a></li>
+<li><a class="reference internal" href="#open-orgs-in-the-browser">Open Orgs in the Browser</a></li>
+<li><a class="reference internal" href="#delete-scratch-orgs">Delete Scratch Orgs</a></li>
+<li><a class="reference internal" href="#configure-predefined-orgs">Configure Predefined Orgs</a></li>
+<li><a class="reference internal" href="#import-an-org-from-salesforce-cli-or-clariti">Import an Org from Salesforce CLI or Clariti</a><ul>
+<li><a class="reference internal" href="#import-from-salesforce-cli">Import from Salesforce CLI</a></li>
+<li><a class="reference internal" href="#import-from-clariti-org-pools">Import from Clariti Org Pools</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#org-pool-checkout">Org Pool Checkout</a></li>
+<li><a class="reference internal" href="#use-a-non-default-dev-hub">Use a Non-Default Dev Hub</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=dac0bbfe"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

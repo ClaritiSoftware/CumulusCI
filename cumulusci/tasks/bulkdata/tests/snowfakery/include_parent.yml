@@ -1,3 +1,0 @@
-- include_file: child.yml
-- object: Account
-  include: AccountDefaults1, AccountDefaults2

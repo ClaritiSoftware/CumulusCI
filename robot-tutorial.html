@@ -1,0 +1,707 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="about.html" /><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Robot Debugger" href="robot-debugger.html" /><link rel="prev" title="Robot Advanced Topics" href="robot-advanced.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>Robot Tutorial - CumulusCI 4.6.0.dev1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">CumulusCI 4.6.0.dev1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">CumulusCI 4.6.0.dev1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Key Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get-started.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">The <code class="docutils literal notranslate"><span class="pre">cci</span></code> Command Line</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="config.html">Configure CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Configure CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="deploy.html">Configure Metadata Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scratch-orgs.html">Manage Scratch Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connected-orgs.html">Connect Persistent Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Develop a Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Automate Data Operations</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="robot.html">Acceptance Testing with Robot Framework</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Acceptance Testing with Robot Framework</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="robot-locators.html">Managing Locators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-advanced.html">Robot Advanced Topics</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Robot Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-debugger.html">Robot Debugger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-playwright.html">Playwright Technology Preview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="continuous-integration.html">Continuous Integration</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Continuous Integration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cumulusci-flow.html">CumulusCI Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="github-actions.html">Run CumulusCI from GitHub Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="2gp-testing.html">Testing with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="headless.html">Run CumulusCI Headlessly</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="packaging.html">Release Managed and Unlocked Packages</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Release Managed and Unlocked Packages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="managed-package.html">Release a First-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="managed-2gp.html">Release a Second-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unlocked-package.html">Release an Unlocked Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="npsp-eda-2gp.html">Extend NPSP and EDA with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-notes.html">Generate Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-upgrades.html">Manage Push Upgrades</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="unpackaged.html">Manage Unpackaged Configuration</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Manage Unpackaged Configuration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="metadata-etl.html">Metadata ETL</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cheat-sheet.html">Cheat Sheet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flows.html">Flow Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env-var-reference.html">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="org_config-reference.html">org_config Object Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="about.html">About CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of About CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contribute to CumulusCI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/robot-tutorial.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="robot-tutorial">
+<h1>Robot Tutorial<a class="headerlink" href="#robot-tutorial" title="Link to this heading">¶</a></h1>
+<p>This tutorial will step you through writing your first test, then
+enhancing that test with a custom keyword implemented as a page object.
+It is not a comprehensive tutorial on using Robot Framework. For Robot
+Framework documentation see the <a class="reference external" href="http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html">Robot Framework User
+Guide</a></p>
+<p>It is assumed you’ve worked through the CumulusCI <a class="reference internal" href="get-started.html"><span class="doc std std-doc">Get Started</span></a> section at least up to the point where you’ve called <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">project</span> <span class="pre">init</span></code>. It is also assumed that
+you’ve read the <a class="reference internal" href="robot.html#acceptance-testing-with-robot-framework"><span class="std std-ref">Acceptance Testing with Robot Framework</span></a> section of this document, which gives an overview of CumulusCI and Robot Framework integration.</p>
+<section id="part-1-folder-structure">
+<h2>Part 1: Folder Structure<a class="headerlink" href="#part-1-folder-structure" title="Link to this heading">¶</a></h2>
+<p>We recommend that all Robot tests, keywords, data, and log and report
+files live under a folder named <code class="docutils literal notranslate"><span class="pre">robot</span></code>, at the root of your repository.
+If you worked through the <a class="reference internal" href="get-started.html"><span class="doc std std-doc">Get Started</span></a> section, the following folders will have been created under
+<code class="docutils literal notranslate"><span class="pre">MyProject/robot/MyProject</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">doc</span></code> - a place to put documentation for your tests</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resources</span></code> - a place to put Robot libraries and keyword files that
+are unique to your project</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results</span></code> - a place for Robot to write its log and report files</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tests</span></code> - a place for all of your tests.</p></li>
+</ul>
+</section>
+<section id="part-2-creating-a-custom-object">
+<h2>Part 2: Creating a custom object<a class="headerlink" href="#part-2-creating-a-custom-object" title="Link to this heading">¶</a></h2>
+<p>For this tutorial we’re going to use a Custom Object named <code class="docutils literal notranslate"><span class="pre">MyObject</span></code>
+(e.g. <code class="docutils literal notranslate"><span class="pre">MyObject__c</span></code>). In addition, we need a Custom Tab that is
+associated with that object.</p>
+<p>If you want to run the tests and keywords in this tutorial verbatim, you
+will need to go to Setup and create the following:</p>
+<ol class="arabic simple">
+<li><p>A Custom Object with the name <code class="docutils literal notranslate"><span class="pre">MyObject</span></code>.</p></li>
+<li><p>A Custom Tab associated with this object.</p></li>
+</ol>
+</section>
+<section id="part-3-creating-and-running-your-first-robot-test">
+<h2>Part 3: Creating and running your first Robot test<a class="headerlink" href="#part-3-creating-and-running-your-first-robot-test" title="Link to this heading">¶</a></h2>
+<p>The first thing we want to do is create a test that verifies we can get
+to the listing page of the Custom Object. This will let us know that
+everything is configured properly.</p>
+<p>Open up your favorite editor and create a file named <code class="docutils literal notranslate"><span class="pre">MyObject.robot</span></code> in
+the folder <code class="docutils literal notranslate"><span class="pre">robot/MyProject/tests</span></code>. Copy and paste the following into
+this file, and then save it.</p>
+<div class="highlight-robotframework notranslate"><div class="highlight"><pre><span></span><span class="gh">*** Settings ***</span>
+<span class="kn">Resource</span><span class="p">  </span><span class="nn">cumulusci/robotframework/Salesforce.robot</span>
+<span class="kn">Library</span><span class="p">   </span><span class="nn">cumulusci.robotframework.PageObjects</span>
+
+<span class="kn">Suite Setup</span><span class="p">     </span><span class="nf">Open test browser</span>
+<span class="kn">Suite Teardown</span><span class="p">  </span><span class="nf">Delete records and close browser</span>
+
+<span class="gh">*** Test Cases ***</span>
+<span class="gu">Test the MyObject listing page</span>
+<span class="p">    </span><span class="nf">Go to page</span><span class="p">  </span><span class="s">Listing</span><span class="p">  </span><span class="s">MyObject__c</span>
+<span class="p">    </span><span class="nf">Current page should be</span><span class="p">  </span><span class="s">Listing</span><span class="p">  </span><span class="s">MyObject__c</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above code uses <code class="docutils literal notranslate"><span class="pre">Go</span> <span class="pre">to</span> <span class="pre">page</span></code> and <code class="docutils literal notranslate"><span class="pre">Current</span> <span class="pre">page</span> <span class="pre">should</span> <span class="pre">be</span></code>, which
+accept a page type (<code class="docutils literal notranslate"><span class="pre">Listing</span></code>) and object name (<code class="docutils literal notranslate"><span class="pre">MyObject__c</span></code>). Even
+though we have yet to create that page object, the keywords will work by
+using a generic implementation. Later, once we’ve created the page
+object, the test will start using our implementation.</p>
+</div>
+<p>To run just this test, run the following command at the prompt:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>task<span class="w"> </span>run<span class="w"> </span>robot<span class="w"> </span>-o<span class="w"> </span>suites<span class="w"> </span>robot/MyProject/tests/MyObject.robot<span class="w"> </span>--org<span class="w"> </span>dev
+</pre></div>
+</div>
+<p>If everything is set up correctly, you should see the output that looks
+similar to this:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>task<span class="w"> </span>run<span class="w"> </span>robot<span class="w"> </span>-o<span class="w"> </span>suites<span class="w"> </span>robot/MyProject/tests/MyObject.robot<span class="w"> </span>--org<span class="w"> </span>dev
+<span class="go">2019-05-21 17:29:25: Getting scratch org info from Salesforce DX</span>
+<span class="go">2019-05-21 17:29:29: Beginning task: Robot</span>
+<span class="go">2019-05-21 17:29:29:        As user: test-wftmq9afc3ud@example.com</span>
+<span class="go">2019-05-21 17:29:29:         In org: 00Df0000003cuDx</span>
+<span class="go">2019-05-21 17:29:29:</span>
+<span class="go">==============================================================================</span>
+<span class="go">MyObject</span>
+<span class="go">==============================================================================</span>
+<span class="go">Test the MyObject listing page                                        | PASS |</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">MyObject                                                              | PASS |</span>
+<span class="go">1 critical test, 1 passed, 0 failed</span>
+<span class="go">1 test total, 1 passed, 0 failed</span>
+<span class="go">==============================================================================</span>
+<span class="go">Output:  /Users/boakley/dev/MyProject/robot/MyProject/results/output.xml</span>
+<span class="go">Log:     /Users/boakley/dev/MyProject/robot/MyProject/results/log.html</span>
+<span class="go">Report:  /Users/boakley/dev/MyProject/robot/MyProject/results/report.html</span>
+</pre></div>
+</div>
+</section>
+<section id="part-4-creating-a-page-object">
+<h2>Part 4: Creating a page object<a class="headerlink" href="#part-4-creating-a-page-object" title="Link to this heading">¶</a></h2>
+<p>Most projects are going to need to write custom keywords that are unique
+to that project. For example, NPSP has a keyword for filling in a batch
+gift entry form, EDA has a keyword with some custom logic for validating
+and affiliated contact, and so on.</p>
+<p>The best way to create and organize these keywords is to place them in
+page object libraries. These libraries contain normal Python classes and
+methods which have been decorated with the <code class="docutils literal notranslate"><span class="pre">pageobjects</span></code> decorator
+provided by CumulusCI. By using page objects, you can write keywords
+that are unique to a given page, making them easier to find and easier
+to manage.</p>
+<section id="defining-the-class">
+<h3>Defining the class<a class="headerlink" href="#defining-the-class" title="Link to this heading">¶</a></h3>
+<p>CumulusCI provides the base classes that are a good starting point for
+your page object (see <a class="reference internal" href="robot-advanced.html#page-object-base-classes"><span class="std std-ref">Page Object Base Classes</span></a>). In this case we’re writing a keyword that works on the
+listing page, so we want our class to inherit from the <code class="docutils literal notranslate"><span class="pre">ListingPage</span></code>
+class.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Our class also needs to use the <code class="docutils literal notranslate"><span class="pre">pageobject</span></code> decorator, so we must
+import that along with the <code class="docutils literal notranslate"><span class="pre">ListingPage</span></code> class.</p>
+</div>
+<p>To get started, create a new file named <code class="docutils literal notranslate"><span class="pre">MyObjectPages.py</span></code> in the folder
+<code class="docutils literal notranslate"><span class="pre">robot/MyProject/resources</span></code>. At the top of the new keyword file, add the
+following import statement:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cumulusci.robotframework.pageobjects</span><span class="w"> </span><span class="kn">import</span> <span class="n">pageobject</span><span class="p">,</span> <span class="n">ListingPage</span>
+</pre></div>
+</div>
+<p>Next we can create the class definition by adding the following two
+lines:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pageobject</span><span class="p">(</span><span class="n">page_type</span><span class="o">=</span><span class="s2">&quot;Listing&quot;</span><span class="p">,</span> <span class="n">object_name</span><span class="o">=</span><span class="s2">&quot;MyObject__c&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyObjectListingPage</span><span class="p">(</span><span class="n">ListingPage</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>The first line registers this class as a page object for a listing page
+for the object <code class="docutils literal notranslate"><span class="pre">MyObject__c</span></code>. The second line begins the class
+definition.</p>
+</section>
+<section id="creating-the-keyword">
+<h3>Creating the keyword<a class="headerlink" href="#creating-the-keyword" title="Link to this heading">¶</a></h3>
+<p>At this point, all we need to do to create the keyword is to create a
+method on this object. The method name should be all lowercase, with
+underscores instead of spaces. When called from a Robot test, the case
+is ignored and all spaces are converted to underscores.</p>
+<p>In this case we want to create a method named
+<code class="docutils literal notranslate"><span class="pre">click_on_the_row_with_name</span></code>. All we want it to do is to find a link
+with the given name, click on the link, and then wait for the new page
+to load. To make the code more bulletproof, it will use a keyword from
+<code class="docutils literal notranslate"><span class="pre">SeleniumLibrary</span></code> to wait until the page contains the link before
+clicking on it. While probably not strictly necessary on this page,
+waiting for elements before interacting with them is a good habit to get
+into.</p>
+<p>Add the following under the class definition:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">click_on_the_row_with_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="n">xpath</span><span class="o">=</span><span class="s1">&#39;xpath://a[@title=&quot;</span><span class="si">{}</span><span class="s1">&quot;]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">selenium</span><span class="o">.</span><span class="n">wait_until_page_contains_element</span><span class="p">(</span><span class="n">xpath</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">selenium</span><span class="o">.</span><span class="n">click_link</span><span class="p">(</span><span class="n">xpath</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">salesforce</span><span class="o">.</span><span class="n">wait_until_loading_is_complete</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Notice that the above code is able to use the built-in properties
+<code class="docutils literal notranslate"><span class="pre">self.selenium</span></code> and <code class="docutils literal notranslate"><span class="pre">self.salesforce</span></code> to directly call keywords in the
+<code class="docutils literal notranslate"><span class="pre">SeleniumLibrary</span></code> and <code class="docutils literal notranslate"><span class="pre">Salesforce</span></code> keyword libraries.</p>
+</section>
+<section id="putting-it-all-together">
+<h3>Putting it all together<a class="headerlink" href="#putting-it-all-together" title="Link to this heading">¶</a></h3>
+<p>After adding all of the above code, our file should now look like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cumulusci.robotframework.pageobjects</span><span class="w"> </span><span class="kn">import</span> <span class="n">pageobject</span><span class="p">,</span> <span class="n">ListingPage</span>
+
+
+<span class="nd">@pageobject</span><span class="p">(</span><span class="n">page_type</span><span class="o">=</span><span class="s2">&quot;Listing&quot;</span><span class="p">,</span> <span class="n">object_name</span><span class="o">=</span><span class="s2">&quot;MyObject__c&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyObjectListingPage</span><span class="p">(</span><span class="n">ListingPage</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">click_on_the_row_with_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">xpath</span><span class="o">=</span><span class="s1">&#39;xpath://a[@title=&quot;</span><span class="si">{}</span><span class="s1">&quot;]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selenium</span><span class="o">.</span><span class="n">wait_until_page_contains_element</span><span class="p">(</span><span class="n">xpath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selenium</span><span class="o">.</span><span class="n">click_link</span><span class="p">(</span><span class="n">xpath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">salesforce</span><span class="o">.</span><span class="n">wait_until_loading_is_complete</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We now need to import this page object into our tests. In the first
+iteration of the test, we imported
+<code class="docutils literal notranslate"><span class="pre">cumulusci.robotframework.PageObjects</span></code>, which provided our test with
+keywords such as <code class="docutils literal notranslate"><span class="pre">Go</span> <span class="pre">to</span> <span class="pre">page</span></code> and <code class="docutils literal notranslate"><span class="pre">Current</span> <span class="pre">page</span> <span class="pre">should</span> <span class="pre">be</span></code>. In addition
+to being the source of these keywords, it is also the way to import page
+object files into a test case.</p>
+<p>To import a file with one or more page objects you need to supply the
+path to the page object file as an argument when importing
+<code class="docutils literal notranslate"><span class="pre">PageObjects</span></code>. The easiest way is to use Robot’s continuation
+characters <code class="docutils literal notranslate"><span class="pre">...</span></code> on a separate line.</p>
+<p>Modify the import statements at the top of <code class="docutils literal notranslate"><span class="pre">MyObject.robot</span></code> to look like
+the following:</p>
+<div class="highlight-robotframework notranslate"><div class="highlight"><pre><span></span><span class="gh">*** Settings ***</span>
+<span class="kn">Resource</span><span class="p">  </span><span class="nn">cumulusci/robotframework/Salesforce.robot</span>
+<span class="kn">Library</span><span class="p">   </span><span class="nn">cumulusci.robotframework.PageObjects</span>
+<span class="p">...  </span><span class="s">robot/MyProject/resources/MyObjectPages.py</span>
+</pre></div>
+</div>
+<p>This will import the page object definitions into the test case, but the
+keywords won’t be available until the page object is loaded. Page
+objects are loaded automatically when you call <code class="docutils literal notranslate"><span class="pre">Go</span> <span class="pre">to</span> <span class="pre">page</span></code>, or you can
+explicitly load them with <code class="docutils literal notranslate"><span class="pre">Load</span> <span class="pre">page</span> <span class="pre">object</span></code>. In both cases, the first
+argument is the page type (eg: [Listing]{.title-ref},
+[Home]{.title-ref}, etc) and the second argument is the object name (eg:
+<code class="docutils literal notranslate"><span class="pre">MyObject__c</span></code>).</p>
+<p>Our test is already using <code class="docutils literal notranslate"><span class="pre">Go</span> <span class="pre">to</span> <span class="pre">page</span></code>, so our keyword should already be
+available to us once we’ve gone to that page.</p>
+</section>
+</section>
+<section id="part-5-adding-test-data">
+<h2>Part 5: Adding test data<a class="headerlink" href="#part-5-adding-test-data" title="Link to this heading">¶</a></h2>
+<p>We want to be able to test that when we click on one of our custom
+objects on the listing page that it will take us to the detail page for
+that object. To do that, our test needs some test data. While that can
+be very complicated in a real-world scenario, for simple tests we can
+use the Salesforce API to create test data when the suite first starts
+up.</p>
+<p>To create the data when the suite starts, we can add a <code class="docutils literal notranslate"><span class="pre">Suite</span> <span class="pre">Setup</span></code> in
+the settings section of the test. This takes as an argument the name of
+a keyword. In our case we’re going to create a custom keyword right in
+the test to add some test data for us.</p>
+<p>It is not necessary to do it in a setup. It could be a step in an
+individual test case, for example. However, putting it in the
+<code class="docutils literal notranslate"><span class="pre">Suite</span> <span class="pre">Setup</span></code> guarantees it will run before any tests in the same file
+are run.</p>
+<p>Open up <code class="docutils literal notranslate"><span class="pre">MyObject.robot</span></code> and add the following just before
+<code class="docutils literal notranslate"><span class="pre">***</span> <span class="pre">Test</span> <span class="pre">Cases</span> <span class="pre">***</span></code>:</p>
+<div class="highlight-robotframework notranslate"><div class="highlight"><pre><span></span><span class="gh">*** Keywords ***</span>
+<span class="gu">Create test data</span>
+<span class="p">    [</span><span class="kn">Documentation</span><span class="p">]</span>
+<span class="p">    ...  </span><span class="s">Creates a MyObject record named &quot;Leeroy Jenkins&quot;</span>
+<span class="p">    ...  </span><span class="s">if one doesn&#39;t exist</span>
+
+<span class="p">    </span><span class="c">## Check to see if the record is already in the database,</span>
+<span class="p">    </span><span class="c">## and return if it already exists</span>
+<span class="p">    ${</span><span class="nv">status</span><span class="p">}  ${</span><span class="nv">result</span><span class="p">}=  </span><span class="nf">Run keyword and ignore error</span><span class="p">  </span><span class="s">Salesforce get</span><span class="p">  </span><span class="s">MyObject__c</span><span class="p">  </span><span class="s">Name=Leeroy Jenkins</span>
+<span class="p">    </span><span class="nf">Return from keyword if</span><span class="p">  </span><span class="s">&#39;</span><span class="p">${</span><span class="nv">status</span><span class="p">}</span><span class="s">&#39;==&#39;PASS&#39;</span>
+
+<span class="p">    </span><span class="c">## The record didn&#39;t exist, so create it</span>
+<span class="p">    </span><span class="nf">Log</span><span class="p">  </span><span class="s">creating MyObject object with name &#39;Leeroy Jenkins&#39;</span><span class="p">  </span><span class="s">DEBUG</span>
+<span class="p">    </span><span class="nf">Salesforce Insert</span><span class="p">  </span><span class="s">MyObject__c</span><span class="p">  </span><span class="s">Name=Leeroy Jenkins</span>
+</pre></div>
+</div>
+<p>We also need to modify our <code class="docutils literal notranslate"><span class="pre">Suite</span> <span class="pre">Setup</span></code> to call this keyword in
+addition to calling the <code class="docutils literal notranslate"><span class="pre">Open</span> <span class="pre">Test</span> <span class="pre">Browser</span></code> keyword. Since <code class="docutils literal notranslate"><span class="pre">Suite</span> <span class="pre">Setup</span></code>
+only accepts a single keyword, we can use the built-in keyword
+<code class="docutils literal notranslate"><span class="pre">Run</span> <span class="pre">keywords</span></code> to run more than one keyword in the setup.</p>
+<p>Change the suite setup to look like the following, again using Robot’s
+continuation characters to spread the code across multiple rows for
+readability.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is critical that you use all caps for <code class="docutils literal notranslate"><span class="pre">AND</span></code>, as that’s the way Robot
+knows where one keyword ends and the next begins.</p>
+</div>
+<div class="highlight-robotframework notranslate"><div class="highlight"><pre><span></span><span class="c">Suite Setup</span><span class="p">     </span><span class="c">Run keywords</span>
+<span class="c">...</span><span class="p">  </span><span class="c">Create test data</span>
+<span class="c">...</span><span class="p">  </span><span class="c">AND</span><span class="p">  </span><span class="c">Open test browser</span>
+</pre></div>
+</div>
+<p>Notice that our <code class="docutils literal notranslate"><span class="pre">Suite</span> <span class="pre">Teardown</span></code> calls
+<code class="docutils literal notranslate"><span class="pre">Delete</span> <span class="pre">records</span> <span class="pre">and</span> <span class="pre">close</span> <span class="pre">browser</span></code>. The <code class="docutils literal notranslate"><span class="pre">records</span></code> in that keyword
+refers to any data records created by <code class="docutils literal notranslate"><span class="pre">Salesforce</span> <span class="pre">Insert</span></code>. This makes it
+possible to both create and later clean up temporary data used for a
+test.</p>
+<p>It is important to note that the suite teardown isn’t guaranteed to run
+if you forcibly kill a running Robot test. For that reason, we added a
+step in <code class="docutils literal notranslate"><span class="pre">Create</span> <span class="pre">test</span> <span class="pre">data</span></code> to check for an existing record before adding
+it. If a previous test was interrupted and the record already exists,
+there’s no reason to create a new record.</p>
+</section>
+<section id="part-6-using-the-new-keyword">
+<h2>Part 6: Using the new keyword<a class="headerlink" href="#part-6-using-the-new-keyword" title="Link to this heading">¶</a></h2>
+<p>We are now ready to modify our test to use our new keyword, since we now
+have some test data in our database, and the keyword definition in our
+page object file.</p>
+<p>Once again, edit <code class="docutils literal notranslate"><span class="pre">MyObject.robot</span></code> to add the following two statements at
+the end of our test:</p>
+<div class="highlight-robotframework notranslate"><div class="highlight"><pre><span></span><span class="c">Click on the row with name</span><span class="p">  </span><span class="c">Leeroy Jenkins</span>
+<span class="c">Current page should be</span><span class="p">  </span><span class="c">Detail</span><span class="p">  </span><span class="c">MyObject__c</span>
+</pre></div>
+</div>
+<p>The complete test should now look like this:</p>
+<div class="highlight-robotframework notranslate"><div class="highlight"><pre><span></span><span class="gh">*** Settings ***</span>
+<span class="kn">Resource</span><span class="p">  </span><span class="nn">cumulusci/robotframework/Salesforce.robot</span>
+<span class="kn">Library</span><span class="p">   </span><span class="nn">cumulusci.robotframework.PageObjects</span>
+<span class="p">...  </span><span class="s">robot/MyProject/resources/MyObjectPages.py</span>
+
+<span class="kn">Suite Setup</span><span class="p">     </span><span class="nf">Run keywords</span>
+<span class="p">...  </span><span class="s">Create test data</span>
+<span class="p">...  </span><span class="s">AND</span><span class="p">  </span><span class="s">Open test browser</span>
+<span class="kn">Suite Teardown</span><span class="p">  </span><span class="nf">Delete records and close browser</span>
+
+<span class="gh">*** Keywords ***</span>
+<span class="gu">Create test data</span>
+<span class="p">    [</span><span class="kn">Documentation</span><span class="p">]  </span><span class="s">Creates a MyObject record named &quot;Leeroy Jenkins&quot; if one doesn&#39;t exist</span>
+
+<span class="p">    </span><span class="c">## Check to see if the record is already in the database,</span>
+<span class="p">    </span><span class="c">## and do nothing if it already exists</span>
+<span class="p">    ${</span><span class="nv">status</span><span class="p">}  ${</span><span class="nv">result</span><span class="p">}=  </span><span class="nf">Run keyword and ignore error</span><span class="p">  </span><span class="s">Salesforce get</span><span class="p">  </span><span class="s">MyObject__c</span><span class="p">  </span><span class="s">Name=Leeroy Jenkins</span>
+<span class="p">    </span><span class="nf">Return from keyword if</span><span class="p">  </span><span class="s">&#39;</span><span class="p">${</span><span class="nv">status</span><span class="p">}</span><span class="s">&#39;==&#39;PASS&#39;</span>
+
+<span class="p">    </span><span class="c">## The record didn&#39;t exist, so create it</span>
+<span class="p">    </span><span class="nf">Log</span><span class="p">  </span><span class="s">creating MyObject object with name &#39;Leeroy Jenkins&#39;</span><span class="p">  </span><span class="s">DEBUG</span>
+<span class="p">    </span><span class="nf">Salesforce Insert</span><span class="p">  </span><span class="s">MyObject__c</span><span class="p">  </span><span class="s">Name=Leeroy Jenkins</span>
+
+<span class="gh">*** Test Cases ***</span>
+<span class="gu">Test the MyObject listing page</span>
+<span class="p">    </span><span class="nf">Go to page</span><span class="p">  </span><span class="s">Listing</span><span class="p">  </span><span class="s">MyObject__c</span>
+<span class="p">    </span><span class="nf">Current page should be</span><span class="p">  </span><span class="s">Listing</span><span class="p">  </span><span class="s">MyObject__c</span>
+
+<span class="p">    </span><span class="nf">Click on the row with name</span><span class="p">  </span><span class="s">Leeroy Jenkins</span>
+<span class="p">    </span><span class="nf">Current page should be</span><span class="p">  </span><span class="s">Detail</span><span class="p">  </span><span class="s">MyObject__c</span>
+</pre></div>
+</div>
+<p>With everything in place, we should be able to run the test using the
+same command as before:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cci<span class="w"> </span>task<span class="w"> </span>run<span class="w"> </span>robot<span class="w"> </span>-o<span class="w"> </span>suites<span class="w"> </span>robot/MyProject/tests/MyObject.robot<span class="w"> </span>--org<span class="w"> </span>dev
+<span class="go">2019-05-21 22:02:27: Getting scratch org info from Salesforce DX</span>
+<span class="go">2019-05-21 22:02:31: Beginning task: Robot</span>
+<span class="go">2019-05-21 22:02:31:        As user: test-wftmq9afc3ud@example.com</span>
+<span class="go">2019-05-21 22:02:31:         In org: 00Df0000003cuDx</span>
+<span class="go">2019-05-21 22:02:31:</span>
+<span class="go">==============================================================================</span>
+<span class="go">MyObject</span>
+<span class="go">==============================================================================</span>
+<span class="go">Test the MyObject listing page                                        | PASS |</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">MyObject                                                              | PASS |</span>
+<span class="go">1 critical test, 1 passed, 0 failed</span>
+<span class="go">1 test total, 1 passed, 0 failed</span>
+<span class="go">==============================================================================</span>
+<span class="go">Output:  /Users/boakley/dev/MyProject/robot/MyProject/results/output.xml</span>
+<span class="go">Log:     /Users/boakley/dev/MyProject/robot/MyProject/results/log.html</span>
+<span class="go">Report:  /Users/boakley/dev/MyProject/robot/MyProject/results/report.html</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="robot-debugger.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Robot Debugger</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="robot-advanced.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Robot Advanced Topics</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Salesforce.org
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Robot Tutorial</a><ul>
+<li><a class="reference internal" href="#part-1-folder-structure">Part 1: Folder Structure</a></li>
+<li><a class="reference internal" href="#part-2-creating-a-custom-object">Part 2: Creating a custom object</a></li>
+<li><a class="reference internal" href="#part-3-creating-and-running-your-first-robot-test">Part 3: Creating and running your first Robot test</a></li>
+<li><a class="reference internal" href="#part-4-creating-a-page-object">Part 4: Creating a page object</a><ul>
+<li><a class="reference internal" href="#defining-the-class">Defining the class</a></li>
+<li><a class="reference internal" href="#creating-the-keyword">Creating the keyword</a></li>
+<li><a class="reference internal" href="#putting-it-all-together">Putting it all together</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#part-5-adding-test-data">Part 5: Adding test data</a></li>
+<li><a class="reference internal" href="#part-6-using-the-new-keyword">Part 6: Using the new keyword</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=dac0bbfe"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

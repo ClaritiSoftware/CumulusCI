@@ -1,0 +1,606 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="about.html" /><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Release Managed and Unlocked Packages" href="packaging.html" /><link rel="prev" title="Testing with Second-Generation Packaging" href="2gp-testing.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>Run CumulusCI Headlessly - CumulusCI 4.6.0.dev1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">CumulusCI 4.6.0.dev1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">CumulusCI 4.6.0.dev1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Key Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get-started.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">The <code class="docutils literal notranslate"><span class="pre">cci</span></code> Command Line</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="config.html">Configure CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Configure CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="deploy.html">Configure Metadata Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scratch-orgs.html">Manage Scratch Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connected-orgs.html">Connect Persistent Orgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Develop a Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Automate Data Operations</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="robot.html">Acceptance Testing with Robot Framework</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Acceptance Testing with Robot Framework</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="robot-locators.html">Managing Locators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-advanced.html">Robot Advanced Topics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-tutorial.html">Robot Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-debugger.html">Robot Debugger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot-playwright.html">Playwright Technology Preview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="continuous-integration.html">Continuous Integration</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Continuous Integration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cumulusci-flow.html">CumulusCI Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="github-actions.html">Run CumulusCI from GitHub Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="2gp-testing.html">Testing with Second-Generation Packaging</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Run CumulusCI Headlessly</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="packaging.html">Release Managed and Unlocked Packages</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Release Managed and Unlocked Packages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="managed-package.html">Release a First-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="managed-2gp.html">Release a Second-Generation Managed Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unlocked-package.html">Release an Unlocked Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="npsp-eda-2gp.html">Extend NPSP and EDA with Second-Generation Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-notes.html">Generate Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-upgrades.html">Manage Push Upgrades</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="unpackaged.html">Manage Unpackaged Configuration</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Manage Unpackaged Configuration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="metadata-etl.html">Metadata ETL</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cheat-sheet.html">Cheat Sheet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flows.html">Flow Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env-var-reference.html">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="org_config-reference.html">org_config Object Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="about.html">About CumulusCI</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of About CumulusCI</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contribute to CumulusCI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/headless.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="run-cumulusci-headlessly">
+<h1>Run CumulusCI Headlessly<a class="headerlink" href="#run-cumulusci-headlessly" title="Link to this heading">¶</a></h1>
+<p>CumulusCI can be used to run continuous integration builds in your CI
+system.</p>
+<p>This section outlines how to setup services and orgs that can be defined
+in a particular environment such that they will be recognized by
+CumulusCI.</p>
+<p>If you’re working in GitHub Actions, you can take advantage of our
+<a class="reference internal" href="github-actions.html"><span class="doc std std-doc">GitHub Actions framework</span></a> to streamline your setup
+process. You’ll need the information in this document only if you wish
+to use an alternate authorization strategy or configure additional
+services.</p>
+<section id="register-environment-services">
+<span id="id1"></span><h2>Register Environment Services<a class="headerlink" href="#register-environment-services" title="Link to this heading">¶</a></h2>
+<p>It is often the case that services you use for local development will
+differ from the services that you want to use in your build system. For
+example, developers will setup a GitHub service locally that is
+associated with their GitHub User, while an integration build may want
+to run as an integration user when interacting with GitHub. By providing
+environment variables with specific prefixes, CumulusCI can detect and
+register those services for use when running tasks and flows.</p>
+<section id="name-environment-services">
+<h3>Name Environment Services<a class="headerlink" href="#name-environment-services" title="Link to this heading">¶</a></h3>
+<p>Environment variables that define CumulusCI services adhere to the
+following format:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">CUMULUSCI_SERVICE_&lt;service_type&gt;[__service_name]</span>
+</pre></div>
+</div>
+<p>All services should start with the prefix <code class="docutils literal notranslate"><span class="pre">CUMULUSCI_SERVICE_</span></code> followed
+immediately by the <code class="docutils literal notranslate"><span class="pre">service_type</span></code> (for a full list of available services
+run <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">service</span> <span class="pre">list</span></code>). Additionally, you have the option to provide a
+unique name for your service by adding a double underscore (<code class="docutils literal notranslate"><span class="pre">__</span></code>)
+followed by the name you wish to use. If a name is specified it is
+prepended with “env-” to help establish that this service is coming
+from the environment. If a name is not specified, a defualt name of
+<code class="docutils literal notranslate"><span class="pre">env</span></code> is used for that service.</p>
+<p>Here are some examples of environment variable names along with their
+corresponding service types and names:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CUMULUSCI_SERVICE_github</span></code> –&gt; A <code class="docutils literal notranslate"><span class="pre">github</span></code> service that will have
+the default name of <code class="docutils literal notranslate"><span class="pre">env</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CUMULUSCI_SERVICE_github__integration-user</span></code> –&gt; A <code class="docutils literal notranslate"><span class="pre">github</span></code>
+service that will have the name <code class="docutils literal notranslate"><span class="pre">env-integration-user</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CUMULUSCI_SERVICE_github_enterprise__enter-user</span></code> –&gt; A <code class="docutils literal notranslate"><span class="pre">github_enterprise</span></code>
+service that will have the name <code class="docutils literal notranslate"><span class="pre">env-enter-user</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CUMULUSCI_SERVICE_connected_app</span></code> –&gt; A <code class="docutils literal notranslate"><span class="pre">connected_app</span></code> service
+with the default name of <code class="docutils literal notranslate"><span class="pre">env</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CUMULUSCI_SERVICE_connected_app__sandbox</span></code> –&gt; A <code class="docutils literal notranslate"><span class="pre">connected_app</span></code>
+service with the name <code class="docutils literal notranslate"><span class="pre">env-sandbox</span></code></p></li>
+</ul>
+<p>By always prepending <code class="docutils literal notranslate"><span class="pre">env</span></code> to the names of services
+specified by environment variables, it is easy to see which services are
+currently set by environment variables and which are not.</p>
+</section>
+<section id="environment-service-config-values">
+<h3>Environment Service Config Values<a class="headerlink" href="#environment-service-config-values" title="Link to this heading">¶</a></h3>
+<p>The value of the environment variables (i.e. everything that comes after
+the <code class="docutils literal notranslate"><span class="pre">=</span></code> character) are provided in the form of a JSON string. The
+following shows an example that defines a github service via an
+environment variable:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">CUMULUSCI_SERVICE_github=&#39;{&quot;username&quot;: &quot;jdoe&quot;, &quot;email&quot;: &quot;jane.doe@some.biz&quot;, &quot;token&quot;: &quot;&lt;personal_access_token&gt;&quot;}&#39;</span>
+</pre></div>
+</div>
+<p>These values provide CumulusCI with the required attributes for a
+particular service. The easiest way to find what attributes are needed
+for a particular service is to look for your service under the <a class="reference external" href="https://github.com/SFDO-Tooling/CumulusCI/blob/34533b4a1caa3f1850c64e223ece26069c83b60e/cumulusci/cumulusci.yml#L1164">services
+tag in the CumulusCI standard
+library</a>
+and provide values for all “attributes” listed under the desired
+service. You can also use <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">service</span> <span class="pre">info</span></code> to get the values from a
+service you’ve configured locally.</p>
+<p>For example, if you’re looking to register a <code class="docutils literal notranslate"><span class="pre">connected_app</span></code> service,
+then the attributes: <code class="docutils literal notranslate"><span class="pre">callback_url</span></code>, <code class="docutils literal notranslate"><span class="pre">client_id</span></code>, and <code class="docutils literal notranslate"><span class="pre">client_secret</span></code>
+would need to be provided in the following format:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;callback_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;callback_url&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;client_id&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;client_secret&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;client_secret&gt;&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>The values <code class="docutils literal notranslate"><span class="pre">&lt;callback_url&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;client_id&gt;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&lt;client_secret&gt;</span></code>
+should all be replaced with actual values.</p>
+</div></blockquote>
+</section>
+<section id="github-enterprise-server-considerations">
+<h3>GitHub Enterprise Server considerations<a class="headerlink" href="#github-enterprise-server-considerations" title="Link to this heading">¶</a></h3>
+<p>The use of <a class="reference internal" href="env-var-reference.html"><span class="doc std std-doc">GitHub environment variables</span></a> is supported when connecting to a repository a GitHub Enterprise Server.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">GitHubEnterprise</span></code> client is selected automatically based on the repository configuration in the <code class="docutils literal notranslate"><span class="pre">cumulusci.yml</span></code> file. When the <code class="docutils literal notranslate"><span class="pre">repo_url</span></code> is NOT GitHub.com an attempt will be made to connect to the base domain in <code class="docutils literal notranslate"><span class="pre">repo_url</span></code>. The <a class="reference internal" href="env-var-reference.html"><span class="doc std std-doc">GitHub environemnt variables</span></a> are then used to authorize.</p>
+<p>If your use case requires dependencies on a different server, for example, upstream dependencies reside on GitHub.com but your project repository is stored on a GitHub Enterprise Server do not use <a class="reference internal" href="env-var-reference.html#github-token"><span class="std std-ref">GITHUB_TOKEN</span></a>, instead configure services for GitHub.com and your GitHub Enterprise Server similarly to this example:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">CUMULUSCI_SERVICE_github=&#39;{&quot;username&quot;: &quot;jdoe&quot;, &quot;email&quot;: &quot;jane.doe@some.biz&quot;, &quot;token&quot;: &quot;&lt;personal_access_token&gt;&quot;}&#39;</span>
+<span class="go">CUMULUSCI_SERVICE_github_enterprise`=&#39;{&quot;username&quot;: &quot;jdoe&quot;, &quot;email&quot;: &quot;jane.doe@some.biz&quot;, &quot;server_domain&quot;:&quot;git.some.biz&quot;, &quot;token&quot;: &quot;&lt;enterprise_personal_access_token&gt;&quot;}&#39;</span>
+</pre></div>
+</div>
+<p>When connecting to repositories on GitHub.com or GitHub Enterprise Server, the service configuration for authorization is selected automatically by matching the <code class="docutils literal notranslate"><span class="pre">server_domain</span></code> field to the repository domain. When a repository domain is <code class="docutils literal notranslate"><span class="pre">github.com</span></code> the <code class="docutils literal notranslate"><span class="pre">github</span></code> service will be used.</p>
+</section>
+</section>
+<section id="register-persistent-orgs">
+<span id="id2"></span><h2>Register Persistent Orgs<a class="headerlink" href="#register-persistent-orgs" title="Link to this heading">¶</a></h2>
+<section id="sfdx-auth-url-authorization">
+<h3>SFDX Auth URL Authorization<a class="headerlink" href="#sfdx-auth-url-authorization" title="Link to this heading">¶</a></h3>
+<p>CumulusCI can import persistent org authorization from the SFDX CLI.
+This capability allows you to store the SFDX auth URL for an org in
+your CI system’s secret storage, import it into the SFDX keychain,
+and then use it directly from CumulusCI.</p>
+<p>To do so, follow these steps.</p>
+<ol class="arabic simple">
+<li><p>Retrieve your auth URL.</p></li>
+<li><p>Authorize the org using <code class="docutils literal notranslate"><span class="pre">sf</span> <span class="pre">org</span> <span class="pre">login</span> <span class="pre">sfdx-url</span></code>.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">org</span> <span class="pre">import</span> <span class="pre">&lt;sfdx_alias&gt;</span> <span class="pre">--org</span> <span class="pre">&lt;cci_alias&gt;</span></code> (or provide the desired
+CumulusCI org name as the second positional argument).</p></li>
+</ol>
+</section>
+<section id="jwt-flow-authorization">
+<h3>JWT Flow Authorization<a class="headerlink" href="#jwt-flow-authorization" title="Link to this heading">¶</a></h3>
+<p>Using JWT authorization provides you with the greatest control over access
+to your persistent org. This approach uses a Connected App and digital certificate,
+which you control and can rotate as desired.</p>
+<p>First, you need a Connected App that is configured with a certificate in
+the “Use digital signatures” setting in its OAuth settings. You can
+follow the Salesforce DX Developer Guide to get this set up:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_key_and_cert.htm">Create a private key and self-signed
+certificate</a></p></li>
+<li><p><a class="reference external" href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_connected_app.htm">Create a Connected
+App</a></p></li>
+<li><p>In addition to the OAuth scopes mentioned in that article, CumulusCI
+also requires the <code class="docutils literal notranslate"><span class="pre">full</span></code> scope.</p></li>
+</ul>
+<p>Once you have a Connected App created, you can configure CumulusCI to
+use this Connected App to login to a persistent org by setting the
+following environment variables.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CUMULUSCI_ORG_orgName</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SFDX_CLIENT_ID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SFDX_HUB_KEY</span></code></p></li>
+</ul>
+<p>See the below entries for the values to use with each.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Setting the above environment variables negates the need to use the
+<code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">org</span> <span class="pre">connect</span></code> command. You can simply run a <code class="docutils literal notranslate"><span class="pre">cci</span></code> command and pass
+the <code class="docutils literal notranslate"><span class="pre">--org</span> <span class="pre">orgName</span></code> option, where <code class="docutils literal notranslate"><span class="pre">orgName</span></code> corresponds to the name used
+in the <code class="docutils literal notranslate"><span class="pre">CUMULUSCI_ORG_*</span></code> environment variable.</p>
+</div>
+<p>In the context of GitHub Actions, all of these environment variables
+would be declared under the <code class="docutils literal notranslate"><span class="pre">env</span></code> section of a workflow. Below is an
+example of what this would look like:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">env</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">CUMULUSCI_ORG_sandbox</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">{</span>
+<span class="w">            </span><span class="s">&quot;username&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">&quot;just.in@salesforce.org&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">            </span><span class="s">&quot;instance_url&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">&quot;https://sfdo--sbxname.my.salesforce.com&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">SFDX_CLIENT_ID</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w"> </span><span class="nv">$secrets.client_id</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">SFDX_HUB_KEY</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w"> </span><span class="nv">$secrets.server_key</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<p>The above assumes that you have <code class="docutils literal notranslate"><span class="pre">client_id</span></code> and <code class="docutils literal notranslate"><span class="pre">server_key</span></code> setup in
+your GitHub <a class="reference external" href="https://docs.github.com/en/free-pro-team&#64;latest/actions/reference/encrypted-secrets">encrypted
+secrets</a></p>
+<p>Note that the value of the <code class="docutils literal notranslate"><span class="pre">server_key</span></code> environment variable is the
+content of the file <code class="docutils literal notranslate"><span class="pre">server.key</span></code>, which was created as part of your
+Connected App setup. The key is in PEM format.</p>
+<section id="cumulusci-org-orgname">
+<h4><code class="docutils literal notranslate"><span class="pre">CUMULUSCI_ORG_orgName</span></code><a class="headerlink" href="#cumulusci-org-orgname" title="Link to this heading">¶</a></h4>
+<p>The name of this environment variable defines what name to use for the
+value of the <code class="docutils literal notranslate"><span class="pre">--org</span></code> option. For example, a value of
+<code class="docutils literal notranslate"><span class="pre">CUMULUSCI_ORG_mySandbox</span></code> would mean you use <code class="docutils literal notranslate"><span class="pre">--org</span> <span class="pre">mySandbox</span></code> to use
+this org in a <code class="docutils literal notranslate"><span class="pre">cci</span></code> command.</p>
+<p>Set this variable equal to the following json string:</p>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;USERNAME&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;instance_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;INSTANCE_URL&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">USERNAME</span></code> - The username of the user who will login to the target
+org.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">INSTANCE_URL</span></code> - The instance URL for the org. Should begin with the
+<code class="docutils literal notranslate"><span class="pre">https://</span></code> schema.</p></li>
+</ul>
+<p>You can see an example of setting this environment variable in a GitHub
+actions workflow in our <a class="reference external" href="https://github.com/SFDO-Tooling/CumulusCI-CI-Demo/blob/404c5114dac8afd3747963d5abf63be774e61757/.github/workflows/main.yml#L11">demo
+repository</a>.</p>
+<div class="admonition-wizard-note admonition">
+<p class="admonition-title">Wizard Note</p>
+<p>If the target org’s instance URL is instanceless (i.e. does not contain
+a segment like cs46 identifying the instance), then for sandboxes it is
+also necessary to set <code class="docutils literal notranslate"><span class="pre">SFDX_AUDIENCE_URL</span></code> to
+<code class="docutils literal notranslate"><span class="pre">https://test.salesforce.com&quot;</span></code>. This instructs CumulusCI to set the
+correct <code class="docutils literal notranslate"><span class="pre">aud</span></code> value in the JWT (which is normally determined from the
+instance URL).</p>
+</div>
+</section>
+<section id="sfdx-client-id">
+<h4><code class="docutils literal notranslate"><span class="pre">SFDX_CLIENT_ID</span></code><a class="headerlink" href="#sfdx-client-id" title="Link to this heading">¶</a></h4>
+<p>Set this to your Connected App’s client id. This, combined with the
+<code class="docutils literal notranslate"><span class="pre">SFDX_HUB_KEY</span></code> variable instructs CumulusCI to authenticate to the org
+using the <a class="reference external" href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm##sfdx_dev_auth_jwt_flow">JWT Bearer
+Flow</a>
+instead of the <a class="reference external" href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_web_flow.htm##!">Web Server
+Flow</a>.</p>
+</section>
+<section id="sfdx-hub-key">
+<h4><code class="docutils literal notranslate"><span class="pre">SFDX_HUB_KEY</span></code><a class="headerlink" href="#sfdx-hub-key" title="Link to this heading">¶</a></h4>
+<p>Set this to the private key associated with your Connected App (this is
+the contents of your <code class="docutils literal notranslate"><span class="pre">server.key</span></code> file). This combined with the
+<code class="docutils literal notranslate"><span class="pre">SFDX_CLIENT_ID</span></code> variable instructs CumulusCI to authenticate to the org
+using the <a class="reference external" href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm##sfdx_dev_auth_jwt_flow">JWT Bearer
+Flow</a>
+instead of the <a class="reference external" href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_web_flow.htm##!">Web Server
+Flow</a>.</p>
+</section>
+</section>
+</section>
+<section id="multiple-services-of-the-same-type">
+<h2>Multiple Services of the Same Type<a class="headerlink" href="#multiple-services-of-the-same-type" title="Link to this heading">¶</a></h2>
+<p>In rare cases a build may need to utilize multiple services of the same
+type. To set a specific service as the default for subsequent
+tasks/flows run the <code class="docutils literal notranslate"><span class="pre">cci</span> <span class="pre">service</span> <span class="pre">default</span> <span class="pre">&lt;service_type&gt;</span> <span class="pre">&lt;name&gt;</span></code> command.
+You can run this command again to set a new default service to be used
+for the given service type.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="packaging.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Release Managed and Unlocked Packages</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="2gp-testing.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Testing with Second-Generation Packaging</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Salesforce.org
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Run CumulusCI Headlessly</a><ul>
+<li><a class="reference internal" href="#register-environment-services">Register Environment Services</a><ul>
+<li><a class="reference internal" href="#name-environment-services">Name Environment Services</a></li>
+<li><a class="reference internal" href="#environment-service-config-values">Environment Service Config Values</a></li>
+<li><a class="reference internal" href="#github-enterprise-server-considerations">GitHub Enterprise Server considerations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#register-persistent-orgs">Register Persistent Orgs</a><ul>
+<li><a class="reference internal" href="#sfdx-auth-url-authorization">SFDX Auth URL Authorization</a></li>
+<li><a class="reference internal" href="#jwt-flow-authorization">JWT Flow Authorization</a><ul>
+<li><a class="reference internal" href="#cumulusci-org-orgname"><code class="docutils literal notranslate"><span class="pre">CUMULUSCI_ORG_orgName</span></code></a></li>
+<li><a class="reference internal" href="#sfdx-client-id"><code class="docutils literal notranslate"><span class="pre">SFDX_CLIENT_ID</span></code></a></li>
+<li><a class="reference internal" href="#sfdx-hub-key"><code class="docutils literal notranslate"><span class="pre">SFDX_HUB_KEY</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multiple-services-of-the-same-type">Multiple Services of the Same Type</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=dac0bbfe"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
