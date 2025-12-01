@@ -929,9 +929,17 @@ class TestScratchOrgConfigPytest:
         mock_checkout.return_value = SimpleNamespace(
             username="user@example.com", alias=None
         )
-        imported_org = mock.Mock(spec=ScratchOrgConfig)
-        imported_org.config = {"username": "user@example.com"}
-        imported_org.expired = True
+        imported_org = ScratchOrgConfig(
+            {
+                "config_file": "tmp.json",
+                "username": "user@example.com",
+                "date_created": datetime.utcnow() - timedelta(days=8),
+                "days": 1,
+            },
+            "expired-import",
+            mock_keychain,
+        )
+        assert imported_org.expired
         mock_import.return_value = imported_org
         mock_set_alias.return_value = (True, None)
 
