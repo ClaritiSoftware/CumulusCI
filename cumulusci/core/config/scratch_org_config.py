@@ -64,7 +64,15 @@ class ScratchOrgConfig(SfdxOrgConfig):
     @property
     def expired(self) -> bool:
         """Check if an org has already expired"""
-        return bool(self.expires) and self.expires < datetime.datetime.utcnow()
+        expires = self.expires
+        if not expires:
+            return False
+
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=datetime.timezone.utc)
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+        return expires < now
 
     @property
     def expires(self) -> Optional[datetime.datetime]:
@@ -74,7 +82,10 @@ class ScratchOrgConfig(SfdxOrgConfig):
     @property
     def days_alive(self) -> Optional[int]:
         if self.date_created and not self.expired:
-            delta = datetime.datetime.utcnow() - self.date_created
+            created = self.date_created
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=datetime.timezone.utc)
+            delta = datetime.datetime.now(datetime.timezone.utc) - created
             return delta.days + 1
 
     def create_org(self) -> None:
@@ -165,7 +176,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
 
         self.config["org_id"] = res["orgId"]
         self.config["username"] = res["username"]
-        self.config["date_created"] = datetime.datetime.utcnow()
+        self.config["date_created"] = datetime.datetime.now(datetime.timezone.utc)
 
         if stderr.strip():
             self.logger.debug("SFDX stderr: %s", stderr)
