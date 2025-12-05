@@ -2,7 +2,7 @@ import io
 import os
 import shutil
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -546,13 +546,30 @@ class TestScratchOrgConfig:
 
     def test_expires(self, Command):
         config = ScratchOrgConfig({"days": 1}, "test")
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         config.date_created = now
         assert config.expires == now + timedelta(days=1)
 
         config = ScratchOrgConfig({"days": 1}, "test")
         config.date_created = None
         assert config.expires is None
+
+    def test_expired_handles_tzinfo_without_offset(self, Command):
+        class TzinfoWithoutOffset(tzinfo):
+            def utcoffset(self, dt):
+                return None
+
+            def dst(self, dt):
+                return None
+
+            def tzname(self, dt):
+                return "NoneOffset"
+
+        config = ScratchOrgConfig({"days": 1}, "test")
+        config.date_created = datetime(2000, 1, 1, tzinfo=TzinfoWithoutOffset())
+
+        assert config.expired
+        assert config.expires.tzinfo is not None
 
     def test_days_alive(self, Command):
         config = ScratchOrgConfig({}, "test")
