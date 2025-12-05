@@ -43,6 +43,17 @@ class ScratchOrgConfig(SfdxOrgConfig):
     org_pool_id: str
 
     createable: bool = True
+    @staticmethod
+    def _as_aware_utc(dt: datetime.datetime) -> datetime.datetime:
+        """Normalize datetimes to aware UTC for safe comparisons."""
+        if isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime):
+            dt = datetime.datetime.combine(dt, datetime.time.min)
+
+        tzinfo = getattr(dt, "tzinfo", None)
+        if tzinfo is None or tzinfo.utcoffset(dt) is None:
+            return dt.replace(tzinfo=datetime.timezone.utc)
+
+        return dt.astimezone(datetime.timezone.utc)
 
     @property
     def scratch_info(self):
@@ -68,23 +79,20 @@ class ScratchOrgConfig(SfdxOrgConfig):
         if not expires:
             return False
 
-        if expires.tzinfo is None:
-            expires = expires.replace(tzinfo=datetime.timezone.utc)
-
+        expires = self._as_aware_utc(expires)
         now = datetime.datetime.now(datetime.timezone.utc)
         return expires < now
 
     @property
     def expires(self) -> Optional[datetime.datetime]:
         if self.date_created:
-            return self.date_created + datetime.timedelta(days=int(self.days))
+            expires = self.date_created + datetime.timedelta(days=int(self.days))
+            return self._as_aware_utc(expires)
 
     @property
     def days_alive(self) -> Optional[int]:
         if self.date_created and not self.expired:
-            created = self.date_created
-            if created.tzinfo is None:
-                created = created.replace(tzinfo=datetime.timezone.utc)
+            created = self._as_aware_utc(self.date_created)
             delta = datetime.datetime.now(datetime.timezone.utc) - created
             return delta.days + 1
 
