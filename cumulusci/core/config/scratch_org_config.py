@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 import tempfile
-from typing import List, NoReturn, Optional, TYPE_CHECKING
+from typing import List, NoReturn, Optional, TYPE_CHECKING, Union
 
 import sarge
 
@@ -44,7 +44,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
 
     createable: bool = True
     @staticmethod
-    def _as_aware_utc(dt: datetime.datetime) -> datetime.datetime:
+    def _as_aware_utc(dt: Union[datetime.datetime, datetime.date]) -> datetime.datetime:
         """Normalize datetimes to aware UTC for safe comparisons."""
         if isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime):
             dt = datetime.datetime.combine(dt, datetime.time.min)
