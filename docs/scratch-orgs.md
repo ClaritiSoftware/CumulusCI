@@ -313,6 +313,8 @@ CumulusCI leaves the pool metadata intact while creating the org from scratch.
 | set | falsy | truthy | Attempts Clariti checkout; failing checkout raises `ScratchOrgException`. |
 | set | falsy | falsy | Attempts Clariti checkout; failing checkout falls back to scratch org creation. |
 
+**Note:** "truthy" values include `1`, `true`, `yes`, or `on` (case-insensitive); "falsy" includes empty string, `0`, `false`, `no`, or `off`.
+
 ## Use a Non-Default Dev Hub
 
 By default, CumulusCI creates scratch orgs using the DevHub org
