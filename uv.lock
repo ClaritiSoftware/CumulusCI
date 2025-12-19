@@ -354,7 +354,7 @@ requires-dist = [
     { name = "selenium", specifier = "<4" },
     { name = "sentry-sdk", specifier = ">=2.8.0,<3" },
     { name = "simple-salesforce", specifier = "==1.11.4" },
-    { name = "snowfakery", specifier = ">=4.1.0" },
+    { name = "snowfakery", specifier = ">=4.2.0" },
     { name = "sqlalchemy", specifier = "<2" },
     { name = "xmltodict" },
 ]
@@ -2038,15 +2038,15 @@ wheels = [
 
 [[package]]
 name = "sentry-sdk"
-version = "2.49.0"
+version = "2.52.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/02/94/23ac26616a883f492428d9ee9ad6eee391612125326b784dbfc30e1e7bab/sentry_sdk-2.49.0.tar.gz", hash = "sha256:c1878599cde410d481c04ef50ee3aedd4f600e4d0d253f4763041e468b332c30", size = 387228, upload-time = "2026-01-08T09:56:25.642Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/eb/1b497650eb564701f9a7b8a95c51b2abe9347ed2c0b290ba78f027ebe4ea/sentry_sdk-2.52.0.tar.gz", hash = "sha256:fa0bec872cfec0302970b2996825723d67390cdd5f0229fb9efed93bd5384899", size = 410273, upload-time = "2026-02-04T15:03:54.706Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/43/1c586f9f413765201234541857cb82fda076f4b0f7bad4a0ec248da39cf3/sentry_sdk-2.49.0-py2.py3-none-any.whl", hash = "sha256:6ea78499133874445a20fe9c826c9e960070abeb7ae0cdf930314ab16bb97aa0", size = 415693, upload-time = "2026-01-08T09:56:21.872Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/63/2c6daf59d86b1c30600bff679d039f57fd1932af82c43c0bde1cbc55e8d4/sentry_sdk-2.52.0-py2.py3-none-any.whl", hash = "sha256:931c8f86169fc6f2752cb5c4e6480f0d516112e78750c312e081ababecbaf2ed", size = 435547, upload-time = "2026-02-04T15:03:51.567Z" },
 ]
 
 [[package]]
@@ -2091,7 +2091,7 @@ wheels = [
 
 [[package]]
 name = "snowfakery"
-version = "4.1.0"
+version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -2108,9 +2108,9 @@ dependencies = [
     { name = "setuptools" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bf/6d/8e13daa8b9ebc5f6b24351ab0bf3a25be59bc24d68b9f7636e7ce779957d/snowfakery-4.1.0.tar.gz", hash = "sha256:d589c14ab7673649023138b6ef468a51e8bc1c390db624be115d1adbfe5c1d36", size = 76085, upload-time = "2025-10-09T05:51:05.144Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ea/48/b155854cd42d4bf345873fc11bdeb3257a505914de088dc8a0ec90e8753e/snowfakery-4.2.0.tar.gz", hash = "sha256:930df06131749d033559e5edb4a60daa747beacafa8a36b07093d23da7095908", size = 110275, upload-time = "2025-12-19T09:17:56.172Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/87/1f9b9dc9ee25c32aff7f90187d64c727baa01ca1a8b4d1a43bb982110929/snowfakery-4.1.0-py3-none-any.whl", hash = "sha256:c13453ae5240bbc3d0ccf6049d3c9f1989d0c803672e88f7cff25419828c6ce0", size = 100778, upload-time = "2025-10-09T05:51:06.514Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/00/dca6dd168eeb2783e0e667923155cee1695b594bdcb22c27214379214728/snowfakery-4.2.0-py3-none-any.whl", hash = "sha256:e5df8361c86bc70741fdb8d31d2e420d0bb9e0c804097874756911ec6d2ee49b", size = 138789, upload-time = "2025-12-19T09:17:54.94Z" },
 ]
 
 [[package]]
