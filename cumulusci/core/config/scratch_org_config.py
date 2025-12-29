@@ -99,7 +99,15 @@ class ScratchOrgConfig(SfdxOrgConfig):
     def create_org(self) -> None:
         """Uses sf org create scratch  to create the org"""
         try:
-            if self._try_checkout_pooled_org():
+            if (
+                self.config.get("org_pool_id")
+                and self._should_skip_pool_checkout_env()
+            ):
+                self.logger.info(
+                    "Skipping Clariti org pool checkout because CCI_DISABLE_POOL_CHECKOUT "
+                    "is set."
+                )
+            elif self._try_checkout_pooled_org():
                 return
             if (
                 self.config.get("org_pool_id")
@@ -122,6 +130,10 @@ class ScratchOrgConfig(SfdxOrgConfig):
             self._create_org_via_sfdx()
         finally:
             self._cleanup_tmp_config()
+
+    def _should_skip_pool_checkout_env(self) -> bool:
+        value = os.getenv("CCI_DISABLE_POOL_CHECKOUT", "")
+        return value.lower() in ("1", "true", "yes", "on")
 
     def _create_org_via_sfdx(self) -> None:
         if not self.config_file:

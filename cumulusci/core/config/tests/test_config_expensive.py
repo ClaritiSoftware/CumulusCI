@@ -929,6 +929,43 @@ class TestScratchOrgConfigPytest:
 
         config._create_org_via_sfdx.assert_called_once()
 
+    @mock.patch.dict(os.environ, {"CCI_DISABLE_POOL_CHECKOUT": "1"})
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    def test_create_org_skips_pool_checkout_when_disabled(self, mock_checkout):
+        mock_keychain = mock.Mock()
+        mock_keychain.project_config = mock.Mock(project__name="Project")
+        config = ScratchOrgConfig(
+            {
+                "config_file": "tmp.json",
+                "org_pool_id": "Pool42",
+            },
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        config.create_org()
+
+        config._create_org_via_sfdx.assert_called_once()
+        mock_checkout.assert_not_called()
+
+    @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
+    def test_create_org_without_pool_id_creates_from_scratch(self, mock_checkout):
+        mock_keychain = mock.Mock()
+        config = ScratchOrgConfig(
+            {
+                "config_file": "tmp.json",
+            },
+            "dev",
+            mock_keychain,
+        )
+        config._create_org_via_sfdx = mock.Mock()
+
+        config.create_org()
+
+        config._create_org_via_sfdx.assert_called_once()
+        mock_checkout.assert_not_called()
+
     @mock.patch("cumulusci.core.config.scratch_org_config.import_sfdx_org_to_keychain")
     @mock.patch("cumulusci.core.config.scratch_org_config.checkout_org_from_pool")
     @mock.patch("cumulusci.core.config.scratch_org_config.set_sf_alias")
