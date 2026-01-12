@@ -127,6 +127,7 @@ class GitHubSource:
 
     def fetch(self):
         """Fetch the archive of the specified commit and construct its project config."""
+        assert self.commit is not None
         with self.project_config.open_cache(
             os.path.join("projects", self.repo_name, self.commit)
         ) as path:
