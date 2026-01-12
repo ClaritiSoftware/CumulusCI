@@ -134,14 +134,25 @@ def init_sentry():
     if not dsn:
         return
 
-    sentry_sdk.init(
-        dsn=dsn,
-        release=cumulusci.__version__,
-        environment=_get_sentry_environment(),
-        send_default_pii=False,
-        attach_stacktrace=True,
-        max_breadcrumbs=50,
-    )
+    try:
+        sentry_sdk.init(
+            dsn=dsn,
+            release=cumulusci.__version__,
+            environment=_get_sentry_environment(),
+            send_default_pii=False,
+            attach_stacktrace=True,
+            max_breadcrumbs=50,
+        )
+    except Exception as e:
+        # Invalid DSN or other init error - disable telemetry gracefully
+        # Don't crash the CLI just because telemetry configuration is wrong
+        import sys
+
+        print(
+            f"Warning: Failed to initialize telemetry: {e}. Telemetry disabled.",
+            file=sys.stderr,
+        )
+        return
 
     _set_sentry_user_context()
 

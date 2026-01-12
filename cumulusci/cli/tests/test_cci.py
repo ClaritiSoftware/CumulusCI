@@ -701,6 +701,16 @@ class TestInitSentry:
             cci.init_sentry()
         assert sentry_init.call_args[1]["send_default_pii"] is False
 
+    @mock.patch("sentry_sdk.init")
+    def test_handles_invalid_dsn_gracefully(self, sentry_init, capsys):
+        """Invalid DSN should not crash the CLI"""
+        sentry_init.side_effect = Exception("Invalid DSN")
+        with mock.patch.dict(os.environ, {"CCI_ENABLE_TELEMETRY": "1"}, clear=True):
+            cci.init_sentry()  # Should not raise
+        stderr = capsys.readouterr().err
+        assert "Warning" in stderr
+        assert "Telemetry disabled" in stderr
+
 
 class TestSetSentryUserContext:
     """Tests for _set_sentry_user_context()"""
