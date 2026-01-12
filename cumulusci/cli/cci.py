@@ -1,6 +1,9 @@
 import code
 import contextlib
+import hashlib
+import os
 import pdb
+import platform
 import runpy
 import sys
 import traceback
@@ -8,6 +11,7 @@ import traceback
 import click
 import requests
 import rich
+import sentry_sdk
 from rich.console import Console
 from rich.markup import escape
 
@@ -35,6 +39,113 @@ from .utils import (
     warn_if_no_long_paths,
 )
 
+SENTRY_DSN = "https://774d755112e0f997c8d6650052dc057b@o98429.ingest.us.sentry.io/4510699827691520"
+
+
+def _get_sentry_environment():
+    """Determine Sentry environment based on version or env var.
+
+    Returns 'development' for dev/local builds, 'production' for releases.
+    Can be overridden with CCI_ENVIRONMENT env var.
+    """
+    if env := os.environ.get("CCI_ENVIRONMENT"):
+        return env
+
+    version = cumulusci.__version__
+    # Dev versions contain 'dev', 'alpha', 'beta', 'rc', or 'unknown'
+    if any(tag in version.lower() for tag in ("dev", "alpha", "beta", "rc", "unknown")):
+        return "development"
+    return "production"
+
+
+def _get_anonymous_user_id():
+    """Generate an anonymous user ID based on machine identifier.
+
+    Uses a hash of stable machine identifiers to create a unique
+    but non-identifiable user ID for error grouping.
+    """
+    # Combine stable system identifiers for consistent hashing
+    # platform.node() = hostname, platform.machine() = arch,
+    # platform.processor() = processor info
+    machine_id = f"{platform.node()}-{platform.machine()}-{platform.processor()}"
+    return hashlib.sha256(machine_id.encode()).hexdigest()[:16]
+
+
+def _detect_ci_environment():
+    """Detect which CI environment CumulusCI is running in, if any."""
+    if os.environ.get("GITHUB_ACTIONS"):
+        return "github_actions"
+    elif os.environ.get("CIRCLECI"):
+        return "circleci"
+    elif os.environ.get("GITLAB_CI"):
+        return "gitlab"
+    elif os.environ.get("JENKINS_URL"):
+        return "jenkins"
+    elif os.environ.get("BITBUCKET_PIPELINE"):
+        return "bitbucket"
+    elif os.environ.get("AZURE_PIPELINES") or os.environ.get("TF_BUILD"):
+        return "azure_devops"
+    elif os.environ.get("CI"):
+        return "unknown_ci"
+    return None
+
+
+def _set_sentry_user_context():
+    """Set anonymized user context for Sentry.
+
+    Sets anonymous user ID and OS/device context using Sentry's recognized structure.
+    No PII is collected.
+    """
+    sentry_sdk.set_user({"id": _get_anonymous_user_id()})
+
+    # Use Sentry's recognized OS context structure
+    sentry_sdk.set_context(
+        "os",
+        {
+            "name": platform.system(),
+            "version": platform.release(),
+            "build": platform.version(),
+        },
+    )
+
+    # Use Sentry's recognized device context for architecture
+    sentry_sdk.set_context(
+        "device",
+        {
+            "arch": platform.machine(),
+        },
+    )
+
+    # CI environment detection
+    if ci_env := _detect_ci_environment():
+        sentry_sdk.set_tag("ci", ci_env)
+
+
+def init_sentry():
+    """Initialize Sentry error tracking.
+
+    Telemetry is OFF by default. To enable, set CCI_ENABLE_TELEMETRY=1 in environment.
+    You can also override the DSN with SENTRY_DSN or environment with CCI_ENVIRONMENT.
+    """
+    if os.environ.get("CCI_ENABLE_TELEMETRY", "").lower() not in ("1", "true", "yes"):
+        return
+
+    dsn = os.environ.get("SENTRY_DSN", SENTRY_DSN)
+    if not dsn:
+        return
+
+    sentry_sdk.init(
+        dsn=dsn,
+        release=cumulusci.__version__,
+        environment=_get_sentry_environment(),
+        send_default_pii=False,
+        attach_stacktrace=True,
+        max_breadcrumbs=50,
+    )
+
+    _set_sentry_user_context()
+
+
 SUGGEST_ERROR_COMMAND = (
     """Run this command for more information about debugging errors: cci error --help"""
 )
@@ -52,6 +163,9 @@ def main(args=None):
 
     This wraps the `click` library in order to do some initialization and centralized error handling.
     """
+    # Initialize Sentry early to capture any errors during startup
+    init_sentry()
+
     with contextlib.ExitStack() as stack:
         args = args or sys.argv
 
@@ -79,6 +193,9 @@ def main(args=None):
             try:
                 runtime = CliRuntime(load_keychain=False)
             except Exception as e:
+                # Capture to Sentry (for non-usage errors)
+                if not isinstance(e, USAGE_ERRORS):
+                    sentry_sdk.capture_exception(e)
                 handle_exception(e, is_error_command, tempfile_path, debug)
                 sys.exit(1)
 
@@ -94,6 +211,10 @@ def main(args=None):
                 show_debug_info() if debug else console.print("\n[red bold]Aborted!")
                 sys.exit(1)
             except Exception as e:
+                # Capture to Sentry regardless of debug mode (for non-usage errors)
+                if not isinstance(e, USAGE_ERRORS):
+                    sentry_sdk.capture_exception(e)
+
                 if debug:
                     show_debug_info()
                 else:
