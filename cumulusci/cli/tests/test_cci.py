@@ -543,3 +543,252 @@ def test_dash_dash_version(
 
     cci.main(["cci", "--version"])
     assert len(show_version_info.mock_calls) == 2
+
+
+# Sentry helper function tests
+
+
+class TestSentryEnvironment:
+    """Tests for _get_sentry_environment()"""
+
+    def test_returns_development_for_dev_version(self):
+        with mock.patch.object(cumulusci, "__version__", "4.0.0.dev1"):
+            assert cci._get_sentry_environment() == "development"
+
+    def test_returns_development_for_alpha_version(self):
+        with mock.patch.object(cumulusci, "__version__", "4.0.0alpha1"):
+            assert cci._get_sentry_environment() == "development"
+
+    def test_returns_development_for_beta_version(self):
+        with mock.patch.object(cumulusci, "__version__", "4.0.0beta1"):
+            assert cci._get_sentry_environment() == "development"
+
+    def test_returns_development_for_rc_version(self):
+        with mock.patch.object(cumulusci, "__version__", "4.0.0rc1"):
+            assert cci._get_sentry_environment() == "development"
+
+    def test_returns_development_for_unknown_version(self):
+        with mock.patch.object(cumulusci, "__version__", "unknown"):
+            assert cci._get_sentry_environment() == "development"
+
+    def test_returns_production_for_release_version(self):
+        with mock.patch.object(cumulusci, "__version__", "4.0.0"):
+            assert cci._get_sentry_environment() == "production"
+
+    def test_env_var_override(self):
+        with mock.patch.dict(os.environ, {"CCI_ENVIRONMENT": "staging"}):
+            assert cci._get_sentry_environment() == "staging"
+
+
+class TestAnonymousUserId:
+    """Tests for _get_anonymous_user_id()"""
+
+    def test_returns_consistent_id(self):
+        """User ID should be consistent across calls"""
+        id1 = cci._get_anonymous_user_id()
+        id2 = cci._get_anonymous_user_id()
+        assert id1 == id2
+
+    def test_returns_16_char_hex_string(self):
+        """User ID should be a 16-character hex string"""
+        user_id = cci._get_anonymous_user_id()
+        assert len(user_id) == 16
+        assert all(c in "0123456789abcdef" for c in user_id)
+
+    def test_different_machines_different_ids(self):
+        """Different machine identifiers should produce different IDs"""
+        with mock.patch("platform.node", return_value="machine1"):
+            id1 = cci._get_anonymous_user_id()
+        with mock.patch("platform.node", return_value="machine2"):
+            id2 = cci._get_anonymous_user_id()
+        assert id1 != id2
+
+
+class TestDetectCiEnvironment:
+    """Tests for _detect_ci_environment()"""
+
+    def test_detects_github_actions(self):
+        with mock.patch.dict(os.environ, {"GITHUB_ACTIONS": "true"}, clear=True):
+            assert cci._detect_ci_environment() == "github_actions"
+
+    def test_detects_circleci(self):
+        with mock.patch.dict(os.environ, {"CIRCLECI": "true"}, clear=True):
+            assert cci._detect_ci_environment() == "circleci"
+
+    def test_detects_gitlab(self):
+        with mock.patch.dict(os.environ, {"GITLAB_CI": "true"}, clear=True):
+            assert cci._detect_ci_environment() == "gitlab"
+
+    def test_detects_jenkins(self):
+        with mock.patch.dict(os.environ, {"JENKINS_URL": "http://jenkins"}, clear=True):
+            assert cci._detect_ci_environment() == "jenkins"
+
+    def test_detects_bitbucket(self):
+        with mock.patch.dict(os.environ, {"BITBUCKET_PIPELINES": "true"}, clear=True):
+            assert cci._detect_ci_environment() == "bitbucket"
+
+    def test_detects_jenkins_via_jenkins_home(self):
+        with mock.patch.dict(os.environ, {"JENKINS_HOME": "/var/jenkins"}, clear=True):
+            assert cci._detect_ci_environment() == "jenkins"
+
+    def test_detects_azure_devops_via_tf_build(self):
+        with mock.patch.dict(os.environ, {"TF_BUILD": "true"}, clear=True):
+            assert cci._detect_ci_environment() == "azure_devops"
+
+    def test_detects_unknown_ci(self):
+        with mock.patch.dict(os.environ, {"CI": "true"}, clear=True):
+            assert cci._detect_ci_environment() == "unknown_ci"
+
+    def test_returns_none_when_not_in_ci(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            assert cci._detect_ci_environment() is None
+
+
+class TestInitSentry:
+    """Tests for init_sentry()"""
+
+    @mock.patch("sentry_sdk.init")
+    def test_does_not_init_when_telemetry_disabled(self, sentry_init):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            cci.init_sentry()
+        sentry_init.assert_not_called()
+
+    @mock.patch("sentry_sdk.init")
+    @mock.patch("cumulusci.cli.cci._set_sentry_user_context")
+    def test_inits_when_telemetry_enabled_with_1(self, set_context, sentry_init):
+        with mock.patch.dict(os.environ, {"CCI_ENABLE_TELEMETRY": "1"}, clear=True):
+            cci.init_sentry()
+        sentry_init.assert_called_once()
+        set_context.assert_called_once()
+
+    @mock.patch("sentry_sdk.init")
+    @mock.patch("cumulusci.cli.cci._set_sentry_user_context")
+    def test_inits_when_telemetry_enabled_with_true(self, set_context, sentry_init):
+        with mock.patch.dict(os.environ, {"CCI_ENABLE_TELEMETRY": "true"}, clear=True):
+            cci.init_sentry()
+        sentry_init.assert_called_once()
+
+    @mock.patch("sentry_sdk.init")
+    @mock.patch("cumulusci.cli.cci._set_sentry_user_context")
+    def test_inits_when_telemetry_enabled_with_yes(self, set_context, sentry_init):
+        with mock.patch.dict(os.environ, {"CCI_ENABLE_TELEMETRY": "yes"}, clear=True):
+            cci.init_sentry()
+        sentry_init.assert_called_once()
+
+    @mock.patch("sentry_sdk.init")
+    @mock.patch("cumulusci.cli.cci._set_sentry_user_context")
+    def test_uses_custom_dsn_from_env(self, set_context, sentry_init):
+        custom_dsn = "https://custom@sentry.io/123"
+        with mock.patch.dict(
+            os.environ,
+            {"CCI_ENABLE_TELEMETRY": "1", "SENTRY_DSN": custom_dsn},
+            clear=True,
+        ):
+            cci.init_sentry()
+        assert sentry_init.call_args[1]["dsn"] == custom_dsn
+
+    @mock.patch("sentry_sdk.init")
+    @mock.patch("cumulusci.cli.cci._set_sentry_user_context")
+    def test_sets_release_to_version(self, set_context, sentry_init):
+        with mock.patch.dict(os.environ, {"CCI_ENABLE_TELEMETRY": "1"}, clear=True):
+            cci.init_sentry()
+        assert sentry_init.call_args[1]["release"] == cumulusci.__version__
+
+    @mock.patch("sentry_sdk.init")
+    @mock.patch("cumulusci.cli.cci._set_sentry_user_context")
+    def test_disables_pii(self, set_context, sentry_init):
+        with mock.patch.dict(os.environ, {"CCI_ENABLE_TELEMETRY": "1"}, clear=True):
+            cci.init_sentry()
+        assert sentry_init.call_args[1]["send_default_pii"] is False
+
+
+class TestSetSentryUserContext:
+    """Tests for _set_sentry_user_context()"""
+
+    @mock.patch("sentry_sdk.set_tag")
+    @mock.patch("sentry_sdk.set_context")
+    @mock.patch("sentry_sdk.set_user")
+    def test_sets_anonymous_user_id(self, set_user, set_context, set_tag):
+        cci._set_sentry_user_context()
+        set_user.assert_called_once()
+        user_data = set_user.call_args[0][0]
+        assert "id" in user_data
+        assert len(user_data["id"]) == 16
+
+    @mock.patch("sentry_sdk.set_tag")
+    @mock.patch("sentry_sdk.set_context")
+    @mock.patch("sentry_sdk.set_user")
+    def test_sets_os_context(self, set_user, set_context, set_tag):
+        cci._set_sentry_user_context()
+        os_call = [c for c in set_context.call_args_list if c[0][0] == "os"]
+        assert len(os_call) == 1
+        os_data = os_call[0][0][1]
+        assert "name" in os_data
+        assert "version" in os_data
+        assert "build" in os_data
+
+    @mock.patch("sentry_sdk.set_tag")
+    @mock.patch("sentry_sdk.set_context")
+    @mock.patch("sentry_sdk.set_user")
+    def test_sets_device_context(self, set_user, set_context, set_tag):
+        cci._set_sentry_user_context()
+        device_call = [c for c in set_context.call_args_list if c[0][0] == "device"]
+        assert len(device_call) == 1
+        device_data = device_call[0][0][1]
+        assert "arch" in device_data
+
+    @mock.patch("sentry_sdk.set_tag")
+    @mock.patch("sentry_sdk.set_context")
+    @mock.patch("sentry_sdk.set_user")
+    def test_sets_ci_tag_when_in_ci(self, set_user, set_context, set_tag):
+        with mock.patch.dict(os.environ, {"GITHUB_ACTIONS": "true"}):
+            cci._set_sentry_user_context()
+        set_tag.assert_called_once_with("ci", "github_actions")
+
+    @mock.patch("sentry_sdk.set_tag")
+    @mock.patch("sentry_sdk.set_context")
+    @mock.patch("sentry_sdk.set_user")
+    def test_does_not_set_ci_tag_when_not_in_ci(self, set_user, set_context, set_tag):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            cci._set_sentry_user_context()
+        set_tag.assert_not_called()
+
+
+class TestTelemetryCommand:
+    """Tests for cci telemetry command"""
+
+    def test_shows_disabled_by_default(self, capsys):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            run_click_command(cci.telemetry)
+        output = capsys.readouterr().out
+        assert "DISABLED" in output
+        assert "CCI_ENABLE_TELEMETRY" in output
+
+    def test_shows_enabled_when_set(self, capsys):
+        with mock.patch.dict(os.environ, {"CCI_ENABLE_TELEMETRY": "1"}, clear=True):
+            run_click_command(cci.telemetry)
+        output = capsys.readouterr().out
+        assert "ENABLED" in output
+
+    def test_shows_version(self, capsys):
+        run_click_command(cci.telemetry)
+        output = capsys.readouterr().out
+        assert cumulusci.__version__ in output
+
+    def test_shows_anonymous_user_id(self, capsys):
+        run_click_command(cci.telemetry)
+        output = capsys.readouterr().out
+        assert "Anonymous User ID" in output
+
+    def test_shows_os_context(self, capsys):
+        run_click_command(cci.telemetry)
+        output = capsys.readouterr().out
+        assert "OS Context" in output
+        assert "Name:" in output
+        assert "Version:" in output
+
+    def test_shows_not_collected_data(self, capsys):
+        run_click_command(cci.telemetry)
+        output = capsys.readouterr().out
+        assert "NOT collected" in output
+        assert "Salesforce credentials" in output

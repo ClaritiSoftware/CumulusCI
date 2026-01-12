@@ -73,17 +73,17 @@ def _get_anonymous_user_id():
 
 def _detect_ci_environment():
     """Detect which CI environment CumulusCI is running in, if any."""
-    if os.environ.get("GITHUB_ACTIONS"):
+    if os.environ.get("GITHUB_ACTIONS") == "true":
         return "github_actions"
     elif os.environ.get("CIRCLECI"):
         return "circleci"
     elif os.environ.get("GITLAB_CI"):
         return "gitlab"
-    elif os.environ.get("JENKINS_URL"):
+    elif os.environ.get("JENKINS_URL") or os.environ.get("JENKINS_HOME"):
         return "jenkins"
-    elif os.environ.get("BITBUCKET_PIPELINE"):
+    elif os.environ.get("BITBUCKET_PIPELINES"):
         return "bitbucket"
-    elif os.environ.get("AZURE_PIPELINES") or os.environ.get("TF_BUILD"):
+    elif os.environ.get("TF_BUILD"):
         return "azure_devops"
     elif os.environ.get("CI"):
         return "unknown_ci"
@@ -351,6 +351,64 @@ def shell(runtime, script=None, python=None):
         exec(python, variables)
     else:
         code.interact(local=variables)
+
+
+@cli.command(name="telemetry", help="Show telemetry status and what data would be collected")
+def telemetry():
+    """Display telemetry configuration and data that would be collected."""
+    console = rich.get_console()
+
+    # Check if telemetry is enabled
+    telemetry_enabled = os.environ.get("CCI_ENABLE_TELEMETRY", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+
+    console.print()
+    if telemetry_enabled:
+        console.print("[green bold]Telemetry is ENABLED[/green bold]")
+    else:
+        console.print("[yellow bold]Telemetry is DISABLED (default)[/yellow bold]")
+        console.print(
+            "To enable telemetry, set: [cyan]export CCI_ENABLE_TELEMETRY=1[/cyan]"
+        )
+
+    console.print()
+    console.print("[bold]Data that would be collected:[/bold]")
+    console.print()
+
+    # Show what would be collected
+    console.print(f"  [dim]CumulusCI Version:[/dim] {cumulusci.__version__}")
+    console.print(f"  [dim]Environment:[/dim] {_get_sentry_environment()}")
+    console.print(f"  [dim]Anonymous User ID:[/dim] {_get_anonymous_user_id()}")
+    console.print()
+    console.print("  [dim]OS Context:[/dim]")
+    console.print(f"    [dim]Name:[/dim] {platform.system()}")
+    console.print(f"    [dim]Version:[/dim] {platform.release()}")
+    console.print(f"    [dim]Build:[/dim] {platform.version()}")
+    console.print()
+    console.print("  [dim]Device Context:[/dim]")
+    console.print(f"    [dim]Architecture:[/dim] {platform.machine()}")
+
+    ci_env = _detect_ci_environment()
+    if ci_env:
+        console.print()
+        console.print(f"  [dim]CI Environment:[/dim] {ci_env}")
+
+    console.print()
+    console.print("[bold]Data NOT collected:[/bold]")
+    console.print("  - Salesforce credentials or tokens")
+    console.print("  - Org data or metadata")
+    console.print("  - Project-specific configuration")
+    console.print("  - File contents or paths")
+    console.print("  - Personal information")
+    console.print()
+    console.print(
+        "For more information, see: "
+        "[link=https://claritisoftware.github.io/CumulusCI/env-var-reference.html#telemetry]"
+        "https://claritisoftware.github.io/CumulusCI/env-var-reference.html#telemetry[/link]"
+    )
 
 
 # Top Level Groups
