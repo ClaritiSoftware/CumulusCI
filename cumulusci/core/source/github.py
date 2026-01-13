@@ -1,7 +1,6 @@
 import os
 import shutil
 
-import fs
 from github3.exceptions import NotFoundError
 
 from cumulusci.core.exceptions import DependencyResolutionError
@@ -128,8 +127,10 @@ class GitHubSource:
 
     def fetch(self):
         """Fetch the archive of the specified commit and construct its project config."""
+        if self.commit is None:
+            raise RuntimeError("Cannot fetch: commit has not been resolved")
         with self.project_config.open_cache(
-            fs.path.join("projects", self.repo_name, self.commit)
+            os.path.join("projects", self.repo_name, self.commit)
         ) as path:
             zf = download_extract_github(
                 self.gh, self.repo_owner, self.repo_name, ref=self.commit
