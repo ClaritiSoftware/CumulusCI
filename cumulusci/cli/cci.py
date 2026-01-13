@@ -1,6 +1,9 @@
 import code
 import contextlib
+import hashlib
+import os
 import pdb
+import platform
 import runpy
 import sys
 import traceback
@@ -8,6 +11,7 @@ import traceback
 import click
 import requests
 import rich
+import sentry_sdk
 from rich.console import Console
 from rich.markup import escape
 
@@ -35,6 +39,124 @@ from .utils import (
     warn_if_no_long_paths,
 )
 
+SENTRY_DSN = "https://774d755112e0f997c8d6650052dc057b@o98429.ingest.us.sentry.io/4510699827691520"
+
+
+def _get_sentry_environment():
+    """Determine Sentry environment based on version or env var.
+
+    Returns 'development' for dev/local builds, 'production' for releases.
+    Can be overridden with CCI_ENVIRONMENT env var.
+    """
+    if env := os.environ.get("CCI_ENVIRONMENT"):
+        return env
+
+    version = cumulusci.__version__
+    # Dev versions contain 'dev', 'alpha', 'beta', 'rc', or 'unknown'
+    if any(tag in version.lower() for tag in ("dev", "alpha", "beta", "rc", "unknown")):
+        return "development"
+    return "production"
+
+
+def _get_anonymous_user_id():
+    """Generate an anonymous user ID based on machine identifier.
+
+    Uses a hash of stable machine identifiers to create a unique
+    but non-identifiable user ID for error grouping.
+    """
+    # Combine stable system identifiers for consistent hashing
+    # platform.node() = hostname, platform.machine() = arch,
+    # platform.processor() = processor info
+    machine_id = f"{platform.node()}-{platform.machine()}-{platform.processor()}"
+    return hashlib.sha256(machine_id.encode()).hexdigest()[:16]
+
+
+def _detect_ci_environment():
+    """Detect which CI environment CumulusCI is running in, if any."""
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        return "github_actions"
+    elif os.environ.get("CIRCLECI"):
+        return "circleci"
+    elif os.environ.get("GITLAB_CI"):
+        return "gitlab"
+    elif os.environ.get("JENKINS_URL") or os.environ.get("JENKINS_HOME"):
+        return "jenkins"
+    elif os.environ.get("BITBUCKET_PIPELINES"):
+        return "bitbucket"
+    elif os.environ.get("TF_BUILD"):
+        return "azure_devops"
+    elif os.environ.get("CI"):
+        return "unknown_ci"
+    return None
+
+
+def _set_sentry_user_context():
+    """Set anonymized user context for Sentry.
+
+    Sets anonymous user ID and OS/device context using Sentry's recognized structure.
+    No PII is collected.
+    """
+    sentry_sdk.set_user({"id": _get_anonymous_user_id()})
+
+    # Use Sentry's recognized OS context structure
+    sentry_sdk.set_context(
+        "os",
+        {
+            "name": platform.system(),
+            "version": platform.release(),
+            "build": platform.version(),
+        },
+    )
+
+    # Use Sentry's recognized device context for architecture
+    sentry_sdk.set_context(
+        "device",
+        {
+            "arch": platform.machine(),
+        },
+    )
+
+    # CI environment detection
+    if ci_env := _detect_ci_environment():
+        sentry_sdk.set_tag("ci", ci_env)
+
+
+def init_sentry():
+    """Initialize Sentry error tracking.
+
+    Telemetry is OFF by default. To enable, set CCI_ENABLE_TELEMETRY=1 in environment.
+    You can also override the DSN with SENTRY_DSN or environment with CCI_ENVIRONMENT.
+    """
+    if os.environ.get("CCI_ENABLE_TELEMETRY", "").lower() not in ("1", "true", "yes"):
+        return
+
+    dsn = os.environ.get("SENTRY_DSN", SENTRY_DSN)
+    if not dsn:
+        return
+
+    try:
+        sentry_sdk.init(
+            dsn=dsn,
+            release=cumulusci.__version__,
+            environment=_get_sentry_environment(),
+            send_default_pii=False,
+            attach_stacktrace=True,
+            max_breadcrumbs=50,
+        )
+    except Exception as e:
+        # Invalid DSN or other init error - disable telemetry gracefully
+        # Don't crash the CLI just because telemetry configuration is wrong
+        import sys
+
+        print(
+            f"Warning: Failed to initialize telemetry: {e}. Telemetry disabled.",
+            file=sys.stderr,
+        )
+        return
+
+    _set_sentry_user_context()
+
+
 SUGGEST_ERROR_COMMAND = (
     """Run this command for more information about debugging errors: cci error --help"""
 )
@@ -52,6 +174,9 @@ def main(args=None):
 
     This wraps the `click` library in order to do some initialization and centralized error handling.
     """
+    # Initialize Sentry early to capture any errors during startup
+    init_sentry()
+
     with contextlib.ExitStack() as stack:
         args = args or sys.argv
 
@@ -79,6 +204,9 @@ def main(args=None):
             try:
                 runtime = CliRuntime(load_keychain=False)
             except Exception as e:
+                # Capture to Sentry (for non-usage errors)
+                if not isinstance(e, USAGE_ERRORS):
+                    sentry_sdk.capture_exception(e)
                 handle_exception(e, is_error_command, tempfile_path, debug)
                 sys.exit(1)
 
@@ -94,6 +222,10 @@ def main(args=None):
                 show_debug_info() if debug else console.print("\n[red bold]Aborted!")
                 sys.exit(1)
             except Exception as e:
+                # Capture to Sentry regardless of debug mode (for non-usage errors)
+                if not isinstance(e, USAGE_ERRORS):
+                    sentry_sdk.capture_exception(e)
+
                 if debug:
                     show_debug_info()
                 else:
@@ -230,6 +362,64 @@ def shell(runtime, script=None, python=None):
         exec(python, variables)
     else:
         code.interact(local=variables)
+
+
+@cli.command(name="telemetry", help="Show telemetry status and what data would be collected")
+def telemetry():
+    """Display telemetry configuration and data that would be collected."""
+    console = rich.get_console()
+
+    # Check if telemetry is enabled
+    telemetry_enabled = os.environ.get("CCI_ENABLE_TELEMETRY", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+
+    console.print()
+    if telemetry_enabled:
+        console.print("[green bold]Telemetry is ENABLED[/green bold]")
+    else:
+        console.print("[yellow bold]Telemetry is DISABLED (default)[/yellow bold]")
+        console.print(
+            "To enable telemetry, set: [cyan]export CCI_ENABLE_TELEMETRY=1[/cyan]"
+        )
+
+    console.print()
+    console.print("[bold]Data that would be collected:[/bold]")
+    console.print()
+
+    # Show what would be collected
+    console.print(f"  [dim]CumulusCI Version:[/dim] {cumulusci.__version__}")
+    console.print(f"  [dim]Environment:[/dim] {_get_sentry_environment()}")
+    console.print(f"  [dim]Anonymous User ID:[/dim] {_get_anonymous_user_id()}")
+    console.print()
+    console.print("  [dim]OS Context:[/dim]")
+    console.print(f"    [dim]Name:[/dim] {platform.system()}")
+    console.print(f"    [dim]Version:[/dim] {platform.release()}")
+    console.print(f"    [dim]Build:[/dim] {platform.version()}")
+    console.print()
+    console.print("  [dim]Device Context:[/dim]")
+    console.print(f"    [dim]Architecture:[/dim] {platform.machine()}")
+
+    ci_env = _detect_ci_environment()
+    if ci_env:
+        console.print()
+        console.print(f"  [dim]CI Environment:[/dim] {ci_env}")
+
+    console.print()
+    console.print("[bold]Data NOT collected:[/bold]")
+    console.print("  - Salesforce credentials or tokens")
+    console.print("  - Org data or metadata")
+    console.print("  - Project-specific configuration")
+    console.print("  - File contents or paths")
+    console.print("  - Personal information")
+    console.print()
+    console.print(
+        "For more information, see: "
+        "[link=https://claritisoftware.github.io/CumulusCI/env-var-reference.html#telemetry]"
+        "https://claritisoftware.github.io/CumulusCI/env-var-reference.html#telemetry[/link]"
+    )
 
 
 # Top Level Groups

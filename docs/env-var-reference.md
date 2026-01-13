@@ -76,3 +76,55 @@ Extra arguments passed to `sf org create scratch`.
 To provide additional arguments, use the following format. For instance, to set the release to "preview", the environment variable would be: "--release=preview"
 
 To specify multiple options, you can include them together, like: "--edition=developer --release=preview"
+
+(telemetry)=
+## Telemetry
+
+CumulusCI includes optional error telemetry powered by Sentry to help improve
+the tool. Telemetry is **disabled by default** and must be explicitly enabled.
+
+### `CCI_ENABLE_TELEMETRY`
+
+Set to `1`, `true`, or `yes` to enable error telemetry. When enabled, CumulusCI
+will send anonymous error reports to help developers identify and fix issues.
+
+```bash
+export CCI_ENABLE_TELEMETRY=1
+```
+
+### `CCI_ENVIRONMENT`
+
+Override the environment tag sent with telemetry data. By default, CumulusCI
+automatically detects whether it's a development or production release based
+on the version string.
+
+### `SENTRY_DSN`
+
+Override the default Sentry DSN endpoint. This is primarily useful for
+organizations that want to route telemetry to their own Sentry instance.
+
+### What data is collected?
+
+When telemetry is enabled, CumulusCI collects:
+
+- **Error information**: Exception type, message, and stack trace
+- **CumulusCI version**: The installed version of CumulusCI
+- **Environment**: Whether running a development or production build
+- **Anonymous user ID**: A hashed identifier based on machine characteristics
+  (hostname, architecture, processor) - no personally identifiable information
+- **OS information**: Operating system name, version, and architecture
+- **CI environment**: Which CI platform is being used (if any)
+
+CumulusCI does **not** collect:
+
+- Salesforce credentials or tokens
+- Org data or metadata
+- Project-specific configuration
+- File contents or paths
+- Personal information
+
+### Disabling telemetry
+
+Telemetry is disabled by default. If you previously enabled it and want to
+disable it, simply unset or remove the `CCI_ENABLE_TELEMETRY` environment
+variable.
