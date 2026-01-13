@@ -505,7 +505,7 @@ requires-dist = [
     { name = "sarge" },
     { name = "scikit-learn", marker = "extra == 'select'" },
     { name = "selenium", specifier = "<4" },
-    { name = "sentry-sdk", specifier = ">=2.0.0,<3" },
+    { name = "sentry-sdk", specifier = ">=2.8.0,<3" },
     { name = "simple-salesforce", specifier = "==1.11.4" },
     { name = "snowfakery", specifier = ">=4.1.0" },
     { name = "sqlalchemy", specifier = "<2" },
