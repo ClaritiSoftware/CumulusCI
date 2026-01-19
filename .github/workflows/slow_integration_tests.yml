@@ -13,6 +13,9 @@ on:
 
     workflow_dispatch:
 
+permissions:
+    contents: read
+
 env:
     CUMULUSCI_KEY: ${{ secrets.CUMULUSCI_KEY }}
     CUMULUSCI_SERVICE_github: ${{ secrets.CUMULUSCI_SERVICE_github }}
