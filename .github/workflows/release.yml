@@ -31,13 +31,13 @@ jobs:
                   VERSION="$(hatch version)"
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-                  # Determine environment based on version pattern
+                  # Determine environment based on version pattern (PEP 440 compliant)
                   ENVIRONMENT=""
                   PRERELEASE=""
-                  if [[ "$VERSION" == *".dev"* ]]; then
+                  if [[ "$VERSION" =~ \.dev[0-9]*$ ]]; then
                       ENVIRONMENT="development"
                       PRERELEASE="true"
-                  elif [[ "$VERSION" == *"a"* ]] || [[ "$VERSION" == *"b"* ]] || [[ "$VERSION" == *"rc"* ]]; then
+                  elif [[ "$VERSION" =~ (a|b|rc)[0-9]+$ ]]; then
                       ENVIRONMENT="staging"
                       PRERELEASE="true"
                   else
