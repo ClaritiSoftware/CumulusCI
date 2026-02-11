@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from io import StringIO, TextIOWrapper
 from pathlib import Path
 from typing import IO, ContextManager, Text, Tuple, Union
-from urllib.parse import unquote as urlunquote
+from urllib.parse import urlparse
 
 import requests
 
@@ -132,10 +132,18 @@ class FSResource:
         if isinstance(resource_url_or_path, FSResource):
             self._path = resource_url_or_path._path
         elif isinstance(resource_url_or_path, str) and "://" in resource_url_or_path:
-            url_str = resource_url_or_path
-            # Strip the scheme prefix to get the path portion
-            _, path_part = url_str.split("://", 1)
-            decoded = urlunquote(path_part)
+            parsed = urlparse(resource_url_or_path)
+            if parsed.scheme != "file":
+                raise ValueError(
+                    f"Only file:// URLs are supported, got {parsed.scheme}://"
+                )
+            # For relative file URLs like file://relative/path, urlparse puts
+            # "relative" in netloc and "/path" in path. Concatenate them.
+            if parsed.netloc and parsed.netloc.lower() != "localhost":
+                path_str = parsed.netloc + parsed.path
+            else:
+                path_str = parsed.path
+            decoded = urllib.request.url2pathname(path_str)
             self._path = Path(decoded).absolute()
         else:
             self._path = Path(resource_url_or_path).absolute()
@@ -172,14 +180,10 @@ class FSResource:
         shutil.copy2(self._path, other._path)
 
     def mkdir(self, *, parents=False, exist_ok=False):
-        try:
-            self._path.mkdir(parents=parents, exist_ok=exist_ok)
-        except FileExistsError:
-            if not exist_ok:
-                raise
+        self._path.mkdir(parents=parents, exist_ok=exist_ok)
 
     def __contains__(self, other):
-        return other in str(self._path)
+        return str(other) in str(self._path)
 
     @property
     def suffix(self):

@@ -248,6 +248,10 @@ class TestFSResourceError:
         with pytest.raises(NotImplementedError):
             FSResource()
 
+    def test_non_file_url_rejected(self):
+        with pytest.raises(ValueError, match="Only file:// URLs are supported"):
+            FSResource.new("https://example.com/path")
+
 
 def test_update_tree(tmpdir):
     source_dir = Path(tmpdir.mkdir("source"))
