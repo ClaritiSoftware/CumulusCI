@@ -10,7 +10,6 @@ from unittest import mock
 
 import pytest
 import responses
-from fs import errors, open_fs
 
 import cumulusci
 from cumulusci.utils import fileutils, temporary_dir, update_tree
@@ -149,12 +148,6 @@ class _TestFSResourceShared:
             with open_fs_resource(resource) as resource2:
                 assert abspath in str(resource2)
 
-    def test_load_from_file_system(self):
-        abspath = os.path.abspath(self.file)
-        fs = open_fs("/")
-        with open_fs_resource(abspath, fs) as f:
-            assert abspath in str(f)
-
     def test_windows_path(self):
         abspath = "c:\\foo\\bar"
         with open_fs_resource(abspath) as f:
@@ -234,7 +227,7 @@ class TestFSResourceTempdir(_TestFSResourceShared):
             f.mkdir(parents=False, exist_ok=True)
             assert abspath.exists()
 
-            with pytest.raises(errors.DirectoryExists):
+            with pytest.raises(FileExistsError):
                 f.mkdir(parents=False, exist_ok=False)
             f.rmdir()
 
@@ -254,6 +247,10 @@ class TestFSResourceError:
     def test_fs_resource_init_error(self):
         with pytest.raises(NotImplementedError):
             FSResource()
+
+    def test_non_file_url_rejected(self):
+        with pytest.raises(ValueError, match="Only file:// URLs are supported"):
+            FSResource.new("https://example.com/path")
 
 
 def test_update_tree(tmpdir):

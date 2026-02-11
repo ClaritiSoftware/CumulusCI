@@ -1,14 +1,5 @@
 import os
 import sys
-import warnings
-
-# Suppress pkg_resources deprecation warning from PyFilesystem (fs) package
-# See: https://github.com/PyFilesystem/pyfilesystem2/issues/577
-warnings.filterwarnings(
-    "ignore",
-    message="pkg_resources is deprecated as an API",
-    category=UserWarning,
-)
 
 from simple_salesforce import api, bulk
 
