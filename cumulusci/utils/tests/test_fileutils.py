@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import urllib.request
+from collections import namedtuple
 from io import BytesIO, UnsupportedOperation
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -147,6 +148,15 @@ class _TestFSResourceShared:
         with open_fs_resource(Path(abspath)) as resource:
             with open_fs_resource(resource) as resource2:
                 assert abspath in str(resource2)
+
+    def test_load_from_file_system(self):
+        abspath = os.path.abspath(self.file)
+        # Backwards compatibility: pass a dummy filesystem and ensure it is ignored
+        DummyFS = namedtuple("DummyFS", [])
+        fs = DummyFS()
+        with open_fs_resource(abspath, fs) as f:
+            assert abspath in str(f)
+
 
     def test_windows_path(self):
         abspath = "c:\\foo\\bar"
