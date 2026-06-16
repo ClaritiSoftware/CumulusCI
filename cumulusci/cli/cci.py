@@ -226,11 +226,12 @@ def _maybe_report_salesforce_error(e: SalesforceError) -> None:
         if click.confirm(
             "Would you like to report this Salesforce error to Clariti to help improve CumulusCI?",
             default=False,
+            err=True,
         ):
             sentry_sdk.capture_exception(e)
             console.print("[dim]Error report sent. Thank you.[/dim]")
-    except Exception:
-        pass  # stdin not available or other prompt failure - silently skip
+    except (click.Abort, EOFError, OSError):
+        pass  # stdin not available or user aborted - skip reporting quietly
 
 
 #

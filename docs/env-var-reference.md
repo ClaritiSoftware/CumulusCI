@@ -114,7 +114,7 @@ in the org rather than bugs in CumulusCI itself.
 In interactive sessions, if this variable is not set, CumulusCI will ask
 after displaying the error:
 
-```
+```text
 Would you like to report this Salesforce error to Clariti to help improve CumulusCI? [y/N]:
 ```
 
