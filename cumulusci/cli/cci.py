@@ -434,7 +434,9 @@ def shell(runtime, script=None, python=None):
         code.interact(local=variables)
 
 
-@cli.command(name="telemetry", help="Show telemetry status and what data would be collected")
+@cli.command(
+    name="telemetry", help="Show telemetry status and what data would be collected"
+)
 def telemetry():
     """Display telemetry configuration and data that would be collected."""
     console = rich.get_console()
