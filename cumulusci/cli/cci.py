@@ -14,10 +14,11 @@ import rich
 import sentry_sdk
 from rich.console import Console
 from rich.markup import escape
+from simple_salesforce.exceptions import SalesforceError
 
 import cumulusci
 from cumulusci.core.debug import set_debug_mode
-from cumulusci.core.exceptions import CumulusCIUsageError
+from cumulusci.core.exceptions import CumulusCIException, CumulusCIUsageError
 from cumulusci.utils import get_cci_upgrade_command
 from cumulusci.utils.http.requests_utils import init_requests_trust
 from cumulusci.utils.logging import tee_stdout_stderr
@@ -121,6 +122,20 @@ def _set_sentry_user_context():
         sentry_sdk.set_tag("ci", ci_env)
 
 
+def _sentry_before_send(event, hint):
+    """Drop events for expected/handled exception types.
+
+    CumulusCIException (and its subclasses) are intentionally raised with
+    user-facing messages - we already tell the user what went wrong.
+    Only true surprises (bugs, unexpected third-party errors) belong in Sentry.
+    """
+    exc_info = hint.get("exc_info")
+    if exc_info and exc_info[1] is not None:
+        if isinstance(exc_info[1], _HANDLED_EXCEPTION_TYPES):
+            return None
+    return event
+
+
 def init_sentry():
     """Initialize Sentry error tracking.
 
@@ -142,6 +157,7 @@ def init_sentry():
             send_default_pii=False,
             attach_stacktrace=True,
             max_breadcrumbs=50,
+            before_send=_sentry_before_send,
         )
     except Exception as e:
         # Invalid DSN or other init error - disable telemetry gracefully
@@ -162,6 +178,59 @@ SUGGEST_ERROR_COMMAND = (
 )
 
 USAGE_ERRORS = (CumulusCIUsageError, click.UsageError)
+
+# CumulusCIException subclasses and connection errors are intentionally raised with
+# user-facing messages - we already tell the user what went wrong, Sentry gets nothing useful.
+# SalesforceError is handled separately: the user is prompted to report it (see below).
+_HANDLED_EXCEPTION_TYPES = (
+    CumulusCIException,
+    click.UsageError,
+    requests.exceptions.ConnectionError,
+)
+
+
+def _maybe_report_salesforce_error(e: SalesforceError) -> None:
+    """Optionally send a SalesforceError to Sentry after asking the user.
+
+    Behaviour is controlled by CCI_REPORT_SF_ERRORS:
+      always / 1 / true / yes  - send without prompting (good for CI scripts)
+      never  / 0 / false / no  - never send, never ask
+      (not set)                - prompt in interactive sessions; auto-send in CI
+    """
+    telemetry_on = os.environ.get("CCI_ENABLE_TELEMETRY", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    if not telemetry_on:
+        return
+
+    setting = os.environ.get("CCI_REPORT_SF_ERRORS", "").lower()
+
+    if setting in ("1", "true", "yes", "always"):
+        sentry_sdk.capture_exception(e)
+        return
+
+    if setting in ("0", "false", "no", "never"):
+        return
+
+    # In CI, send automatically without interrupting the pipeline
+    if _detect_ci_environment():
+        sentry_sdk.capture_exception(e)
+        return
+
+    # Interactive: ask the user
+    try:
+        console = Console(stderr=True)
+        console.print()
+        if click.confirm(
+            "Would you like to report this Salesforce error to Clariti to help improve CumulusCI?",
+            default=False,
+        ):
+            sentry_sdk.capture_exception(e)
+            console.print("[dim]Error report sent. Thank you.[/dim]")
+    except Exception:
+        pass  # stdin not available or other prompt failure - silently skip
 
 
 #
@@ -204,10 +273,11 @@ def main(args=None):
             try:
                 runtime = CliRuntime(load_keychain=False)
             except Exception as e:
-                # Capture to Sentry (for non-usage errors)
-                if not isinstance(e, USAGE_ERRORS):
-                    sentry_sdk.capture_exception(e)
                 handle_exception(e, is_error_command, tempfile_path, debug)
+                if isinstance(e, SalesforceError):
+                    _maybe_report_salesforce_error(e)
+                elif not isinstance(e, _HANDLED_EXCEPTION_TYPES):
+                    sentry_sdk.capture_exception(e)
                 sys.exit(1)
 
             runtime.check_cumulusci_version()
@@ -222,10 +292,6 @@ def main(args=None):
                 show_debug_info() if debug else console.print("\n[red bold]Aborted!")
                 sys.exit(1)
             except Exception as e:
-                # Capture to Sentry regardless of debug mode (for non-usage errors)
-                if not isinstance(e, USAGE_ERRORS):
-                    sentry_sdk.capture_exception(e)
-
                 if debug:
                     show_debug_info()
                 else:
@@ -235,6 +301,10 @@ def main(args=None):
                         tempfile_path,
                         should_show_stacktraces,
                     )
+                if isinstance(e, SalesforceError):
+                    _maybe_report_salesforce_error(e)
+                elif not isinstance(e, _HANDLED_EXCEPTION_TYPES):
+                    sentry_sdk.capture_exception(e)
                 sys.exit(1)
 
 
@@ -293,7 +363,7 @@ def show_version_info():
     latest_version = get_latest_final_version()
 
     if not latest_version > current_version:
-        console.print("You have the latest version of CumulusCI :sun_behind_cloud:\n")
+        console.print("You have the latest version of CumulusCI\n")
         display_release_notes_link(str(latest_version))
         return
 
