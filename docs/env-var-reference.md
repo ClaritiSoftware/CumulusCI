@@ -98,6 +98,33 @@ Override the environment tag sent with telemetry data. By default, CumulusCI
 automatically detects whether it's a development or production release based
 on the version string.
 
+### `CCI_REPORT_SF_ERRORS`
+
+Controls whether Salesforce API errors (`SalesforceError`) are reported to
+Sentry when telemetry is enabled. Salesforce errors are treated separately
+from other errors because they often indicate configuration or data issues
+in the org rather than bugs in CumulusCI itself.
+
+| Value | Behaviour |
+|---|---|
+| `always`, `1`, `true`, `yes` | Always send without prompting |
+| `never`, `0`, `false`, `no` | Never send, never ask |
+| *(not set)* | Prompt in interactive sessions; auto-send in CI |
+
+In interactive sessions, if this variable is not set, CumulusCI will ask
+after displaying the error:
+
+```text
+Would you like to report this Salesforce error to Clariti to help improve CumulusCI? [y/N]:
+```
+
+For CI pipelines, set `CCI_REPORT_SF_ERRORS=always` to send automatically:
+
+```bash
+export CCI_ENABLE_TELEMETRY=1
+export CCI_REPORT_SF_ERRORS=always
+```
+
 ### `SENTRY_DSN`
 
 Override the default Sentry DSN endpoint. This is primarily useful for
@@ -105,15 +132,22 @@ organizations that want to route telemetry to their own Sentry instance.
 
 ### What data is collected?
 
-When telemetry is enabled, CumulusCI collects:
+When telemetry is enabled, CumulusCI automatically sends:
 
-- **Error information**: Exception type, message, and stack trace
+- **Unexpected error information**: Exception type, message, and stack trace
+  for unhandled errors (e.g. Python bugs, unexpected third-party failures)
 - **CumulusCI version**: The installed version of CumulusCI
 - **Environment**: Whether running a development or production build
 - **Anonymous user ID**: A hashed identifier based on machine characteristics
   (hostname, architecture, processor) - no personally identifiable information
 - **OS information**: Operating system name, version, and architecture
 - **CI environment**: Which CI platform is being used (if any)
+
+**Salesforce API errors** are not sent automatically - you are prompted to
+opt in each time (or can configure this with `CCI_REPORT_SF_ERRORS`).
+
+**Handled errors** (misconfiguration, missing orgs, deployment failures, etc.)
+are never sent - CumulusCI already tells you what went wrong.
 
 CumulusCI does **not** collect:
 
