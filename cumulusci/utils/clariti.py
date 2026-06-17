@@ -8,9 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence, Tuple, cast
 
-from cumulusci.core.sfdx import sfdx
-
 from cumulusci.core.debug import get_debug_mode
+from cumulusci.core.sfdx import sfdx
 
 
 class ClaritiError(Exception):

@@ -243,7 +243,8 @@ class TestBaseProjectConfig:
             "SFDO-Tooling",
             "CumulusCI-Test",
             {
-                "cumulusci.yml": DummyContents(b"""
+                "cumulusci.yml": DummyContents(
+                    b"""
         project:
             name: CumulusCI-Test
             package:
@@ -253,7 +254,8 @@ class TestBaseProjectConfig:
                 repo_url: https://github.com/SFDO-Tooling/CumulusCI-Test
             dependencies:
                 - github: https://github.com/SFDO-Tooling/CumulusCI-Test-Dep
-        """),
+        """
+                ),
                 "unpackaged/pre": {"pre": {}, "skip": {}},
                 "src": {"src": ""},
                 "unpackaged/post": {"post": {}, "skip": {}},
@@ -264,7 +266,8 @@ class TestBaseProjectConfig:
             "SFDO-Tooling",
             "CumulusCI-Test-Dep",
             {
-                "cumulusci.yml": DummyContents(b"""
+                "cumulusci.yml": DummyContents(
+                    b"""
         project:
             name: CumulusCI-Test-Dep
             package:
@@ -272,7 +275,8 @@ class TestBaseProjectConfig:
                 namespace: ccitestdep
             git:
                 repo_url: https://github.com/SFDO-Tooling/CumulusCI-Test-Dep
-        """),
+        """
+                ),
                 "unpackaged/pre": {},
                 "src": {},
                 "unpackaged/post": {},

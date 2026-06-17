@@ -2,6 +2,7 @@ import code
 import json
 import runpy
 import webbrowser
+from typing import Optional
 from urllib.parse import urlencode, urlparse
 
 import click
@@ -10,10 +11,8 @@ from rich.console import Console
 from cumulusci.cli.ui import CliTable, SimpleSalesforceUIHelpers
 from cumulusci.core.config import OrgConfig, ScratchOrgConfig
 from cumulusci.core.exceptions import CumulusCIException, OrgNotFound
-from cumulusci.core.org_import import (
-    import_sfdx_org_to_keychain,
-    calculate_org_days as _core_calculate_org_days,
-)
+from cumulusci.core.org_import import calculate_org_days as _core_calculate_org_days
+from cumulusci.core.org_import import import_sfdx_org_to_keychain
 from cumulusci.oauth.client import (
     PROD_LOGIN_URL,
     SANDBOX_LOGIN_URL,
@@ -21,8 +20,6 @@ from cumulusci.oauth.client import (
     OAuth2ClientConfig,
 )
 from cumulusci.salesforce_api.utils import get_simple_salesforce_connection
-from typing import Optional
-
 from cumulusci.utils.clariti import (
     ClaritiError,
     build_default_org_name,

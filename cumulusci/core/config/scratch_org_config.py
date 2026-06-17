@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 import tempfile
-from typing import List, NoReturn, Optional, TYPE_CHECKING, Union
+from typing import List, NoReturn, Optional, Union
 
 import sarge
 
@@ -15,9 +15,6 @@ from cumulusci.core.exceptions import (
 )
 from cumulusci.core.sfdx import sfdx
 from cumulusci.utils.clariti import ClaritiError, checkout_org_from_pool, set_sf_alias
-
-if TYPE_CHECKING:  # pragma: no cover
-    from cumulusci.core.org_import import import_sfdx_org_to_keychain as _Importer
 
 import_sfdx_org_to_keychain = None  # type: ignore
 

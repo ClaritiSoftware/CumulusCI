@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from io import StringIO, TextIOWrapper
 from pathlib import Path
 from typing import IO, ContextManager, Text, Tuple, Union
-from urllib.parse import unquote, urlparse
+from urllib.parse import urlparse
 
 import requests
 
