@@ -44,6 +44,7 @@ def set_org_name(required):
 
     `required` is a boolean for whether org_name is required
     """
+
     # could be generalized to work for any mutex pair (or list) but no obvious need
     def callback(ctx, param, value):
         """Callback which enforces mutex and 'required' behaviour (if required)."""
@@ -245,7 +246,9 @@ def org_default(runtime, org_name, unset):
             click.echo("There is no default org")
 
 
-@org.command(name="import", help="Import an org from Salesforce DX or Clariti Org Pooling System")
+@org.command(
+    name="import", help="Import an org from Salesforce DX or Clariti Org Pooling System"
+)
 @click.argument("username_or_alias", required=False)
 @orgname_option_or_argument(required=False)
 @click.option(
@@ -287,9 +290,7 @@ def org_import(
             raise click.ClickException(str(err)) from err
 
         if resolved_pool_id:
-            click.echo(
-                f"Checking out org from Clariti pool {resolved_pool_id}..."
-            )
+            click.echo(f"Checking out org from Clariti pool {resolved_pool_id}...")
         else:
             click.echo(
                 "Checking out org from Clariti pool configured in .clariti.json..."
@@ -322,8 +323,7 @@ def org_import(
         alias_success, alias_error = set_sf_alias(org_name, checkout.username)
         if alias_success:
             click.echo(
-                f"Set Salesforce CLI alias '{org_name}' "
-                f"for {checkout.username}"
+                f"Set Salesforce CLI alias '{org_name}' " f"for {checkout.username}"
             )
         elif alias_error:
             click.echo(

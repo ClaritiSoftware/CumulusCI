@@ -141,7 +141,9 @@ class UpdateDependencies(BaseSalesforceTask):
             DependencyResolutionStrategy.BETA_RELEASE_TAG,
         ]
 
-        force_strategy = process_bool_arg(self.options.get("force_resolution_strategy", False))
+        force_strategy = process_bool_arg(
+            self.options.get("force_resolution_strategy", False)
+        )
         if force_strategy:
             self.logger.warning(
                 "The force_resolution_strategy option is turned on and dependency resolution will be forced on scratch and sandbox orgs."
@@ -155,11 +157,15 @@ class UpdateDependencies(BaseSalesforceTask):
             and not self.org_config.scratch  # Not a scratch org
             and (
                 not force_strategy  # Remove for all non-scratch orgs
-                or (force_strategy and not self.org_config.is_sandbox)  # Remove for production orgs only
+                or (
+                    force_strategy and not self.org_config.is_sandbox
+                )  # Remove for production orgs only
             )
         )
 
-        if should_remove_resolvers and any(r in self.resolution_strategy for r in unsafe_prod_resolvers):
+        if should_remove_resolvers and any(
+            r in self.resolution_strategy for r in unsafe_prod_resolvers
+        ):
             self.logger.warning(
                 "Target org is a persistent org; removing Beta resolvers. Consider selecting the `production` resolver stack."
             )
@@ -261,7 +267,9 @@ class UpdateDependencies(BaseSalesforceTask):
         if not isinstance(
             dependency, (PackageNamespaceVersionDependency, PackageVersionIdDependency)
         ):
-            self.logger.debug("Dependency is unmanaged metadata; no installed check needed.")
+            self.logger.debug(
+                "Dependency is unmanaged metadata; no installed check needed."
+            )
             return False
 
         try:
@@ -272,14 +280,17 @@ class UpdateDependencies(BaseSalesforceTask):
             )
             return False
 
-        installed_version_ids_18 = {v.id for versions in installed.values() for v in versions}
+        installed_version_ids_18 = {
+            v.id for versions in installed.values() for v in versions
+        }
         installed_version_ids_15 = {vid[:15] for vid in installed_version_ids_18}
 
         if isinstance(dependency, PackageVersionIdDependency):
             dep_id = dependency.version_id
             dep_id_15 = dep_id[:15] if dep_id else None
             is_installed = (
-                dep_id in installed_version_ids_18 or dep_id_15 in installed_version_ids_15
+                dep_id in installed_version_ids_18
+                or dep_id_15 in installed_version_ids_15
             )
             self.logger.info(
                 f"Already-installed check by version_id: {dep_id} (15:{dep_id_15}) -> {is_installed}"
@@ -291,7 +302,8 @@ class UpdateDependencies(BaseSalesforceTask):
                 dep_id = dependency.version_id
                 dep_id_15 = dep_id[:15] if dep_id else None
                 is_installed = (
-                    dep_id in installed_version_ids_18 or dep_id_15 in installed_version_ids_15
+                    dep_id in installed_version_ids_18
+                    or dep_id_15 in installed_version_ids_15
                 )
                 self.logger.info(
                     f"Already-installed check by version_id: {dep_id} (15:{dep_id_15}) -> {is_installed}"

@@ -157,7 +157,6 @@ class _TestFSResourceShared:
         with open_fs_resource(abspath, fs) as f:
             assert abspath in str(f)
 
-
     def test_windows_path(self):
         abspath = "c:\\foo\\bar"
         with open_fs_resource(abspath) as f:

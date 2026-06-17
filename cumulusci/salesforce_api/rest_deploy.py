@@ -88,7 +88,10 @@ class RestDeploy:
             self.task.logger.error(
                 f"Deployment request failed with status code {response.status_code}"
             )
-            raise MetadataApiError(f"Deployment request failed with status code {response.status_code}", response)
+            raise MetadataApiError(
+                f"Deployment request failed with status code {response.status_code}",
+                response,
+            )
 
     # Set the purge_on_delete attribute based on org type
     def _set_purge_on_delete(self, purge_on_delete):
@@ -118,7 +121,7 @@ class RestDeploy:
             if response_json["deployResult"]["status"] not in ["InProgress", "Pending"]:
                 # Handle the case when status has Failed
                 if response_json["deployResult"]["status"] == "Failed":
-                    error_log = ''
+                    error_log = ""
                     for failure in response_json["deployResult"]["details"][
                         "componentFailures"
                     ]:

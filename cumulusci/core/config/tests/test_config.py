@@ -61,13 +61,16 @@ class TestBaseConfig:
     def test_getattr_toplevel_key_missing(self):
         config = BaseConfig()
         config.config = {}
-        with mock.patch(
-            "cumulusci.core.config.base_config.STRICT_GETATTR", False
-        ), pytest.warns(DeprecationWarning, match="foo"):
+        with (
+            mock.patch("cumulusci.core.config.base_config.STRICT_GETATTR", False),
+            pytest.warns(DeprecationWarning, match="foo"),
+        ):
             assert config.foo is None
-        with mock.patch(
-            "cumulusci.core.config.base_config.STRICT_GETATTR", True
-        ), pytest.deprecated_call(), pytest.raises(AssertionError):
+        with (
+            mock.patch("cumulusci.core.config.base_config.STRICT_GETATTR", True),
+            pytest.deprecated_call(),
+            pytest.raises(AssertionError),
+        ):
             assert config.foo is None
 
     def test_getattr_child_key(self):
@@ -78,9 +81,11 @@ class TestBaseConfig:
     def test_strict_getattr(self):
         config = FakeConfig()
         config.config = {"foo": {"bar": "baz"}}
-        with mock.patch(
-            "cumulusci.core.config.base_config.STRICT_GETATTR", "True"
-        ), mock.patch("warnings.warn"), pytest.raises(AssertionError):
+        with (
+            mock.patch("cumulusci.core.config.base_config.STRICT_GETATTR", "True"),
+            mock.patch("warnings.warn"),
+            pytest.raises(AssertionError),
+        ):
             print(config.jfiesojfieoj)
 
     def test_getattr_child_parent_key_missing(self):
@@ -238,8 +243,7 @@ class TestBaseProjectConfig:
             "SFDO-Tooling",
             "CumulusCI-Test",
             {
-                "cumulusci.yml": DummyContents(
-                    b"""
+                "cumulusci.yml": DummyContents(b"""
         project:
             name: CumulusCI-Test
             package:
@@ -249,8 +253,7 @@ class TestBaseProjectConfig:
                 repo_url: https://github.com/SFDO-Tooling/CumulusCI-Test
             dependencies:
                 - github: https://github.com/SFDO-Tooling/CumulusCI-Test-Dep
-        """
-                ),
+        """),
                 "unpackaged/pre": {"pre": {}, "skip": {}},
                 "src": {"src": ""},
                 "unpackaged/post": {"post": {}, "skip": {}},
@@ -261,8 +264,7 @@ class TestBaseProjectConfig:
             "SFDO-Tooling",
             "CumulusCI-Test-Dep",
             {
-                "cumulusci.yml": DummyContents(
-                    b"""
+                "cumulusci.yml": DummyContents(b"""
         project:
             name: CumulusCI-Test-Dep
             package:
@@ -270,8 +272,7 @@ class TestBaseProjectConfig:
                 namespace: ccitestdep
             git:
                 repo_url: https://github.com/SFDO-Tooling/CumulusCI-Test-Dep
-        """
-                ),
+        """),
                 "unpackaged/pre": {},
                 "src": {},
                 "unpackaged/post": {},
@@ -1768,7 +1769,7 @@ class TestOrgConfig:
             config.resolve_04t_dependencies(
                 [PackageNamespaceVersionDependency(namespace="dep", version="1.0")]
             )
-            
+
     def test_create_org_with_snapshot(self):
         """Test that creating an org with a snapshot:
         1. Stores the snapshot value in config
@@ -1783,7 +1784,11 @@ class TestOrgConfig:
                     {
                         "edition": "Developer",
                         "features": ["EnableSetPasswordInApi"],
-                        "settings": {"securitySettings": {"passwordPolicies": {"enableSetPasswordInApi": True}}},
+                        "settings": {
+                            "securitySettings": {
+                                "passwordPolicies": {"enableSetPasswordInApi": True}
+                            }
+                        },
                     },
                     f,
                 )

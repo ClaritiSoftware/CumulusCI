@@ -258,7 +258,7 @@ def test_init_options_force_resolution_strategy_false():
                     "version": "1.0",
                 }
             ],
-            "resolution_strategy": "include_beta"
+            "resolution_strategy": "include_beta",
         },
         project_config=None,
         org_config=org_config,
@@ -586,12 +586,14 @@ def test_freeze__interactive_exception():
 def test_is_dependency_already_installed_unmanaged():
     """Test that unmanaged dependencies return False"""
     task = create_task(UpdateDependencies, {"dependencies": []})
-    dependency = UnmanagedGitHubRefDependency.parse_obj({
-        "github": "https://github.com/Test/TestRepo",
-        "ref": "main",
-        "subfolder": "src"
-    })
-    
+    dependency = UnmanagedGitHubRefDependency.parse_obj(
+        {
+            "github": "https://github.com/Test/TestRepo",
+            "ref": "main",
+            "subfolder": "src",
+        }
+    )
+
     assert task._is_dependency_already_installed(dependency) is False
 
 
@@ -602,7 +604,7 @@ def test_is_dependency_already_installed_error_handling():
     # Mock the property to raise an exception
     type(task.org_config).installed_packages = mock.PropertyMock(side_effect=Exception)
     dependency = PackageVersionIdDependency(version_id="04t000000000000")
-    
+
     assert task._is_dependency_already_installed(dependency) is False
 
 
@@ -610,12 +612,12 @@ def test_is_dependency_already_installed_version_id():
     """Test package version ID dependency checks"""
     task = create_task(UpdateDependencies, {"dependencies": []})
     task.org_config = mock.Mock()
-    
+
     # Test with 18 character ID
     task.org_config.installed_packages = {"ns": [mock.Mock(id="04t000000000000AAA")]}
     dependency = PackageVersionIdDependency(version_id="04t000000000000AAA")
     assert task._is_dependency_already_installed(dependency) is True
-    
+
     # Test with 15 character ID
     task.org_config.installed_packages = {"ns": [mock.Mock(id="04t000000000000")]}
     dependency = PackageVersionIdDependency(version_id="04t000000000000AAA")
@@ -626,26 +628,26 @@ def test_is_dependency_already_installed_namespace_version():
     """Test namespace version dependency checks"""
     task = create_task(UpdateDependencies, {"dependencies": []})
     task.org_config = mock.Mock()
-    
+
     # Test with version_id
     task.org_config.installed_packages = {"ns": [mock.Mock(id="04t000000000000AAA")]}
     dependency = PackageNamespaceVersionDependency(
-        namespace="ns",
-        version="1.0",
-        version_id="04t000000000000AAA"
+        namespace="ns", version="1.0", version_id="04t000000000000AAA"
     )
     assert task._is_dependency_already_installed(dependency) is True
-    
+
     # Test with regular version
     mock_version = mock.Mock()
     mock_version.id = "04t000000000000AAA"
     task.org_config.installed_packages = {"ns@1.0": [mock_version]}
     dependency = PackageNamespaceVersionDependency(namespace="ns", version="1.0")
     assert task._is_dependency_already_installed(dependency) is True
-    
+
     # Test with beta version
     mock_version = mock.Mock()
     mock_version.id = "04t000000000000BBB"
     task.org_config.installed_packages = {"ns@1.0b2": [mock_version]}
-    dependency = PackageNamespaceVersionDependency(namespace="ns", version="1.0 (Beta 2)")
+    dependency = PackageNamespaceVersionDependency(
+        namespace="ns", version="1.0 (Beta 2)"
+    )
     assert task._is_dependency_already_installed(dependency) is True

@@ -54,6 +54,7 @@ def _capture_to_text_stream(stream: T.Any, encoding: str) -> io.StringIO:
         return io.StringIO(data.decode(encoding, errors="replace"))
     return io.StringIO(str(data))
 
+
 def sfdx(
     command,
     username=None,
