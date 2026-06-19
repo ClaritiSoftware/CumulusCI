@@ -148,7 +148,8 @@ def test_checkout_org_from_pool_formats_json_error(monkeypatch):
 def test_checkout_org_from_pool_formats_json_error_debug(monkeypatch):
     payload = {
         "name": "ClaritiOrgCheckoutError",
-        "message": "Failed", "extra": "details",
+        "message": "Failed",
+        "extra": "details",
     }
 
     def fake_sfdx(command, **kwargs):

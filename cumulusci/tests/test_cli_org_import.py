@@ -1,6 +1,5 @@
 from types import SimpleNamespace
 
-import pytest
 from click.testing import CliRunner
 
 from cumulusci.cli.org import org
@@ -13,6 +12,7 @@ class FakeRuntime:
     def _load_keychain(self):
         # Tests bypass actual keychain loading.
         pass
+
 
 def test_org_import_rejects_username_and_pool_id(tmp_path):
     runner = CliRunner()

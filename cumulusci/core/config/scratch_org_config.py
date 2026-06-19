@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 import tempfile
-from typing import List, NoReturn, Optional, TYPE_CHECKING, Union
+from typing import List, NoReturn, Optional, Union
 
 import sarge
 
@@ -16,9 +16,6 @@ from cumulusci.core.exceptions import (
 from cumulusci.core.sfdx import sfdx
 from cumulusci.utils.clariti import ClaritiError, checkout_org_from_pool, set_sf_alias
 
-if TYPE_CHECKING:  # pragma: no cover
-    from cumulusci.core.org_import import import_sfdx_org_to_keychain as _Importer
-
 import_sfdx_org_to_keychain = None  # type: ignore
 
 
@@ -29,6 +26,7 @@ def _get_org_importer():
 
         import_sfdx_org_to_keychain = helper
     return import_sfdx_org_to_keychain
+
 
 class ScratchOrgConfig(SfdxOrgConfig):
     """Salesforce DX Scratch org configuration"""
@@ -43,6 +41,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
     org_pool_id: str
 
     createable: bool = True
+
     @staticmethod
     def _as_aware_utc(dt: Union[datetime.datetime, datetime.date]) -> datetime.datetime:
         """Normalize datetimes to aware UTC for safe comparisons."""
@@ -99,21 +98,16 @@ class ScratchOrgConfig(SfdxOrgConfig):
     def create_org(self) -> None:
         """Uses sf org create scratch  to create the org"""
         try:
-            if (
-                self.config.get("org_pool_id")
-                and self._should_skip_pool_checkout_env()
-            ):
+            if self.config.get("org_pool_id") and self._should_skip_pool_checkout_env():
                 self.logger.info(
                     "Skipping Clariti org pool checkout because CCI_DISABLE_POOL_CHECKOUT "
                     "is set."
                 )
             elif self._try_checkout_pooled_org():
                 return
-            if (
-                self.config.get("org_pool_id")
-                and os.getenv("CCI_DISABLE_SCRATCH_FALLBACK", "").lower()
-                in ("1", "true", "yes", "on")
-            ):
+            if self.config.get("org_pool_id") and os.getenv(
+                "CCI_DISABLE_SCRATCH_FALLBACK", ""
+            ).lower() in ("1", "true", "yes", "on"):
                 self.logger.info(
                     "Clariti checkout failed and scratch org fallback is disabled via "
                     "CCI_DISABLE_SCRATCH_FALLBACK."
@@ -338,7 +332,7 @@ class ScratchOrgConfig(SfdxOrgConfig):
                 org_config.pop("snapshot", None)
 
             # Create temporary config file
-            tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+            tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
             self._tmp_config = tmp.name
 
             # Try catch error here to avoid leaving temp file around

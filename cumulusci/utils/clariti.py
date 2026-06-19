@@ -8,9 +8,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence, Tuple, cast
 
+from cumulusci.core.debug import get_debug_mode
 from cumulusci.core.sfdx import sfdx
 
-from cumulusci.core.debug import get_debug_mode
 
 class ClaritiError(Exception):
     """Raised when a Clariti CLI operation fails."""
@@ -147,8 +147,7 @@ def checkout_org_from_pool(
         payload = json.loads(stdout)
     except json.JSONDecodeError as err:
         raise ClaritiError(
-            "Failed to parse JSON from Clariti CLI response."
-            f" Raw output: {stdout}"
+            "Failed to parse JSON from Clariti CLI response." f" Raw output: {stdout}"
         ) from err
 
     username = cast(str, _extract_string(payload, _USERNAME_PATHS))

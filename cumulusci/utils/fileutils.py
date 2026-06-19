@@ -85,7 +85,7 @@ def load_from_source(source: DataInput) -> ContextManager[Tuple[IO[Text], Text]]
             yield f, path
     elif "://" in source:  # URL string-like
         url = source
-        resp = requests.get(url)
+        resp = requests.get(url, timeout=30)
         resp.raise_for_status()
         yield StringIO(resp.text), url
     else:  # path-string-like
@@ -109,11 +109,29 @@ def view_file(path):
 class FSResource:
     """A pathlib.Path-based resource abstraction for local filesystem operations.
 
-    Create them through the open_fs_resource module function or static
-    function which will create a context manager that generates an FSResource.
+    This class is a minimal, local-only replacement for the small portion of
+    the PyFilesystem2 API that CumulusCI used. It exposes a pathlib-like
+    interface with a few methods that match prior usage patterns, allowing us
+    to remove the external "fs" dependency while keeping existing call sites
+    working.
 
-    If you don't need the resource management aspects of the context manager,
-    you can call the `new()` classmethod."""
+    Scope and behavior:
+    - Only local filesystem operations are supported. Remote backends (e.g.,
+      S3/FTP/ZIP) and non-"file" schemes are not supported and will raise
+      ValueError when passed as URLs.
+    - Supported operations include: exists, open, unlink, rmdir, removetree,
+      mkdir(parents, exist_ok), copy_to, joinpath, geturl, getsyspath,
+      __fspath__, and path-style division ("/").
+    - "file://" URLs are supported for both absolute and relative paths;
+      other URL schemes are rejected.
+    - getsyspath returns an absolute path without resolving symlinks so that
+      macOS paths under "/var" vs "/private/var" remain textually stable in
+      comparisons.
+    - close() is a no-op in this implementation.
+
+    Create instances via the open_fs_resource() context manager or the
+    FSResource.new() classmethod when you don't need context management.
+    """
 
     def __init__(self):
         raise NotImplementedError("Please use open_fs_resource context manager")
@@ -122,11 +140,14 @@ class FSResource:
     def new(
         cls,
         resource_url_or_path: Union[str, Path, "FSResource"],
+        filesystem=None,
     ):
         """Directly create a new FSResource from a URL or path (absolute or relative)
 
-        You can call this to bypass the context manager in contexts where closing isn't
-        important (e.g. interactive repl experiments)."""
+        The `filesystem` parameter is ignored in this implementation and exists only
+        for backward compatibility with callers. This FSResource operates solely on
+        the local filesystem using pathlib and shutil.
+        """
         self = cls.__new__(cls)
 
         if isinstance(resource_url_or_path, FSResource):
@@ -207,11 +228,15 @@ class FSResource:
     @staticmethod
     @contextmanager
     def open_fs_resource(
-        resource_url_or_path: Union[str, Path, "FSResource"],
+        resource_url_or_path: Union[str, Path, "FSResource"], filesystem=None
     ):
-        """Create a context-managed FSResource
+        """Create a context-managed FSResource (local filesystem only).
 
-        Input is a URL, path (absolute or relative) or FSResource
+        - Accepts a path (absolute or relative), a "file://" URL, or an
+          existing FSResource, and yields a compatible FSResource instance.
+        - Non-"file" URL schemes are not supported.
+        - The optional ``filesystem`` argument is ignored and kept only for
+          backward compatibility with older call sites.
 
         The function should be used in a context manager.
 
@@ -235,7 +260,7 @@ class FSResource:
         # yam
 
         """
-        resource = FSResource.new(resource_url_or_path)
+        resource = FSResource.new(resource_url_or_path, filesystem)
         yield resource
 
 
