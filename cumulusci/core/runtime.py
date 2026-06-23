@@ -1,12 +1,19 @@
+import logging
 import sys
 from abc import abstractmethod
-from typing import Optional, Type
+from typing import TYPE_CHECKING, Optional, Type
 
 from cumulusci.core.config import BaseProjectConfig, UniversalConfig
 from cumulusci.core.debug import DebugMode, get_debug_mode
 from cumulusci.core.exceptions import NotInProject, ProjectConfigNotFound
 from cumulusci.core.flowrunner import FlowCallback, FlowCoordinator
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.core.plugins import PluginManager, set_plugin_manager
+
+if TYPE_CHECKING:
+    from cumulusci.core.plugins import PluginManager as PluginManagerType
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=assignment-from-none
@@ -19,12 +26,17 @@ class BaseCumulusCI:
     universal_config: UniversalConfig
     project_config: Optional[BaseProjectConfig]
     keychain: Optional[BaseProjectKeychain]
+    plugin_manager: "PluginManagerType"
     debug_mode: DebugMode
     project_config_error: Exception
 
-    def __init__(self, *args, load_keychain=True, **kwargs):
+    def __init__(self, *args, load_keychain=True, load_plugins=True, **kwargs):
         self.keychain = None
         self.debug_mode = get_debug_mode()
+
+        # Initialize plugin manager early and register as global singleton
+        self.plugin_manager = PluginManager(self)
+        set_plugin_manager(self.plugin_manager)
 
         self._load_universal_config()
 
@@ -34,8 +46,13 @@ class BaseCumulusCI:
         except (NotInProject, ProjectConfigNotFound) as e:
             self.project_config = None
             self.project_config_error = e
+
         if load_keychain:
             self._load_keychain()
+
+        # Load plugins after project config and keychain are available
+        if load_plugins:
+            self._load_plugins()
 
     @property
     def universal_config_cls(self) -> Type:
@@ -97,6 +114,28 @@ class BaseCumulusCI:
         else:
             self.keychain = self.keychain_cls(self.project_config, keychain_key)
             self.project_config.keychain = self.keychain
+
+    def _load_plugins(self):
+        """Discover and load enabled plugins."""
+        try:
+            # Discover available plugins
+            self.plugin_manager.discover_plugins()
+
+            # Load plugin configurations from project config
+            if self.project_config:
+                plugin_configs = self.project_config.lookup("plugins") or {}
+                self.plugin_manager.load_plugin_configs(plugin_configs)
+
+            # Load enabled plugins
+            self.plugin_manager.load_enabled_plugins()
+
+            # Call cli_init hook
+            self.plugin_manager.hook_manager.hook.cci_cli_init(runtime=self)
+
+        except Exception as e:
+            logger.warning(f"Error loading plugins: {e}")
+            if self.debug_mode:
+                raise
 
     def get_flow(self, name: str, options: Optional[dict] = None) -> FlowCoordinator:
         """Get a primed and ready-to-go flow coordinator."""
