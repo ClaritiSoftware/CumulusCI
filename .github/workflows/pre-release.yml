@@ -70,22 +70,23 @@ jobs:
                   npm install prettier@3
                   npx prettier --write docs/history.md
             - name: Commit changes
+              env:
+                  JIRA_TICKET: ${{ inputs.jira_ticket }}
               run: |
                   git config user.name github-actions[bot]
                   git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-                  TICKET="${{ inputs.jira_ticket }}"
                   VERSION="$(hatch version)"
-                  BRANCH="release${TICKET:+/$TICKET}/$VERSION"
+                  BRANCH="release${JIRA_TICKET:+/$JIRA_TICKET}/$VERSION"
                   git switch -c "$BRANCH"
                   git add docs/history.md cumulusci/__about__.py
-                  COMMIT_PREFIX="${TICKET:+$TICKET }chore"
+                  COMMIT_PREFIX="${JIRA_TICKET:+$JIRA_TICKET }chore"
                   git commit -m "${COMMIT_PREFIX}: update changelog and bump version to $VERSION"
                   git push origin "$BRANCH"
             - name: Open PR
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  JIRA_TICKET: ${{ inputs.jira_ticket }}
               run: |
-                  TICKET="${{ inputs.jira_ticket }}"
                   VERSION="$(hatch version)"
-                  TITLE="${TICKET:+$TICKET }chore: release v$VERSION"
+                  TITLE="${JIRA_TICKET:+$JIRA_TICKET }chore: release v$VERSION"
                   gh pr create --title "$TITLE" --body "Automated release PR - updates changelog and bumps version to $VERSION." --base main --label 'auto-pr'
