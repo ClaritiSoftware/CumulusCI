@@ -15,6 +15,10 @@ on:
                     - beta
                     - preview
                     - dev
+            jira_ticket:
+                description: "Jira ticket (e.g. DEVOPS-123)"
+                required: false
+                type: string
 
 permissions:
     contents: write
@@ -45,6 +49,7 @@ jobs:
                   PREVIOUS_VERSION=$(gh release view --json tagName --jq .tagName)
                   NEXT_VERSION="v$(hatch version)"
                   echo "## $NEXT_VERSION ($(date -I))" > changelog.md
+                  echo "" >> changelog.md
                   gh api \
                     --method POST \
                     -H "Accept: application/vnd.github.v3+json" \
@@ -53,23 +58,35 @@ jobs:
                     -f target_commitish='main' \
                     -f tag_name=$NEXT_VERSION \
                     --jq '.body' |
+                    grep -v "^\*\*Full Changelog\*\*" |
+                    grep -v "^<!-- " |
                     sed -e 's_\(https.*\/\)\([0-9]*\)$_[#\2](\1\2)_' \
                         -e 's_by @\(.*\) in_by [@\1](https://github.com/\1) in_' >> changelog.md
+                  echo "" >> changelog.md
+                  echo "**Full Changelog**: https://github.com/ClaritiSoftware/CumulusCI/compare/$PREVIOUS_VERSION...$NEXT_VERSION" >> changelog.md
                   python utility/update-history.py
             - name: Lint history
               run: |
                   npm install prettier@3
                   npx prettier --write docs/history.md
             - name: Commit changes
+              env:
+                  JIRA_TICKET: ${{ inputs.jira_ticket }}
               run: |
                   git config user.name github-actions[bot]
                   git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-                  git switch -c "release-$(hatch version)"
+                  VERSION="$(hatch version)"
+                  BRANCH="release${JIRA_TICKET:+/$JIRA_TICKET}/$VERSION"
+                  git switch -c "$BRANCH"
                   git add docs/history.md cumulusci/__about__.py
-                  git commit -m "Update changelog (automated)"
-                  git push origin "release-$(hatch version)"
-            - name: Commit changes and open PR
+                  COMMIT_PREFIX="${JIRA_TICKET:+$JIRA_TICKET }chore"
+                  git commit -m "${COMMIT_PREFIX}: update changelog and bump version to $VERSION"
+                  git push origin "$BRANCH"
+            - name: Open PR
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  JIRA_TICKET: ${{ inputs.jira_ticket }}
               run: |
-                  gh pr create --title "Release v$(hatch version)" --fill --label 'auto-pr'
+                  VERSION="$(hatch version)"
+                  TITLE="${JIRA_TICKET:+$JIRA_TICKET }chore: release v$VERSION"
+                  gh pr create --title "$TITLE" --body "Automated release PR - updates changelog and bumps version to $VERSION." --base main --label 'auto-pr'
