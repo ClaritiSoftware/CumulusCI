@@ -15,6 +15,10 @@ on:
                     - beta
                     - preview
                     - dev
+            jira_ticket:
+                description: "Jira ticket (e.g. DEVOPS-123)"
+                required: false
+                type: string
 
 permissions:
     contents: write
@@ -64,12 +68,19 @@ jobs:
               run: |
                   git config user.name github-actions[bot]
                   git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-                  git switch -c "release-$(hatch version)"
+                  TICKET="${{ inputs.jira_ticket }}"
+                  VERSION="$(hatch version)"
+                  BRANCH="release${TICKET:+/$TICKET}/$VERSION"
+                  git switch -c "$BRANCH"
                   git add docs/history.md cumulusci/__about__.py
-                  git commit -m "Update changelog (automated)"
-                  git push origin "release-$(hatch version)"
-            - name: Commit changes and open PR
+                  COMMIT_PREFIX="${TICKET:+$TICKET }chore"
+                  git commit -m "${COMMIT_PREFIX}: update changelog and bump version to $VERSION"
+                  git push origin "$BRANCH"
+            - name: Open PR
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  gh pr create --title "Release v$(hatch version)" --fill --label 'auto-pr'
+                  TICKET="${{ inputs.jira_ticket }}"
+                  VERSION="$(hatch version)"
+                  TITLE="${TICKET:+$TICKET }chore: release v$VERSION"
+                  gh pr create --title "$TITLE" --body "Automated release PR - updates changelog and bumps version to $VERSION." --base main --label 'auto-pr'
