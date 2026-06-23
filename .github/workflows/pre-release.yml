@@ -49,6 +49,7 @@ jobs:
                   PREVIOUS_VERSION=$(gh release view --json tagName --jq .tagName)
                   NEXT_VERSION="v$(hatch version)"
                   echo "## $NEXT_VERSION ($(date -I))" > changelog.md
+                  echo "" >> changelog.md
                   gh api \
                     --method POST \
                     -H "Accept: application/vnd.github.v3+json" \
@@ -57,8 +58,12 @@ jobs:
                     -f target_commitish='main' \
                     -f tag_name=$NEXT_VERSION \
                     --jq '.body' |
+                    grep -v "^\*\*Full Changelog\*\*" |
+                    grep -v "^<!-- " |
                     sed -e 's_\(https.*\/\)\([0-9]*\)$_[#\2](\1\2)_' \
                         -e 's_by @\(.*\) in_by [@\1](https://github.com/\1) in_' >> changelog.md
+                  echo "" >> changelog.md
+                  echo "**Full Changelog**: https://github.com/ClaritiSoftware/CumulusCI/compare/$PREVIOUS_VERSION...$NEXT_VERSION" >> changelog.md
                   python utility/update-history.py
             - name: Lint history
               run: |
