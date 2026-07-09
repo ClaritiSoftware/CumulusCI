@@ -4,3 +4,4 @@ docs/diagram/
 **/*.min.css
 cumulusci/files/templates/
 **/change_notes/**
+cumulusci/tasks/robotframework/template.html
