@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 from json.decoder import JSONDecodeError
 
 from cumulusci.core.config import OrgConfig
@@ -7,7 +8,93 @@ from cumulusci.core.exceptions import SfdxOrgException
 from cumulusci.core.sfdx import sfdx
 from cumulusci.utils import get_git_config
 
+logger = logging.getLogger(__name__)
+
 nl = "\n"  # fstrings can't contain backslashes
+
+# sf CLI 2.142.7+ redacts sensitive fields (access token, password) in
+# `sf org display --json` output, replacing each value with a placeholder
+# string that starts with this prefix. When we see it we transparently fetch
+# the real value via the dedicated `sf org auth show-*` command.
+REDACTED_VALUE_PREFIX = "[REDACTED]"
+
+
+def _resolve_redacted_value(value, username, *, command, result_key, description):
+    """Resolve a value that newer sf CLI redacts in ``org display`` output.
+
+    Newer versions of the Salesforce CLI redact sensitive fields in
+    ``sf org display --json`` output, replacing each value with a placeholder
+    starting with ``[REDACTED]``. When that placeholder is detected, fetch the
+    real value via ``command`` (whose JSON ``result`` object contains
+    ``result_key``).
+
+    For any non-redacted value (including ``None``/empty) the value is returned
+    unchanged and no CLI call is made, keeping behavior identical on older sf
+    CLI versions. ``description`` is a human-readable label used only in log
+    and error messages.
+    """
+    if not value or not value.startswith(REDACTED_VALUE_PREFIX):
+        return value
+
+    logger.info(
+        "Salesforce CLI redacted the %s for %s; fetching it via 'sf %s'",
+        description,
+        username,
+        command,
+    )
+    p = sfdx(command, username)
+
+    if p.returncode:
+        # These commands are credential-adjacent: never log their raw
+        # stdout/stderr, which can contain the secret itself or sensitive org
+        # details. Log only the return code and keep the exception sanitized.
+        logger.error("'sf %s' failed (returncode %s)", command, p.returncode)
+        raise SfdxOrgException(
+            f"Unable to resolve redacted {description} for {username} "
+            f"(returncode {p.returncode})"
+        )
+
+    try:
+        resolved = json.loads(p.stdout_text.read())["result"][result_key]
+    except (JSONDecodeError, KeyError, TypeError) as e:
+        raise SfdxOrgException(
+            f"Failed to parse {description} from 'sf {command}' output for "
+            f"{username} ({e.__class__.__name__})"
+        )
+
+    if (
+        not isinstance(resolved, str)
+        or not resolved
+        or resolved.startswith(REDACTED_VALUE_PREFIX)
+    ):
+        raise SfdxOrgException(
+            f"'sf {command}' returned an empty or still-redacted {description} "
+            f"for {username}"
+        )
+
+    return resolved
+
+
+def _resolve_access_token(access_token, username):
+    """Resolve a redacted access token from ``sf org display`` output."""
+    return _resolve_redacted_value(
+        access_token,
+        username,
+        command="org auth show-access-token --no-prompt --json",
+        result_key="accessToken",
+        description="access token",
+    )
+
+
+def _resolve_password(password, username):
+    """Resolve a redacted password from ``sf org display`` output."""
+    return _resolve_redacted_value(
+        password,
+        username,
+        command="org auth show-user-password --no-prompt --json",
+        result_key="password",
+        description="password",
+    )
 
 
 class SfdxOrgConfig(OrgConfig):
@@ -53,16 +140,21 @@ class SfdxOrgConfig(OrgConfig):
                     "Failed to parse json from output.\n  "
                     f"Exception: {e.__class__.__name__}\n  Output: {''.join(stdout_list)}"
                 )
-            org_id = org_info["result"]["accessToken"].split("!")[0]
+            access_token = _resolve_access_token(
+                org_info["result"]["accessToken"], self.username
+            )
+            org_id = access_token.split("!")[0]
 
         sfdx_info = {
             "instance_url": org_info["result"]["instanceUrl"],
-            "access_token": org_info["result"]["accessToken"],
+            "access_token": access_token,
             "org_id": org_id,
             "username": org_info["result"]["username"],
         }
         if org_info["result"].get("password"):
-            sfdx_info["password"] = org_info["result"]["password"]
+            sfdx_info["password"] = _resolve_password(
+                org_info["result"]["password"], self.username
+            )
         self._sfdx_info = sfdx_info
         self._sfdx_info_date = datetime.datetime.utcnow()
         self.config.update(sfdx_info)
@@ -180,7 +272,7 @@ class SfdxOrgConfig(OrgConfig):
             )
         else:
             info = json.loads(p.stdout_text.read())
-            return info["result"]["accessToken"]
+            return _resolve_access_token(info["result"]["accessToken"], username)
 
     def force_refresh_oauth_token(self):
         # Call org display and parse output to get instance_url and
