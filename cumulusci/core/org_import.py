@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from cumulusci.core.config.scratch_org_config import ScratchOrgConfig
 from cumulusci.core.config.sfdx_org_config import SfdxOrgConfig
+from cumulusci.core.config.scratch_org_config import ScratchOrgConfig
 from cumulusci.utils import parse_api_datetime
 
 

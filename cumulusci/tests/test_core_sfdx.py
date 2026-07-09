@@ -1,8 +1,8 @@
-import pytest
 import sarge
+import pytest
 
-from cumulusci.core import sfdx as sfdx_module
 from cumulusci.core.exceptions import SfdxOrgException
+from cumulusci.core import sfdx as sfdx_module
 
 
 class _FakeCommand:

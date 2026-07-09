@@ -285,11 +285,11 @@ definition to check out from the pool instead of creating a new org by adding
 
 ```yaml
 orgs:
-    scratch:
-        dev:
-            config_file: orgs/dev.json
-            days: 7
-            org_pool_id: <POOL-ID>
+  scratch:
+    dev:
+      config_file: orgs/dev.json
+      days: 7
+      org_pool_id: <POOL-ID>
 ```
 
 When `org_pool_id` is set, CumulusCI calls `sf clariti org checkout` using the
@@ -306,12 +306,12 @@ CumulusCI leaves the pool metadata intact while creating the org from scratch.
 
 ### Checkout behavior matrix
 
-| `org_pool_id` | `CCI_DISABLE_POOL_CHECKOUT` | `CCI_DISABLE_SCRATCH_FALLBACK` | Result                                                                          |
-| ------------: | --------------------------- | ------------------------------ | ------------------------------------------------------------------------------- |
-|       not set | any                         | any                            | Always creates a scratch org via `sf org create scratch`.                       |
-|           set | truthy                      | any                            | Skips Clariti checkout and creates a scratch org.                               |
-|           set | falsy                       | truthy                         | Attempts Clariti checkout; failing checkout raises `ScratchOrgException`.       |
-|           set | falsy                       | falsy                          | Attempts Clariti checkout; failing checkout falls back to scratch org creation. |
+| `org_pool_id` | `CCI_DISABLE_POOL_CHECKOUT` | `CCI_DISABLE_SCRATCH_FALLBACK` | Result |
+|--------------:|----------------------------|-------------------------------|--------|
+| not set | any | any | Always creates a scratch org via `sf org create scratch`. |
+| set | truthy | any | Skips Clariti checkout and creates a scratch org. |
+| set | falsy | truthy | Attempts Clariti checkout; failing checkout raises `ScratchOrgException`. |
+| set | falsy | falsy | Attempts Clariti checkout; failing checkout falls back to scratch org creation. |
 
 **Note:** "truthy" values include `1`, `true`, `yes`, or `on` (case-insensitive); "falsy" includes empty string, `0`, `false`, `no`, or `off`.
 

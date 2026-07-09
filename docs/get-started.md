@@ -123,7 +123,6 @@ pipx install clariti-cumulusci
 When finished, [verify your installation](verify-your-installation).
 
 (update-environment-variables-manually)=
-
 #### Update Environment Variables Manually
 
 1.  Click Start and search for `edit environment variables`, or open

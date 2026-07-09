@@ -67,7 +67,7 @@ jobs:
                   python utility/update-history.py
             - name: Lint history
               run: |
-                  npm install prettier@3.1.0
+                  npm install prettier@3
                   npx prettier --write docs/history.md
             - name: Commit changes
               env:
