@@ -17,6 +17,7 @@ from cumulusci.core.config import (
     SfdxOrgConfig,
     UniversalConfig,
 )
+from cumulusci.core.config.sfdx_org_config import _resolve_access_token
 from cumulusci.core.exceptions import (
     NotInProject,
     ProjectConfigNotFound,
@@ -443,6 +444,63 @@ class TestScratchOrgConfig:
                 )
                 with pytest.raises(SfdxOrgException, match=exception):
                     config.get_access_token(alias="dadvisor")
+
+    def test_sfdx_info_redacted_access_token(self, Command):
+        """sfdx_info resolves a redacted token and derives a correct org_id."""
+        redacted_display = b"""{
+    "result": {
+        "instanceUrl": "url",
+        "accessToken": "[REDACTED] Use 'sf org auth show-access-token' to view",
+        "username": "username",
+        "password": "password",
+        "createdDate": "1970-01-01T00:00:00Z",
+        "expirationDate": "1970-01-08"
+    }
+}"""
+        show_token = b'{"status": 0, "result": {"accessToken": "00D000!AQEreal"}}'
+        Command.side_effect = [
+            mock.Mock(
+                stderr=io.BytesIO(b""),
+                stdout=io.BytesIO(redacted_display),
+                returncode=0,
+            ),
+            mock.Mock(
+                stderr=io.BytesIO(b""),
+                stdout=io.BytesIO(show_token),
+                returncode=0,
+            ),
+        ]
+
+        config = SfdxOrgConfig({"username": "test", "created": True}, "test")
+        info = config.sfdx_info
+
+        assert info["access_token"] == "00D000!AQEreal"
+        assert info["org_id"] == "00D000"
+
+    def test_get_access_token_redacted(self, Command):
+        """get_access_token resolves a redacted token via the fallback command."""
+        sf = mock.Mock()
+        sf.query_all.return_value = {"records": [{"Username": "whatever@example.com"}]}
+
+        display_response = mock.Mock(returncode=0)
+        display_response.stdout_text.read.return_value = (
+            '{"result": {"accessToken": '
+            "\"[REDACTED] Use 'sf org auth show-access-token' to view\"}}"
+        )
+        show_token_response = mock.Mock(returncode=0)
+        show_token_response.stdout_text.read.return_value = (
+            '{"result": {"accessToken": "00D000!AQEreal"}}'
+        )
+        sfdx = mock.Mock(side_effect=[display_response, show_token_response])
+
+        config = ScratchOrgConfig({}, "test")
+        with mock.patch(
+            "cumulusci.core.config.org_config.OrgConfig.salesforce_client", sf
+        ):
+            with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+                access_token = config.get_access_token(alias="dadvisor")
+
+        assert access_token == "00D000!AQEreal"
 
     def test_instance_url(self, Command):
         config = ScratchOrgConfig({}, "test")
@@ -1058,3 +1116,67 @@ class TestScratchOrgConfigPytest:
             config.create_org()
 
         config._create_org_via_sfdx.assert_not_called()
+
+
+class TestResolveAccessToken:
+    """Direct unit tests for the _resolve_access_token helper."""
+
+    def _make_sfdx(self, returncode=0, stdout="", stderr=""):
+        response = mock.Mock(returncode=returncode)
+        response.stdout_text.read.return_value = stdout
+        response.stderr_text.read.return_value = stderr
+        return mock.Mock(return_value=response)
+
+    def test_non_redacted_passes_through_without_sfdx(self):
+        sfdx = mock.Mock()
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            assert _resolve_access_token("00D000!AQEreal", "user") == "00D000!AQEreal"
+        sfdx.assert_not_called()
+
+    def test_none_and_empty_pass_through_without_sfdx(self):
+        sfdx = mock.Mock()
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            assert _resolve_access_token(None, "user") is None
+            assert _resolve_access_token("", "user") == ""
+        sfdx.assert_not_called()
+
+    def test_redacted_resolves_real_token(self):
+        sfdx = self._make_sfdx(
+            stdout='{"status": 0, "result": {"accessToken": "00D000!AQEreal"}}'
+        )
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            resolved = _resolve_access_token("[REDACTED] view it", "user")
+        assert resolved == "00D000!AQEreal"
+        sfdx.assert_called_once_with(
+            "org auth show-access-token --no-prompt --json", "user"
+        )
+
+    def test_fallback_nonzero_returncode_raises(self):
+        sfdx = self._make_sfdx(returncode=1, stdout="out", stderr="err")
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="returncode 1"):
+                _resolve_access_token("[REDACTED] view it", "user")
+
+    def test_fallback_malformed_json_raises(self):
+        sfdx = self._make_sfdx(stdout="<html></html>")
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="Failed to parse access token"):
+                _resolve_access_token("[REDACTED] view it", "user")
+
+    def test_fallback_missing_key_raises(self):
+        sfdx = self._make_sfdx(stdout='{"result": {}}')
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="Failed to parse access token"):
+                _resolve_access_token("[REDACTED] view it", "user")
+
+    def test_fallback_empty_token_raises(self):
+        sfdx = self._make_sfdx(stdout='{"result": {"accessToken": ""}}')
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="empty or still-redacted"):
+                _resolve_access_token("[REDACTED] view it", "user")
+
+    def test_fallback_still_redacted_token_raises(self):
+        sfdx = self._make_sfdx(stdout='{"result": {"accessToken": "[REDACTED] still"}}')
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="empty or still-redacted"):
+                _resolve_access_token("[REDACTED] view it", "user")

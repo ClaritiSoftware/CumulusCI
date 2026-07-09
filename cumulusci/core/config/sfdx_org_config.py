@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 from json.decoder import JSONDecodeError
 
 from cumulusci.core.config import OrgConfig
@@ -7,7 +8,70 @@ from cumulusci.core.exceptions import SfdxOrgException
 from cumulusci.core.sfdx import sfdx
 from cumulusci.utils import get_git_config
 
+logger = logging.getLogger(__name__)
+
 nl = "\n"  # fstrings can't contain backslashes
+
+# sf CLI 2.142.7+ redacts the accessToken in `sf org display --json` output,
+# replacing it with a string that starts with this prefix. When we see it we
+# transparently fetch the real token via `sf org auth show-access-token`.
+REDACTED_ACCESS_TOKEN_PREFIX = "[REDACTED]"
+
+
+def _resolve_access_token(access_token, username):
+    """Return a usable access token, resolving sf CLI redaction if needed.
+
+    Newer versions of the Salesforce CLI redact the ``accessToken`` field in
+    ``sf org display --json`` output. When that happens the token is replaced
+    with a placeholder string starting with ``[REDACTED]``. This helper detects
+    that placeholder and transparently fetches the real token via
+    ``sf org auth show-access-token``.
+
+    For any non-redacted token (including ``None``/empty) the value is returned
+    unchanged and no CLI call is made, keeping behavior identical on older sf
+    CLI versions.
+    """
+    if not access_token or not access_token.startswith(REDACTED_ACCESS_TOKEN_PREFIX):
+        return access_token
+
+    logger.info(
+        "Salesforce CLI redacted the access token for %s; "
+        "fetching it via 'sf org auth show-access-token'",
+        username,
+    )
+    p = sfdx("org auth show-access-token --no-prompt --json", username)
+
+    if p.returncode:
+        stderr = p.stderr_text.read()
+        stdout = p.stdout_text.read()
+        logger.error(
+            "'sf org auth show-access-token' failed (returncode %s)\n"
+            "stderr:\n%s\nstdout:\n%s",
+            p.returncode,
+            stderr,
+            stdout,
+        )
+        raise SfdxOrgException(
+            f"Unable to resolve redacted access token for {username} "
+            f"(returncode {p.returncode})"
+        )
+
+    try:
+        resolved = json.loads(p.stdout_text.read())["result"]["accessToken"]
+    except (JSONDecodeError, KeyError, TypeError) as e:
+        raise SfdxOrgException(
+            "Failed to parse access token from "
+            "'sf org auth show-access-token' output for "
+            f"{username} ({e.__class__.__name__})"
+        )
+
+    if not resolved or resolved.startswith(REDACTED_ACCESS_TOKEN_PREFIX):
+        raise SfdxOrgException(
+            "'sf org auth show-access-token' returned an empty or still-redacted "
+            f"access token for {username}"
+        )
+
+    return resolved
 
 
 class SfdxOrgConfig(OrgConfig):
@@ -53,11 +117,14 @@ class SfdxOrgConfig(OrgConfig):
                     "Failed to parse json from output.\n  "
                     f"Exception: {e.__class__.__name__}\n  Output: {''.join(stdout_list)}"
                 )
-            org_id = org_info["result"]["accessToken"].split("!")[0]
+            access_token = _resolve_access_token(
+                org_info["result"]["accessToken"], self.username
+            )
+            org_id = access_token.split("!")[0]
 
         sfdx_info = {
             "instance_url": org_info["result"]["instanceUrl"],
-            "access_token": org_info["result"]["accessToken"],
+            "access_token": access_token,
             "org_id": org_id,
             "username": org_info["result"]["username"],
         }
@@ -180,7 +247,7 @@ class SfdxOrgConfig(OrgConfig):
             )
         else:
             info = json.loads(p.stdout_text.read())
-            return info["result"]["accessToken"]
+            return _resolve_access_token(info["result"]["accessToken"], username)
 
     def force_refresh_oauth_token(self):
         # Call org display and parse output to get instance_url and
