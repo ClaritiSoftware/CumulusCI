@@ -12,64 +12,85 @@ logger = logging.getLogger(__name__)
 
 nl = "\n"  # fstrings can't contain backslashes
 
-# sf CLI 2.142.7+ redacts the accessToken in `sf org display --json` output,
-# replacing it with a string that starts with this prefix. When we see it we
-# transparently fetch the real token via `sf org auth show-access-token`.
-REDACTED_ACCESS_TOKEN_PREFIX = "[REDACTED]"
+# sf CLI 2.142.7+ redacts sensitive fields (access token, password) in
+# `sf org display --json` output, replacing each value with a placeholder
+# string that starts with this prefix. When we see it we transparently fetch
+# the real value via the dedicated `sf org auth show-*` command.
+REDACTED_VALUE_PREFIX = "[REDACTED]"
 
 
-def _resolve_access_token(access_token, username):
-    """Return a usable access token, resolving sf CLI redaction if needed.
+def _resolve_redacted_value(value, username, *, command, result_key, description):
+    """Resolve a value that newer sf CLI redacts in ``org display`` output.
 
-    Newer versions of the Salesforce CLI redact the ``accessToken`` field in
-    ``sf org display --json`` output. When that happens the token is replaced
-    with a placeholder string starting with ``[REDACTED]``. This helper detects
-    that placeholder and transparently fetches the real token via
-    ``sf org auth show-access-token``.
+    Newer versions of the Salesforce CLI redact sensitive fields in
+    ``sf org display --json`` output, replacing each value with a placeholder
+    starting with ``[REDACTED]``. When that placeholder is detected, fetch the
+    real value via ``command`` (whose JSON ``result`` object contains
+    ``result_key``).
 
-    For any non-redacted token (including ``None``/empty) the value is returned
+    For any non-redacted value (including ``None``/empty) the value is returned
     unchanged and no CLI call is made, keeping behavior identical on older sf
-    CLI versions.
+    CLI versions. ``description`` is a human-readable label used only in log
+    and error messages.
     """
-    if not access_token or not access_token.startswith(REDACTED_ACCESS_TOKEN_PREFIX):
-        return access_token
+    if not value or not value.startswith(REDACTED_VALUE_PREFIX):
+        return value
 
     logger.info(
-        "Salesforce CLI redacted the access token for %s; "
-        "fetching it via 'sf org auth show-access-token'",
+        "Salesforce CLI redacted the %s for %s; fetching it via 'sf %s'",
+        description,
         username,
+        command,
     )
-    p = sfdx("org auth show-access-token --no-prompt --json", username)
+    p = sfdx(command, username)
 
     if p.returncode:
-        # `show-access-token` is credential-adjacent: never log its raw
-        # stdout/stderr, which can contain token material or sensitive org
+        # These commands are credential-adjacent: never log their raw
+        # stdout/stderr, which can contain the secret itself or sensitive org
         # details. Log only the return code and keep the exception sanitized.
-        logger.error(
-            "'sf org auth show-access-token' failed (returncode %s)",
-            p.returncode,
-        )
+        logger.error("'sf %s' failed (returncode %s)", command, p.returncode)
         raise SfdxOrgException(
-            f"Unable to resolve redacted access token for {username} "
+            f"Unable to resolve redacted {description} for {username} "
             f"(returncode {p.returncode})"
         )
 
     try:
-        resolved = json.loads(p.stdout_text.read())["result"]["accessToken"]
+        resolved = json.loads(p.stdout_text.read())["result"][result_key]
     except (JSONDecodeError, KeyError, TypeError) as e:
         raise SfdxOrgException(
-            "Failed to parse access token from "
-            "'sf org auth show-access-token' output for "
+            f"Failed to parse {description} from 'sf {command}' output for "
             f"{username} ({e.__class__.__name__})"
         )
 
-    if not resolved or resolved.startswith(REDACTED_ACCESS_TOKEN_PREFIX):
+    if not resolved or resolved.startswith(REDACTED_VALUE_PREFIX):
         raise SfdxOrgException(
-            "'sf org auth show-access-token' returned an empty or still-redacted "
-            f"access token for {username}"
+            f"'sf {command}' returned an empty or still-redacted {description} "
+            f"for {username}"
         )
 
     return resolved
+
+
+def _resolve_access_token(access_token, username):
+    """Resolve a redacted access token from ``sf org display`` output."""
+    return _resolve_redacted_value(
+        access_token,
+        username,
+        command="org auth show-access-token --no-prompt --json",
+        result_key="accessToken",
+        description="access token",
+    )
+
+
+def _resolve_password(password, username):
+    """Resolve a redacted password from ``sf org display`` output."""
+    return _resolve_redacted_value(
+        password,
+        username,
+        command="org auth show-user-password --no-prompt --json",
+        result_key="password",
+        description="password",
+    )
 
 
 class SfdxOrgConfig(OrgConfig):
@@ -127,7 +148,9 @@ class SfdxOrgConfig(OrgConfig):
             "username": org_info["result"]["username"],
         }
         if org_info["result"].get("password"):
-            sfdx_info["password"] = org_info["result"]["password"]
+            sfdx_info["password"] = _resolve_password(
+                org_info["result"]["password"], self.username
+            )
         self._sfdx_info = sfdx_info
         self._sfdx_info_date = datetime.datetime.utcnow()
         self.config.update(sfdx_info)

@@ -17,7 +17,10 @@ from cumulusci.core.config import (
     SfdxOrgConfig,
     UniversalConfig,
 )
-from cumulusci.core.config.sfdx_org_config import _resolve_access_token
+from cumulusci.core.config.sfdx_org_config import (
+    _resolve_access_token,
+    _resolve_password,
+)
 from cumulusci.core.exceptions import (
     NotInProject,
     ProjectConfigNotFound,
@@ -476,6 +479,37 @@ class TestScratchOrgConfig:
 
         assert info["access_token"] == "00D000!AQEreal"
         assert info["org_id"] == "00D000"
+
+    def test_sfdx_info_redacted_password(self, Command):
+        """sfdx_info resolves a redacted password via show-user-password."""
+        redacted_display = b"""{
+    "result": {
+        "instanceUrl": "url",
+        "accessToken": "00D000!AQEreal",
+        "username": "username",
+        "password": "[REDACTED] Use 'sf org auth show-user-password' to view"
+    }
+}"""
+        show_password = b'{"status": 0, "result": {"password": "s3cr3t-pw"}}'
+        Command.side_effect = [
+            mock.Mock(
+                stderr=io.BytesIO(b""),
+                stdout=io.BytesIO(redacted_display),
+                returncode=0,
+            ),
+            mock.Mock(
+                stderr=io.BytesIO(b""),
+                stdout=io.BytesIO(show_password),
+                returncode=0,
+            ),
+        ]
+
+        config = SfdxOrgConfig({"username": "test", "created": True}, "test")
+        info = config.sfdx_info
+
+        assert info["password"] == "s3cr3t-pw"
+        # access token was not redacted here, so no extra CLI call for it
+        assert Command.call_count == 2
 
     def test_get_access_token_redacted(self, Command):
         """get_access_token resolves a redacted token via the fallback command."""
@@ -1180,3 +1214,53 @@ class TestResolveAccessToken:
         with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
             with pytest.raises(SfdxOrgException, match="empty or still-redacted"):
                 _resolve_access_token("[REDACTED] view it", "user")
+
+
+class TestResolvePassword:
+    """Direct unit tests for the _resolve_password helper."""
+
+    def _make_sfdx(self, returncode=0, stdout="", stderr=""):
+        response = mock.Mock(returncode=returncode)
+        response.stdout_text.read.return_value = stdout
+        response.stderr_text.read.return_value = stderr
+        return mock.Mock(return_value=response)
+
+    def test_non_redacted_passes_through_without_sfdx(self):
+        sfdx = mock.Mock()
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            assert _resolve_password("real-password", "user") == "real-password"
+        sfdx.assert_not_called()
+
+    def test_none_and_empty_pass_through_without_sfdx(self):
+        sfdx = mock.Mock()
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            assert _resolve_password(None, "user") is None
+            assert _resolve_password("", "user") == ""
+        sfdx.assert_not_called()
+
+    def test_redacted_resolves_real_password(self):
+        sfdx = self._make_sfdx(stdout='{"status": 0, "result": {"password": "s3cr3t"}}')
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            resolved = _resolve_password("[REDACTED] view it", "user")
+        assert resolved == "s3cr3t"
+        sfdx.assert_called_once_with(
+            "org auth show-user-password --no-prompt --json", "user"
+        )
+
+    def test_fallback_nonzero_returncode_raises(self):
+        sfdx = self._make_sfdx(returncode=1, stdout="out", stderr="err")
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="returncode 1"):
+                _resolve_password("[REDACTED] view it", "user")
+
+    def test_fallback_malformed_json_raises(self):
+        sfdx = self._make_sfdx(stdout="<html></html>")
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="Failed to parse password"):
+                _resolve_password("[REDACTED] view it", "user")
+
+    def test_fallback_empty_password_raises(self):
+        sfdx = self._make_sfdx(stdout='{"result": {"password": ""}}')
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="empty or still-redacted"):
+                _resolve_password("[REDACTED] view it", "user")
