@@ -378,7 +378,7 @@ def show_version_info():
 def display_release_notes_link(latest_version: str) -> None:
     """Provide a link to the latest CumulusCI Release Notes"""
     release_notes_link = (
-        f"https://github.com/SFDO-Tooling/CumulusCI/releases/tag/v{latest_version}"
+        f"https://github.com/ClaritiSoftware/CumulusCI/releases/tag/v{latest_version}"
     )
     console = rich.get_console()
     console.print(
