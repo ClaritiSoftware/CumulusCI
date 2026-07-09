@@ -2,13 +2,14 @@ This is my pull request comment. Just explaining some stuff I did here, but shou
 
 # Critical Changes
 
--   This will break everything!
+* This will break everything!
 
 # Changes
 
 Here's something I did. It was really cool
 
 Oh yeah I did something else too!
+
 
 # Issues Closed
 
