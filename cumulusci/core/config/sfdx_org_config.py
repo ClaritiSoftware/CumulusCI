@@ -9,6 +9,36 @@ from cumulusci.utils import get_git_config
 
 nl = "\n"  # fstrings can't contain backslashes
 
+_REDACTED_TOKEN_PREFIX = "[REDACTED]"
+
+
+def _resolve_access_token(access_token, username):
+    """Return a real access token, resolving sf CLI redaction if needed.
+
+    sf CLI 2.142.7+ redacts the ``accessToken`` field in
+    ``sf org display --json`` output. When we see the placeholder, fall
+    back to the sanctioned ``sf org auth show-access-token --no-prompt
+    --json`` command, which Salesforce provides specifically for
+    scripting.
+    """
+    if not access_token or not access_token.startswith(_REDACTED_TOKEN_PREFIX):
+        return access_token
+
+    p = sfdx("org auth show-access-token --no-prompt --json", username)
+    if p.returncode:
+        raise SfdxOrgException(
+            f"Unable to resolve redacted access token for {username}\n"
+            f"stderr: {p.stderr_text.read()}\n"
+            f"stdout: {p.stdout_text.read()}"
+        )
+    try:
+        info = json.loads(p.stdout_text.read())
+        return info["result"]["accessToken"]
+    except (JSONDecodeError, KeyError, TypeError) as exc:
+        raise SfdxOrgException(
+            f"Failed to parse `sf org auth show-access-token` output: {exc}"
+        )
+
 
 class SfdxOrgConfig(OrgConfig):
     """Org config which loads from sfdx keychain"""
@@ -53,11 +83,14 @@ class SfdxOrgConfig(OrgConfig):
                     "Failed to parse json from output.\n  "
                     f"Exception: {e.__class__.__name__}\n  Output: {''.join(stdout_list)}"
                 )
-            org_id = org_info["result"]["accessToken"].split("!")[0]
+            access_token = _resolve_access_token(
+                org_info["result"]["accessToken"], self.username
+            )
+            org_id = access_token.split("!")[0]
 
         sfdx_info = {
             "instance_url": org_info["result"]["instanceUrl"],
-            "access_token": org_info["result"]["accessToken"],
+            "access_token": access_token,
             "org_id": org_id,
             "username": org_info["result"]["username"],
         }
@@ -180,7 +213,7 @@ class SfdxOrgConfig(OrgConfig):
             )
         else:
             info = json.loads(p.stdout_text.read())
-            return info["result"]["accessToken"]
+            return _resolve_access_token(info["result"]["accessToken"], username)
 
     def force_refresh_oauth_token(self):
         # Call org display and parse output to get instance_url and
