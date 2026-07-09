@@ -42,14 +42,12 @@ def _resolve_access_token(access_token, username):
     p = sfdx("org auth show-access-token --no-prompt --json", username)
 
     if p.returncode:
-        stderr = p.stderr_text.read()
-        stdout = p.stdout_text.read()
+        # `show-access-token` is credential-adjacent: never log its raw
+        # stdout/stderr, which can contain token material or sensitive org
+        # details. Log only the return code and keep the exception sanitized.
         logger.error(
-            "'sf org auth show-access-token' failed (returncode %s)\n"
-            "stderr:\n%s\nstdout:\n%s",
+            "'sf org auth show-access-token' failed (returncode %s)",
             p.returncode,
-            stderr,
-            stdout,
         )
         raise SfdxOrgException(
             f"Unable to resolve redacted access token for {username} "
