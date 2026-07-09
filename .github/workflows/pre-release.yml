@@ -89,4 +89,4 @@ jobs:
               run: |
                   VERSION="$(hatch version)"
                   TITLE="${JIRA_TICKET:+$JIRA_TICKET }chore: release v$VERSION"
-                  gh pr create --title "$TITLE" --body "Automated release PR - updates changelog and bumps version to $VERSION." --base main --label 'auto-pr'
+                  gh pr create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "Automated release PR - updates changelog and bumps version to $VERSION." --base main --label 'auto-pr'
