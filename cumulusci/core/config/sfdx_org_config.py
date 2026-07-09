@@ -62,7 +62,11 @@ def _resolve_redacted_value(value, username, *, command, result_key, description
             f"{username} ({e.__class__.__name__})"
         )
 
-    if not resolved or resolved.startswith(REDACTED_VALUE_PREFIX):
+    if (
+        not isinstance(resolved, str)
+        or not resolved
+        or resolved.startswith(REDACTED_VALUE_PREFIX)
+    ):
         raise SfdxOrgException(
             f"'sf {command}' returned an empty or still-redacted {description} "
             f"for {username}"

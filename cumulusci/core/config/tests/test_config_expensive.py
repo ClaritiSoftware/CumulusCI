@@ -507,7 +507,7 @@ class TestScratchOrgConfig:
         config = SfdxOrgConfig({"username": "test", "created": True}, "test")
         info = config.sfdx_info
 
-        assert info["password"] == "s3cr3t-pw"
+        assert info["password"] == "s3cr3t-pw"  # noqa: S105
         # access token was not redacted here, so no extra CLI call for it
         assert Command.call_count == 2
 
@@ -1211,6 +1211,14 @@ class TestResolveAccessToken:
 
     def test_fallback_still_redacted_token_raises(self):
         sfdx = self._make_sfdx(stdout='{"result": {"accessToken": "[REDACTED] still"}}')
+        with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
+            with pytest.raises(SfdxOrgException, match="empty or still-redacted"):
+                _resolve_access_token("[REDACTED] view it", "user")
+
+    def test_fallback_non_string_token_raises(self):
+        # A malformed CLI result (non-string token) must surface as a sanitized
+        # SfdxOrgException, not an AttributeError from calling .startswith.
+        sfdx = self._make_sfdx(stdout='{"result": {"accessToken": 12345}}')
         with mock.patch("cumulusci.core.config.sfdx_org_config.sfdx", sfdx):
             with pytest.raises(SfdxOrgException, match="empty or still-redacted"):
                 _resolve_access_token("[REDACTED] view it", "user")
