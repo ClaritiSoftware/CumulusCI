@@ -165,6 +165,26 @@ def connect_org_to_keychain(
 
     org_config.save()
 
+    # Call plugin hook for org connect
+    _call_org_connect_hook(runtime, org_config, org_name, is_new=True)
+
+
+def _call_org_connect_hook(runtime, org_config, org_name, is_new=False):
+    """Call plugin hook for org connect."""
+    try:
+        if hasattr(runtime, "plugin_manager"):
+            context = {
+                "org_name": org_name,
+                "is_scratch": getattr(org_config, "scratch", False),
+                "is_new": is_new,
+            }
+            runtime.plugin_manager.hook_manager.hook.cci_org_connect(
+                org_config=org_config,
+                context=context,
+            )
+    except Exception:
+        pass  # Don't fail org connect due to hook errors
+
 
 @org.command(
     name="connect", help="Connects a new org's credentials using OAuth Web Flow"
