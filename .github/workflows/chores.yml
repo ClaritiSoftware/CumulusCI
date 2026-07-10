@@ -60,9 +60,11 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  existing_pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls" \
+                  existing_pr=$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" \
                     -f state=open \
-                    --jq ".[] | select(.head.ref == \"update-sfdc-api-v$VERSION\") | .number")
+                    -f head="${GITHUB_REPOSITORY_OWNER}:update-sfdc-api-v$VERSION" \
+                    --paginate \
+                    --jq ".[].number")
                   if [ -n "$existing_pr" ]; then
                       echo "PR #$existing_pr already exists for update-sfdc-api-v$VERSION"
                   else
