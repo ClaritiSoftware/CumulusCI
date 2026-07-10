@@ -60,11 +60,24 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  existing_pr=$(gh pr list --head "update-sfdc-api-v$VERSION" --json number -q '.[0].number')
+                  existing_pr=$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" \
+                    -f state=open \
+                    -f head="${GITHUB_REPOSITORY_OWNER}:update-sfdc-api-v$VERSION" \
+                    --paginate \
+                    --jq ".[].number")
                   if [ -n "$existing_pr" ]; then
                       echo "PR #$existing_pr already exists for update-sfdc-api-v$VERSION"
                   else
-                      gh pr create --fill --label 'auto-pr'
+                      PR_NUMBER=$(gh api "repos/$GITHUB_REPOSITORY/pulls" \
+                        --method POST \
+                        -f title="chore: update SFDC API to v$VERSION" \
+                        -f body="" \
+                        -f base="main" \
+                        -f head="update-sfdc-api-v$VERSION" \
+                        --jq '.number')
+                      gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels" \
+                        --method POST \
+                        -f "labels[]=auto-pr"
                   fi
     test_sfdx_release_candidate:
         uses: ./.github/workflows/release_test_sfdx.yml

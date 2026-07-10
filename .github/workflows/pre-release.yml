@@ -67,7 +67,7 @@ jobs:
                   python utility/update-history.py
             - name: Lint history
               run: |
-                  npm install prettier@3
+                  npm install prettier@3.1.0
                   npx prettier --write docs/history.md
             - name: Commit changes
               env:
@@ -89,4 +89,14 @@ jobs:
               run: |
                   VERSION="$(hatch version)"
                   TITLE="${JIRA_TICKET:+$JIRA_TICKET }chore: release v$VERSION"
-                  gh pr create --title "$TITLE" --body "Automated release PR - updates changelog and bumps version to $VERSION." --base main --label 'auto-pr'
+                  BRANCH="release${JIRA_TICKET:+/$JIRA_TICKET}/$VERSION"
+                  PR_NUMBER=$(gh api "repos/$GITHUB_REPOSITORY/pulls" \
+                    --method POST \
+                    -f title="$TITLE" \
+                    -f body="Automated release PR - updates changelog and bumps version to $VERSION." \
+                    -f base="main" \
+                    -f head="$BRANCH" \
+                    --jq '.number')
+                  gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels" \
+                    --method POST \
+                    -f "labels[]=auto-pr"
