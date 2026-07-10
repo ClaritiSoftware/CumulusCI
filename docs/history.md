@@ -2,6 +2,18 @@
 
 <!-- latest-start -->
 
+## v4.7.1 (2026-07-10)
+
+## What's Changed
+
+### Changes
+
+- DEVOPS-927 fix: handle redacted accessToken and password in sf CLI org display output by [@dipakparmar](https://github.com/dipakparmar) in [#26](https://github.com/ClaritiSoftware/CumulusCI/pull/26)
+
+**Full Changelog**: https://github.com/ClaritiSoftware/CumulusCI/compare/v4.7.0...v4.7.1
+
+<!-- latest-stop -->
+
 ## v4.7.0 (2026-06-23)
 
 ## What's Changed
@@ -14,8 +26,6 @@
 - DEVOPS-906 chore: sync CumulusCI from upstream (2026.06.16) by [@dipakparmar](https://github.com/dipakparmar) in [#24](https://github.com/ClaritiSoftware/CumulusCI/pull/24)
 
 **Full Changelog**: https://github.com/ClaritiSoftware/CumulusCI/compare/v4.6.0...v4.7.0
-
-<!-- latest-stop -->
 
 ## v4.6.0.dev2 (2026-01-17)
 
