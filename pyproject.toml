@@ -117,7 +117,7 @@ allow-direct-references = true
 include = [
     "/cumulusci",
     '/cumulusci/**/*.*', # y[a]ml, js[on], etc.
-
+    "/cumulusci/cli/completions/**", # shell completion scripts (no extension)
 ]
 
 [tool.hatch.build.targets.sdist]
