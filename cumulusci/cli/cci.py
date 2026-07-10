@@ -23,6 +23,7 @@ from cumulusci.utils import get_cci_upgrade_command
 from cumulusci.utils.http.requests_utils import init_requests_trust
 from cumulusci.utils.logging import tee_stdout_stderr
 
+from .completion import completion
 from .error import error
 from .flow import flow
 from .logger import get_tempfile_logger, init_logger
@@ -497,6 +498,7 @@ def telemetry():
 
 # Top Level Groups
 
+cli.add_command(completion)
 cli.add_command(error)
 cli.add_command(project)
 cli.add_command(org)

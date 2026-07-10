@@ -18,26 +18,7 @@ Code. Alternately, on macOS, access the terminal via `Terminal.app`; on
 Windows, open `cmd.exe`; or on Linux, use your preferred terminal
 application.
 
-To see all available commands, type `cci` in your terminal.
-
-```console
-$ cci
-Usage: cci [OPTIONS] COMMAND [ARGS]...
-
-Options:
---help  Show this message and exit.
-
-Commands:
-error    Get or share information about an error
-flow     Commands for finding and running flows for a project
-org      Commands for connecting and interacting with Salesforce orgs
-plan     Commands for getting information about MetaDeploy plans
-project  Commands for interacting with project repository configurations
-service  Commands for connecting services to the keychain
-shell    Drop into a Python shell
-task     Commands for finding and running tasks for a project
-version  Print the current version of CumulusCI
-```
+To see all available commands and options, run `cci --help` in your terminal.
 
 To retrieve information on a specific command, type `cci <command>`.
 
@@ -412,6 +393,54 @@ To remove a service use:
 
 ```console
 $ cci service remove <service_type> <service_name>
+```
+
+## Shell Completion
+
+CumulusCI includes a shell completion script that enables tab completion
+for commands, subcommands, flow names, task names, org names, and more.
+
+### Install (one-time setup)
+
+**Plain zsh** - add the following to your `~/.zshrc`:
+
+```console
+$ mkdir -p ~/.zsh/completions
+$ cci completion zsh > ~/.zsh/completions/_cci
+```
+
+Then add these lines to `~/.zshrc` if not already present:
+
+```sh
+fpath=(~/.zsh/completions $fpath)
+autoload -Uz compinit && compinit
+```
+
+**oh-my-zsh**:
+
+```console
+$ mkdir -p ~/.oh-my-zsh/custom/completions
+$ cci completion zsh > ~/.oh-my-zsh/custom/completions/_cci
+```
+
+After installing, restart your shell or run `autoload -Uz compinit && compinit`.
+
+### What gets completed
+
+| Command | Completes |
+|---|---|
+| `cci <TAB>` | All top-level commands with descriptions |
+| `cci flow run <TAB>` | Flow names (cached 5 min) |
+| `cci task run <TAB>` | Task names (cached 5 min) |
+| `cci flow info <TAB>` | Flow names |
+| `cci task info <TAB>` | Task names |
+| `cci org browser <TAB>` | Org names from your keychain |
+| `--org <TAB>` | Org names (on any command that accepts `--org`) |
+| `cci service connect <TAB>` | Service types |
+
+```{tip}
+Run `cci completion zsh --help` to see the full installation instructions
+in your terminal.
 ```
 
 ## Troubleshoot Errors

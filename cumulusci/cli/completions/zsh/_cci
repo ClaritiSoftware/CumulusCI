@@ -1,0 +1,300 @@
+#compdef cci
+
+# CumulusCI (cci) zsh completion
+#
+# Install (one-time):
+#
+#   Plain zsh - add to ~/.zshrc:
+#     mkdir -p ~/.zsh/completions
+#     cci completion zsh > ~/.zsh/completions/_cci
+#     fpath=(~/.zsh/completions $fpath)
+#     autoload -Uz compinit && compinit
+#
+#   oh-my-zsh:
+#     mkdir -p ~/.oh-my-zsh/custom/completions
+#     cci completion zsh > ~/.oh-my-zsh/custom/completions/_cci
+#
+#   Then restart your shell or run: autoload -Uz compinit && compinit
+
+# -- Cache helpers (5-minute TTL) ---------------------------------------------
+
+_cci_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/cci-completion"
+
+_cci_cache_stale() {
+  local f="$1"
+  [[ ! -f "$f" ]] || [[ -n "$(find "$f" -mmin +5 2>/dev/null)" ]]
+}
+
+_cci_flow_names() {
+  local cache="$_cci_cache_dir/flows"
+  if _cci_cache_stale "$cache"; then
+    mkdir -p "$_cci_cache_dir"
+    cci flow list 2>/dev/null | awk '/^  [a-z_]/{print $1}' > "$cache" 2>/dev/null
+  fi
+  cat "$cache" 2>/dev/null
+}
+
+_cci_task_names() {
+  local cache="$_cci_cache_dir/tasks"
+  if _cci_cache_stale "$cache"; then
+    mkdir -p "$_cci_cache_dir"
+    cci task list 2>/dev/null | awk '/^  [a-z_]/{print $1}' > "$cache" 2>/dev/null
+  fi
+  cat "$cache" 2>/dev/null
+}
+
+_cci_org_names() {
+  # Read directly from keychain files - instant, no subprocess, no decryption
+  local project
+  project="$(cci project info 2>/dev/null | awk '/^Name:/{print $2}')"
+  [[ -n "$project" ]] || return
+  ls "$HOME/.cumulusci/${project}/"*.org 2>/dev/null | sed 's|.*/||; s|\.org$||'
+}
+
+_cci_service_types() {
+  cci service list 2>/dev/null \
+    | awk '/^  / && /[a-z_]{3,}/ && !/Default|Type|Description|────/{
+        for(i=1;i<=NF;i++) if($i ~ /^[a-z][a-z_]+$/) {print $i; break}
+      }' \
+    | sort -u
+}
+
+# -- Completion dispatch -------------------------------------------------------
+
+_cci_complete_flows()    { local -a v; v=($(_cci_flow_names));    _describe 'flow name'     v }
+_cci_complete_tasks()    { local -a v; v=($(_cci_task_names));    _describe 'task name'     v }
+_cci_complete_orgs()     { local -a v; v=($(_cci_org_names));     _describe 'org name'      v }
+_cci_complete_services() { local -a v; v=($(_cci_service_types)); _describe 'service type'  v }
+
+# -- Subcommand handlers -------------------------------------------------------
+
+_cci_error() {
+  local state
+  local -a subcmds=(
+    'gist:Create a GitHub gist from the latest logfile'
+    'info:Output the most recent traceback'
+  )
+  _arguments -C '--help[Show help]' '1: :->cmd'
+  [[ $state == cmd ]] && _describe 'error command' subcmds
+}
+
+_cci_flow() {
+  local state
+  local -a subcmds=(
+    'doc:Generate rst documentation for all flows'
+    'info:Display information about a flow'
+    'list:List available flows for the current context'
+    'run:Run a flow'
+  )
+  _arguments -C '--help[Show help]' '1: :->cmd' '*:: :->args'
+  case $state in
+    cmd) _describe 'flow command' subcmds ;;
+    args)
+      case $words[1] in
+        run)
+          _arguments \
+            '--org[Target org]:org name:_cci_complete_orgs' \
+            '--delete-org[Delete scratch org after flow completes]' \
+            '--debug[Drop into pdb on exception]' \
+            '--no-prompt[Disable all prompts]' \
+            '-o[Pass task option (repeatable)]:task option:' \
+            '--help[Show help]' \
+            '1:flow name:_cci_complete_flows'
+          ;;
+        info|doc) _arguments '--help[Show help]' '1:flow name:_cci_complete_flows' ;;
+        list)     _arguments '--help[Show help]' ;;
+      esac ;;
+  esac
+}
+
+_cci_org() {
+  local state
+  local -a subcmds=(
+    'browser:Open browser and log into the org'
+    'connect:Connect a new org via OAuth Web Flow'
+    'default:Set an org as the default'
+    'import:Import a scratch org from Salesforce DX'
+    'info:Display org connection information'
+    'list:List all connected orgs'
+    'prune:Remove expired scratch orgs from the keychain'
+    'remove:Remove an org from the keychain'
+    'scratch:Connect a Salesforce DX Scratch Org'
+    'scratch_delete:Delete a scratch org'
+    'shell:Drop into a Python shell with org access'
+  )
+  _arguments -C '--help[Show help]' '1: :->cmd' '*:: :->args'
+  case $state in
+    cmd) _describe 'org command' subcmds ;;
+    args)
+      case $words[1] in
+        browser|default|info|remove|shell|scratch_delete)
+          _arguments \
+            '--org[Target org]:org name:_cci_complete_orgs' \
+            '--help[Show help]' \
+            '1::org name:_cci_complete_orgs'
+          ;;
+        connect)
+          _arguments \
+            '--org[Alternate org name]:org name:' \
+            '--connected-app[Connected app service name]:service name:' \
+            '--sandbox[Connect to a sandbox org]' \
+            '--login-url[Login hostname]:url:' \
+            '--default[Set as default org]' \
+            '--global-org[Make available to all CumulusCI projects]' \
+            '--help[Show help]' \
+            '1::org name:'
+          ;;
+        scratch)
+          _arguments \
+            '--org[Alternate org name]:org name:' \
+            '--default[Set as default org]' \
+            '--devhub[Dev Hub org alias]:devhub:' \
+            '--days[Days the scratch org should persist]:days:(1 7 14 30)' \
+            '--no-password[Do not set a password]' \
+            '--release[Org release]:release:(previous preview)' \
+            '--help[Show help]' \
+            '1:scratch config name:' \
+            '2::org name:'
+          ;;
+        import|list|prune) _arguments '--help[Show help]' ;;
+      esac ;;
+  esac
+}
+
+_cci_plan() {
+  local state
+  local -a subcmds=(
+    'info:Display information about a MetaDeploy plan'
+    'list:List available MetaDeploy plans'
+  )
+  _arguments -C '--help[Show help]' '1: :->cmd' '*:: :->args'
+  case $state in
+    cmd) _describe 'plan command' subcmds ;;
+    args)
+      case $words[1] in
+        info) _arguments '--help[Show help]' '1:plan name:' ;;
+        list) _arguments '--help[Show help]' ;;
+      esac ;;
+  esac
+}
+
+_cci_project() {
+  local state
+  local -a subcmds=(
+    'dependencies:Show project dependencies'
+    'info:Display project configuration information'
+    'init:Initialize a new CumulusCI project'
+  )
+  _arguments -C '--help[Show help]' '1: :->cmd'
+  [[ $state == cmd ]] && _describe 'project command' subcmds
+}
+
+_cci_robot() {
+  local state
+  local -a subcmds=(
+    'install_playwright:Install Playwright for Robot Framework'
+    'uninstall_playwright:Uninstall Playwright for Robot Framework'
+  )
+  _arguments -C '--help[Show help]' '1: :->cmd'
+  [[ $state == cmd ]] && _describe 'robot command' subcmds
+}
+
+_cci_service() {
+  local state
+  local -a subcmds=(
+    'connect:Connect a service to the keychain'
+    'default:Set a service as the default'
+    'info:Display service information'
+    'list:List services available for the current project'
+    'remove:Remove a service from the keychain'
+    'rename:Rename a service in the keychain'
+    'update:Update a service configuration'
+  )
+  _arguments -C '--help[Show help]' '1: :->cmd' '*:: :->args'
+  case $state in
+    cmd) _describe 'service command' subcmds ;;
+    args)
+      case $words[1] in
+        connect|default|info|remove|rename|update)
+          _arguments '--help[Show help]' '1:service type:_cci_complete_services' ;;
+      esac ;;
+  esac
+}
+
+_cci_task() {
+  local state
+  local -a subcmds=(
+    'doc:Generate rst documentation for all tasks'
+    'info:Display information and options for a task'
+    'list:List available tasks for the current context'
+    'run:Run a task'
+  )
+  _arguments -C '--help[Show help]' '1: :->cmd' '*:: :->args'
+  case $state in
+    cmd) _describe 'task command' subcmds ;;
+    args)
+      case $words[1] in
+        run)
+          _arguments \
+            '--org[Target org]:org name:_cci_complete_orgs' \
+            '--debug[Drop into pdb on exception]' \
+            '--debug-before[Drop into pdb before task runs]' \
+            '--debug-after[Drop into pdb after task runs]' \
+            '--no-prompt[Disable all prompts]' \
+            '-o[Pass task option (repeatable)]:task option:' \
+            '--help[Show help]' \
+            '1:task name:_cci_complete_tasks'
+          ;;
+        info|doc) _arguments '--help[Show help]' '1:task name:_cci_complete_tasks' ;;
+        list)     _arguments '--help[Show help]' ;;
+      esac ;;
+  esac
+}
+
+# -- Top-level -----------------------------------------------------------------
+
+_cci() {
+  local state
+  local -a commands=(
+    'completion:Generate shell completion scripts'
+    'error:Get or share information about an error'
+    'flow:Commands for finding and running flows'
+    'org:Commands for connecting and interacting with Salesforce orgs'
+    'plan:Commands for getting information about MetaDeploy plans'
+    'project:Commands for interacting with project configurations'
+    'robot:Commands for working with Robot Framework'
+    'service:Commands for connecting services to the keychain'
+    'shell:Drop into a Python shell'
+    'task:Commands for finding and running tasks'
+    'telemetry:Show telemetry status'
+    'version:Print the current version of CumulusCI'
+  )
+
+  _arguments -C \
+    '--version[Show the version and exit]' \
+    '--help[Show this message and exit]' \
+    '1: :->command' \
+    '*:: :->args'
+
+  case $state in
+    command) _describe 'cci command' commands ;;
+    args)
+      case $words[1] in
+        error)      _cci_error ;;
+        flow)       _cci_flow ;;
+        org)        _cci_org ;;
+        plan)       _cci_plan ;;
+        project)    _cci_project ;;
+        robot)      _cci_robot ;;
+        service)    _cci_service ;;
+        task)       _cci_task ;;
+        completion) # handled by cci itself
+          local -a subcmds=('zsh:Output zsh completion script' 'bash:Output bash completion script')
+          _arguments -C '--help[Show help]' '1: :->cmd'
+          [[ $state == cmd ]] && _describe 'completion command' subcmds
+          ;;
+      esac ;;
+  esac
+}
+
+_cci "$@"
