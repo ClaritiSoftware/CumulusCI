@@ -150,6 +150,10 @@ class CreatePackageVersion(BaseSalesforceApiTask):
             "description": "If True, create unlocked packages for unpackaged metadata in this project and dependencies. "
             "Defaults to False."
         },
+        "branch": {
+            "description": "Branch to scope the 2GP build counter (the Package2VersionCreateRequest Branch field). "
+            "Optional; defaults to the project's current repo branch."
+        },
     }
 
     def _init_options(self, kwargs):
@@ -352,6 +356,11 @@ class CreatePackageVersion(BaseSalesforceApiTask):
         skip_validation: bool = False,
         dependencies: list = None,
     ):
+        # Resolve the branch used to scope the 2GP build counter. Salesforce
+        # scopes the build counter independently per (Package2, M.M.P, Branch),
+        # so feature-branch builds get their own sequence.
+        branch_value = self.options.get("branch") or self.project_config.repo_branch
+
         # Prepare the VersionInfo file
         version_bytes = io.BytesIO()
         version_info = zipfile.ZipFile(version_bytes, "w", zipfile.ZIP_DEFLATED)
@@ -361,7 +370,14 @@ class CreatePackageVersion(BaseSalesforceApiTask):
             version_info.writestr("package.zip", package_zip_builder.as_bytes())
 
             if not self.options["force_upload"]:
-                # Check for an existing package with the same contents
+                # Check for an existing package with the same contents.
+                # When a branch is set, scope the content-dedup lookup to that
+                # branch so an identical-content request created on a different
+                # branch is not reused (which would defeat per-branch counter
+                # isolation).
+                branch_filter = (
+                    f"AND Branch = '{branch_value}' " if branch_value else ""
+                )
                 res = self.tooling.query(
                     "SELECT Id "
                     "FROM Package2VersionCreateRequest "
@@ -369,6 +385,7 @@ class CreatePackageVersion(BaseSalesforceApiTask):
                     "AND Status != 'Error' "
                     f"AND SkipValidation = {str(skip_validation)} "
                     f"AND Tag = 'hash:{package_hash}' "
+                    f"{branch_filter}"
                     "ORDER BY CreatedDate DESC"
                 )
                 if res["size"] > 0:
@@ -457,6 +474,8 @@ class CreatePackageVersion(BaseSalesforceApiTask):
             "VersionInfo": version_info,
             "CalculateCodeCoverage": not skip_validation,
         }
+        if branch_value:
+            request["Branch"] = branch_value
 
         install_key = self.options.get("install_key")
         if install_key:

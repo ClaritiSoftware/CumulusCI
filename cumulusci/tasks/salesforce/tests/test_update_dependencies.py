@@ -132,6 +132,27 @@ def test_init_options_uses_include_beta_strategy_for_include_beta_true():
     assert DependencyResolutionStrategy.BETA_RELEASE_TAG in task.resolution_strategy
 
 
+def test_init_options_sets_active_feature_branch_in_context():
+    task = create_task(
+        UpdateDependencies,
+        {
+            "dependencies": [
+                {
+                    "namespace": "ns",
+                    "version": "1.0",
+                }
+            ],
+            "resolution_strategy": "feature_branch",
+            "feature_branch": "feature/DEVOPS-573",
+        },
+    )
+
+    assert (
+        task.project_config.lookup("project__git__active_feature_branch")
+        == "feature/DEVOPS-573"
+    )
+
+
 def test_init_options_removes_beta_resolver_for_include_beta_false():
     task = create_task(
         UpdateDependencies,

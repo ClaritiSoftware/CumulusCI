@@ -590,6 +590,94 @@ class TestCreatePackageVersion:
         )
         assert result == "08c000000000001AAA"
 
+    @responses.activate
+    def test_create_version_request__dedup_query_scopes_to_branch(self, get_task):
+        task = get_task(
+            {
+                "package_type": "Managed",
+                "package_name": "Test Package",
+                "branch": "feature/DEVOPS-573",
+            }
+        )
+        responses.add(
+            "GET",
+            f"{self.devhub_base_url}/tooling/query/",
+            json={"size": 1, "records": [{"Id": "08c000000000001AAA"}]},
+        )
+
+        builder = BasePackageZipBuilder()
+        result = task._create_version_request(
+            "0Ho6g000000fy4ZCAQ", task.package_config, builder
+        )
+        assert result == "08c000000000001AAA"
+        query = responses.calls[-1].request.params["q"]
+        assert "AND Branch = 'feature/DEVOPS-573'" in query
+
+    @responses.activate
+    def test_create_version_request__dedup_query_no_branch(self, get_task):
+        task = get_task(
+            {
+                "package_type": "Managed",
+                "package_name": "Test Package",
+            }
+        )
+        # Force repo_branch to None so no branch is in scope.
+        with mock.patch.object(
+            type(task.project_config),
+            "repo_branch",
+            new_callable=mock.PropertyMock,
+            return_value=None,
+        ):
+            responses.add(
+                "GET",
+                f"{self.devhub_base_url}/tooling/query/",
+                json={"size": 1, "records": [{"Id": "08c000000000001AAA"}]},
+            )
+
+            builder = BasePackageZipBuilder()
+            result = task._create_version_request(
+                "0Ho6g000000fy4ZCAQ", task.package_config, builder
+            )
+        assert result == "08c000000000001AAA"
+        query = responses.calls[-1].request.params["q"]
+        assert "Branch =" not in query
+
+    @responses.activate
+    def test_create_version_request__adds_branch_to_request(self, get_task):
+        task = get_task(
+            {
+                "package_type": "Managed",
+                "package_name": "Test Package",
+                "skip_validation": True,
+                "force_upload": True,
+                "branch": "feature/DEVOPS-573",
+            }
+        )
+        # Base-version lookup (no existing versions)
+        responses.add(
+            "GET",
+            f"{self.devhub_base_url}/tooling/query/",
+            json={"size": 0, "records": []},
+        )
+        # POST to create the Package2VersionCreateRequest
+        responses.add(
+            "POST",
+            f"{self.devhub_base_url}/tooling/sobjects/Package2VersionCreateRequest/",
+            json={"id": "08c000000000002AAA"},
+        )
+
+        builder = BasePackageZipBuilder()
+        result = task._create_version_request(
+            "0Ho6g000000fy4ZCAQ",
+            task.package_config,
+            builder,
+            skip_validation=True,
+        )
+        assert result == "08c000000000002AAA"
+        post_call = [c for c in responses.calls if c.request.method == "POST"][0]
+        body = json.loads(post_call.request.body)
+        assert body["Branch"] == "feature/DEVOPS-573"
+
     def test_has_1gp_namespace_dependencies__no(self, task):
         assert not task._has_1gp_namespace_dependency([])
 

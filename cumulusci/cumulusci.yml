@@ -383,6 +383,10 @@ tasks:
         description: Creates a Github release for a given managed package version number
         class_path: cumulusci.tasks.github.CreateRelease
         group: GitHub
+    create_feature_branch_tag:
+        description: Records a feature-branch 2GP beta as an annotated git tag only (no GitHub Release)
+        class_path: cumulusci.tasks.github.feature_branch_tag.CreateFeatureBranchTag
+        group: GitHub
     gather_release_notes:
         description: Generates release notes by getting the latest release of each repository
         class_path: cumulusci.tasks.release_notes.task.AllGithubReleaseNotes
@@ -1019,6 +1023,26 @@ flows:
                 flow: config_dev
             4:
                 task: snapshot_changes
+    feature_org:
+        group: Org Setup
+        description: >-
+            Set up a scratch org (the `feature` org) seeded with the latest 2GP beta
+            built from the current feature branch. Uses the `feature_branch` resolution
+            strategy; when no feature branch is in context the feature_branch_tag
+            resolver short-circuits and the stack falls through to latest_beta, so this
+            flow is always safe to run.
+        steps:
+            1:
+                flow: dependencies
+                options:
+                    update_dependencies:
+                        resolution_strategy: feature_branch
+            2:
+                flow: deploy_unmanaged
+            3:
+                flow: config_dev
+            4:
+                task: snapshot_changes
     qa_org:
         group: Org Setup
         description: Set up an org as a QA environment for unmanaged metadata
@@ -1553,6 +1577,12 @@ project:
                 - unmanaged
             latest_release:
                 - tag
+                - latest_release
+                - unmanaged
+            feature_branch:
+                - tag
+                - feature_branch_tag
+                - latest_beta
                 - latest_release
                 - unmanaged
     dependencies:

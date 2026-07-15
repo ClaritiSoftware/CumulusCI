@@ -55,6 +55,10 @@ class UpdateDependencies(BaseSalesforceTask):
         "resolution_strategy": {
             "description": "The name of a sequence of resolution_strategy (from project__dependency_resolutions) to apply to dynamic dependencies."
         },
+        "feature_branch": {
+            "description": "The feature branch to resolve feature-branch 2GP betas from. "
+            "When set, the feature_branch_tag resolver will scan annotated git tags under this branch's prefix."
+        },
         "packages_only": {
             "description": "Install only packaged dependencies. Ignore all unmanaged metadata. Defaults to False."
         },
@@ -180,6 +184,16 @@ class UpdateDependencies(BaseSalesforceTask):
                 "The include_beta and prefer_2gp_from_release_branch options "
                 "for update_dependencies are deprecated. Use resolution strategies instead."
             )
+
+        # If a feature branch is specified, overlay it into the project config
+        # context so the feature_branch_tag resolver can read it via
+        # context.lookup("project__git__active_feature_branch").
+        feature_branch = self.options.get("feature_branch")
+        if feature_branch:
+            git_config = self.project_config.config.setdefault(
+                "project", {}
+            ).setdefault("git", {})
+            git_config["active_feature_branch"] = feature_branch
 
         self.install_options = PackageInstallOptions.from_task_options(self.options)
 

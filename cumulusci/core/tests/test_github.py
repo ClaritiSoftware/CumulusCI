@@ -55,6 +55,7 @@ from cumulusci.core.github import (
     get_ref_for_tag,
     get_sso_disabled_orgs,
     get_tag_by_name,
+    get_tag_refs_for_prefix,
     get_version_id_from_tag,
     is_label_on_pull_request,
     is_pull_request_merged,
@@ -540,6 +541,38 @@ class TestGithub(GithubApiTestMixin):
         )
         version_id = get_version_id_from_tag(repo, "test-tag-name")
         assert version_id == "04t000000000000"
+
+    @responses.activate
+    def test_get_tag_refs_for_prefix(self, repo):
+        self.init_github()
+        prefix = "feature/DEVOPS-573/"
+        responses.add(
+            "GET",
+            f"https://api.github.com/repos/TestOwner/TestRepo/git/refs/tags/{prefix}",
+            json=[
+                self._get_expected_tag_ref(f"{prefix}2.5.0.1", "sha1"),
+                self._get_expected_tag_ref(f"{prefix}2.5.0.2", "sha2"),
+            ],
+            status=200,
+        )
+        results = get_tag_refs_for_prefix(repo, prefix)
+        tag_names = [name for name, ref in results]
+        assert tag_names == [
+            "feature/DEVOPS-573/2.5.0.1",
+            "feature/DEVOPS-573/2.5.0.2",
+        ]
+        assert results[0][1].object.sha == "sha1"
+
+    @responses.activate
+    def test_get_tag_refs_for_prefix__none(self, repo):
+        self.init_github()
+        prefix = "feature/DEVOPS-573/"
+        responses.add(
+            "GET",
+            f"https://api.github.com/repos/TestOwner/TestRepo/git/refs/tags/{prefix}",
+            status=404,
+        )
+        assert get_tag_refs_for_prefix(repo, prefix) == []
 
     @responses.activate
     def test_get_version_id_from_tag__dependency_error(self, repo):
