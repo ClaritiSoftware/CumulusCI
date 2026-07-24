@@ -596,7 +596,7 @@ class TestCreatePackageVersion:
             {
                 "package_type": "Managed",
                 "package_name": "Test Package",
-                "branch": "feature/DEVOPS-573",
+                "branch": "feature/widget",
             }
         )
         responses.add(
@@ -611,7 +611,7 @@ class TestCreatePackageVersion:
         )
         assert result == "08c000000000001AAA"
         query = responses.calls[-1].request.params["q"]
-        assert "AND Branch = 'feature/DEVOPS-573'" in query
+        assert "AND Branch = 'feature/widget'" in query
 
     @responses.activate
     def test_create_version_request__dedup_query_no_branch(self, get_task):
@@ -648,7 +648,7 @@ class TestCreatePackageVersion:
                 "package_name": "Test Package",
                 "skip_validation": True,
                 "force_upload": True,
-                "branch": "feature/DEVOPS-573",
+                "branch": "feature/widget",
             }
         )
         # Base-version lookup (no existing versions)
@@ -674,7 +674,7 @@ class TestCreatePackageVersion:
         assert result == "08c000000000002AAA"
         post_call = [c for c in responses.calls if c.request.method == "POST"][0]
         body = json.loads(post_call.request.body)
-        assert body["Branch"] == "feature/DEVOPS-573"
+        assert body["Branch"] == "feature/widget"
 
     @responses.activate
     def test_create_version_request__no_branch_omits_field(self, get_task):

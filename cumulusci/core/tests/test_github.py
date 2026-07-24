@@ -545,7 +545,7 @@ class TestGithub(GithubApiTestMixin):
     @responses.activate
     def test_get_tag_refs_for_prefix(self, repo):
         self.init_github()
-        prefix = "feature/DEVOPS-573/"
+        prefix = "feature/widget/"
         responses.add(
             "GET",
             f"https://api.github.com/repos/TestOwner/TestRepo/git/refs/tags/{prefix}",
@@ -558,15 +558,15 @@ class TestGithub(GithubApiTestMixin):
         results = get_tag_refs_for_prefix(repo, prefix)
         tag_names = [name for name, ref in results]
         assert tag_names == [
-            "feature/DEVOPS-573/2.5.0.1",
-            "feature/DEVOPS-573/2.5.0.2",
+            "feature/widget/2.5.0.1",
+            "feature/widget/2.5.0.2",
         ]
         assert results[0][1].object.sha == "sha1"
 
     @responses.activate
     def test_get_tag_refs_for_prefix__none(self, repo):
         self.init_github()
-        prefix = "feature/DEVOPS-573/"
+        prefix = "feature/widget/"
         responses.add(
             "GET",
             f"https://api.github.com/repos/TestOwner/TestRepo/git/refs/tags/{prefix}",

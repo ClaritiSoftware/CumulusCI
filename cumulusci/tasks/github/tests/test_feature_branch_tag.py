@@ -35,7 +35,7 @@ class TestCreateFeatureBranchTag(GithubApiTestMixin):
             "version": "2.5.0.1",
             "version_id": "04t000000000001",
             "commit": self.commit_sha,
-            "branch": "feature/DEVOPS-573",
+            "branch": "feature/widget",
         }
         opts.update(options or {})
         return CreateFeatureBranchTag(
@@ -45,7 +45,7 @@ class TestCreateFeatureBranchTag(GithubApiTestMixin):
     @responses.activate
     @mock.patch("cumulusci.tasks.github.feature_branch_tag.time.sleep")
     def test_run_task__creates_annotated_tag(self, sleep):
-        expected_tag_name = "feature/DEVOPS-573/2.5.0.1"
+        expected_tag_name = "feature/widget/2.5.0.1"
         responses.add(
             method=responses.GET,
             url=self.repo_api_url,
@@ -99,7 +99,7 @@ class TestCreateFeatureBranchTag(GithubApiTestMixin):
     @responses.activate
     @mock.patch("cumulusci.tasks.github.feature_branch_tag.time.sleep")
     def test_run_task__idempotent_when_tag_exists(self, sleep):
-        expected_tag_name = "feature/DEVOPS-573/2.5.0.1"
+        expected_tag_name = "feature/widget/2.5.0.1"
         responses.add(
             method=responses.GET,
             url=self.repo_api_url,
