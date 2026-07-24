@@ -113,17 +113,23 @@ invisible to every Release-based resolver.
     is omitted the `Branch` field is not set and counting is unscoped,
     exactly as before.
 
-        cci task run create_package_version --branch epic/new-billing
+    ```console
+    $ cci task run create_package_version --branch epic/new-billing
+    ```
 
 2.  Record the resulting version as an annotated git tag with the
-    `create_feature_branch_tag` task. The tag is named
-    `<branch>/<version>` (for example
-    `epic/new-billing/1.2.0.1`) and embeds the `version_id`
-    (`04t`) in its message. No GitHub Release is created.
+    `create_feature_branch_tag` task. Pass the same `--branch` so the tag
+    is created under the intended prefix regardless of the current
+    checkout. The tag is named `<branch>/<version>` (for example
+    `epic/new-billing/1.2.0.1`) and embeds the `version_id` (`04t`) in its
+    message. No GitHub Release is created.
 
-        cci task run create_feature_branch_tag \
-            --version 1.2.0.1 \
-            --version-id 04tXXXXXXXXXXXXXXX
+    ```console
+    $ cci task run create_feature_branch_tag \
+        --branch epic/new-billing \
+        --version 1.2.0.1 \
+        --version-id 04tXXXXXXXXXXXXXXX
+    ```
 
 ### Building an org from the beta
 
@@ -131,7 +137,9 @@ Run the `feature_org` flow, which uses the `feature_branch` resolution
 strategy. When run from a repository already checked out on the feature
 branch, the branch is detected automatically:
 
-    cci flow run feature_org --org feature
+```console
+$ cci flow run feature_org --org feature
+```
 
 For a repository that stays on `main` (such as a solution-org project
 that aggregates many dependencies), name the branch explicitly. Every
@@ -139,11 +147,13 @@ dependency repository that has a matching feature-branch tag resolves to
 it; those that do not fall through to the latest beta and then the latest
 release, so mixed sets of dependencies resolve correctly:
 
-    cci flow run feature_org --org feature \
-        -o update_dependencies.feature_branch=epic/new-billing
+```console
+$ cci flow run feature_org --org feature \
+    -o update_dependencies.feature_branch=epic/new-billing
+```
 
-See [](controlling-github-dependency-resolution) for the full ordered
-list of resolvers in the `feature_branch` strategy.
+See [Controlling GitHub Dependency Resolution](controlling-github-dependency-resolution)
+for the full ordered list of resolvers in the `feature_branch` strategy.
 
 ### Declaring the dependency in `cumulusci.yml`
 

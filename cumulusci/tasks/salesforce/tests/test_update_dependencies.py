@@ -132,7 +132,7 @@ def test_init_options_uses_include_beta_strategy_for_include_beta_true():
     assert DependencyResolutionStrategy.BETA_RELEASE_TAG in task.resolution_strategy
 
 
-def test_init_options_sets_active_feature_branch_in_context():
+def test_feature_branch_overlay_is_scoped_and_restored():
     task = create_task(
         UpdateDependencies,
         {
@@ -143,14 +143,34 @@ def test_init_options_sets_active_feature_branch_in_context():
                 }
             ],
             "resolution_strategy": "feature_branch",
-            "feature_branch": "feature/DEVOPS-573",
+            "feature_branch": "feature/widget",
         },
     )
 
-    assert (
-        task.project_config.lookup("project__git__active_feature_branch")
-        == "feature/DEVOPS-573"
+    # The overlay is not set until resolution runs, so it does not leak from
+    # _init_options into other steps sharing the same project_config.
+    assert task.project_config.lookup("project__git__active_feature_branch") is None
+
+    with task._feature_branch_overlay():
+        assert (
+            task.project_config.lookup("project__git__active_feature_branch")
+            == "feature/widget"
+        )
+
+    # Restored (removed) once resolution completes.
+    assert task.project_config.lookup("project__git__active_feature_branch") is None
+
+
+def test_feature_branch_overlay_noop_without_option():
+    task = create_task(
+        UpdateDependencies,
+        {
+            "dependencies": [{"namespace": "ns", "version": "1.0"}],
+        },
     )
+
+    with task._feature_branch_overlay():
+        assert task.project_config.lookup("project__git__active_feature_branch") is None
 
 
 def test_init_options_removes_beta_resolver_for_include_beta_false():

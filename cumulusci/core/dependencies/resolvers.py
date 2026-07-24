@@ -205,16 +205,22 @@ class GitHubFeatureBranchTagResolver(AbstractResolver):
     def _get_feature_branch(self, context: BaseProjectConfig) -> Optional[str]:
         """Resolve the feature branch name from context, in priority order:
         1. an explicit `project__git__active_feature_branch` overlay, then
-        2. the current repo branch, if it starts with the feature branch prefix.
+        2. the current repo branch, when it is not the default branch.
         Returns None when there is no feature-branch context.
+
+        Any non-default branch is treated as a candidate feature/epic branch
+        (not only the `feature/` prefix), so a repo checked out on a branch such
+        as `epic/new-billing` is picked up automatically. A branch that has no
+        matching annotated tag simply yields no candidates and the strategy
+        falls through to the next resolver, so this is safe for arbitrarily
+        named branches.
         """
         active_feature_branch = context.lookup("project__git__active_feature_branch")
         if active_feature_branch:
             return active_feature_branch
 
         branch = context.repo_branch
-        prefix = context.project__git__prefix_feature
-        if branch and prefix and branch.startswith(prefix):
+        if branch and branch != context.project__git__default_branch:
             return branch
 
         return None
@@ -271,6 +277,13 @@ class GitHubFeatureBranchTagResolver(AbstractResolver):
             return (None, None)
 
         commit_sha = tag.object.sha
+
+        # Honor an explicitly unmanaged dependency: return the tagged commit
+        # with no package dependency so it deploys as unmanaged metadata,
+        # mirroring GitHubReleaseTagResolver.
+        if dep.is_unmanaged:
+            return (commit_sha, None)
+
         package_config = get_remote_project_config(repo, commit_sha)
         package_name, _ = get_package_data(package_config)
 
