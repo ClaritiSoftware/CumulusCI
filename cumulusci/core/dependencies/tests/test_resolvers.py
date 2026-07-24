@@ -367,6 +367,27 @@ class TestGitHubFeatureBranchTagResolver:
         resolver = GitHubFeatureBranchTagResolver()
         assert resolver.can_resolve(self._dep(), context)
 
+    def test_can_resolve__per_dependency_feature_branch(self):
+        # A per-dependency feature_branch resolves even on the default branch
+        # with no overlay.
+        context = self._make_context(active=None, repo_branch="main")
+        dep = GitHubDynamicDependency(
+            github="https://github.com/SFDO-Tooling/TwoGPRepo",
+            feature_branch="epic/new-billing",
+        )
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.can_resolve(dep, context)
+
+    def test_get_feature_branch__per_dependency_overrides_context(self):
+        # The dependency's own feature_branch wins over the run-wide overlay.
+        context = self._make_context(active="feature/gadget", repo_branch="main")
+        dep = GitHubDynamicDependency(
+            github="https://github.com/SFDO-Tooling/TwoGPRepo",
+            feature_branch="epic/new-billing",
+        )
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver._get_feature_branch(dep, context) == "epic/new-billing"
+
     @mock.patch("cumulusci.core.dependencies.resolvers.get_package_data")
     @mock.patch("cumulusci.core.dependencies.resolvers.get_remote_project_config")
     @mock.patch("cumulusci.core.dependencies.resolvers.get_tag_refs_for_prefix")
@@ -423,6 +444,25 @@ class TestGitHubFeatureBranchTagResolver:
         resolver = GitHubFeatureBranchTagResolver()
         assert resolver.resolve(self._dep(), context) == (None, None)
         get_tag_refs.assert_called_once_with(get_repo.return_value, "feature/gadget/")
+
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_tag_refs_for_prefix")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_repo")
+    def test_resolve__per_dependency_feature_branch_prefix(
+        self, get_repo, get_tag_refs
+    ):
+        # The dependency's own feature_branch drives the tag prefix, even when a
+        # different run-wide branch is active.
+        context = self._make_context(active="feature/gadget", repo_branch="main")
+        get_repo.return_value = mock.Mock()
+        get_tag_refs.return_value = []
+        dep = GitHubDynamicDependency(
+            github="https://github.com/SFDO-Tooling/TwoGPRepo",
+            feature_branch="epic/new-billing",
+        )
+
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.resolve(dep, context) == (None, None)
+        get_tag_refs.assert_called_once_with(get_repo.return_value, "epic/new-billing/")
 
     @mock.patch("cumulusci.core.dependencies.resolvers.get_package_data")
     @mock.patch("cumulusci.core.dependencies.resolvers.get_remote_project_config")

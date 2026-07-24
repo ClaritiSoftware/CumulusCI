@@ -202,10 +202,13 @@ class GitHubFeatureBranchTagResolver(AbstractResolver):
 
     name = "GitHub Feature Branch Tag Resolver"
 
-    def _get_feature_branch(self, context: BaseProjectConfig) -> Optional[str]:
-        """Resolve the feature branch name from context, in priority order:
-        1. an explicit `project__git__active_feature_branch` overlay, then
-        2. the current repo branch, when it is not the default branch.
+    def _get_feature_branch(
+        self, dep: DynamicDependency, context: BaseProjectConfig
+    ) -> Optional[str]:
+        """Resolve the feature branch name, in priority order:
+        1. the dependency's own `feature_branch` field (most specific), then
+        2. an explicit `project__git__active_feature_branch` overlay, then
+        3. the current repo branch, when it is not the default branch.
         Returns None when there is no feature-branch context.
 
         Any non-default branch is treated as a candidate feature/epic branch
@@ -215,6 +218,10 @@ class GitHubFeatureBranchTagResolver(AbstractResolver):
         falls through to the next resolver, so this is safe for arbitrarily
         named branches.
         """
+        dep_feature_branch = getattr(dep, "feature_branch", None)
+        if dep_feature_branch:
+            return dep_feature_branch
+
         active_feature_branch = context.lookup("project__git__active_feature_branch")
         if active_feature_branch:
             return active_feature_branch
@@ -228,13 +235,13 @@ class GitHubFeatureBranchTagResolver(AbstractResolver):
     def can_resolve(self, dep: DynamicDependency, context: BaseProjectConfig) -> bool:
         return (
             isinstance(dep, BaseGitHubDependency)
-            and self._get_feature_branch(context) is not None
+            and self._get_feature_branch(dep, context) is not None
         )
 
     def resolve(
         self, dep: BaseGitHubDependency, context: BaseProjectConfig
     ) -> Tuple[Optional[str], Optional[StaticDependency]]:
-        branch = self._get_feature_branch(context)
+        branch = self._get_feature_branch(dep, context)
         if not branch:
             return (None, None)
 

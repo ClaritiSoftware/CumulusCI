@@ -192,6 +192,29 @@ When no feature branch is supplied, the strategy falls through to the
 latest beta and then the latest release, so it is safe to leave
 configured as a default.
 
+To resolve the newest branch beta for a *specific* dependency, set the
+`feature_branch` field directly on that dependency. This is useful when
+different dependencies track different branches, or when only one
+dependency should follow a branch while the rest use their normal
+resolution:
+
+```yaml
+project:
+    dependencies:
+        - github: https://github.com/example-org/package-a
+          feature_branch: epic/new-billing
+        - github: https://github.com/example-org/package-b
+          feature_branch: epic/other-work
+        - github: https://github.com/example-org/package-c
+```
+
+The dependency's `feature_branch` takes precedence over any run-wide
+`feature_branch` option and over the current branch. Package C, with no
+`feature_branch`, resolves normally (latest beta, then release). This
+still requires the `feature_branch` strategy to be active (via the
+`feature_org` flow, a resolution alias, or the `resolution_strategy`
+option).
+
 (end-to-end-testing-with-second-generation-packages)=
 
 ## End-to-End Testing with Second-Generation Packages

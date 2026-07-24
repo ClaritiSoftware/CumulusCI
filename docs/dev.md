@@ -737,11 +737,13 @@ by the `create_feature_branch_tag` task. Unlike `commit_status`, it is
 not limited to `feature/NNN` release branches and does not depend on
 commit statuses.
 
-The feature branch name is taken from the `feature_branch` option of the
-`update_dependencies` task, if set; otherwise from the current branch
-when it begins with the feature branch prefix. When neither yields a
-feature branch, the `feature_branch_tag` resolver is skipped and the
-strategy falls through to the beta and release resolvers, so it is always
+The feature branch name is resolved in priority order: a `feature_branch`
+field set on the individual dependency, then the `feature_branch` option
+of the `update_dependencies` task, then the current branch when it is not
+the default branch. A per-dependency `feature_branch` lets different
+dependencies follow different branches. When none yields a feature
+branch, the `feature_branch_tag` resolver is skipped and the strategy
+falls through to the beta and release resolvers, so it is always
 safe to run.
 
 > -   If a `tag` is present, use the commit for that tag, and any package
