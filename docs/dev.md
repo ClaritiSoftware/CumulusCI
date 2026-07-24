@@ -379,6 +379,12 @@ project:
 The EDA repository's tag `rel/1.105` is used instead of the latest
 production release of EDA (1.111, for this example).
 
+This also works with feature-branch beta tags created by the
+`create_feature_branch_tag` task (for example
+`epic/new-billing/1.2.0.1`). Because the annotated tag's message carries
+the package `version_id`, pinning it installs that exact
+second-generation package version.
+
 #### Skip `unpackaged/*` in Reference Repositories
 
 If the referenced repository has unpackaged metadata under

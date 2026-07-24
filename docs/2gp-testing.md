@@ -145,6 +145,43 @@ release, so mixed sets of dependencies resolve correctly:
 See [](controlling-github-dependency-resolution) for the full ordered
 list of resolvers in the `feature_branch` strategy.
 
+### Declaring the dependency in `cumulusci.yml`
+
+A downstream project can consume a branch beta through its
+`cumulusci.yml` in two ways.
+
+To install one specific branch beta deterministically, pin the annotated
+tag on a GitHub dependency. Because the tag carries the package
+`version_id` in its message, the `tag` resolver installs exactly that
+second-generation package version, with no resolution strategy involved:
+
+```yaml
+project:
+    dependencies:
+        - github: https://github.com/example-org/example-package
+          tag: epic/new-billing/1.2.0.1
+```
+
+To resolve the newest branch beta dynamically instead of pinning a fixed
+version, point a resolution alias at the `feature_branch` strategy so
+development flows use it, then supply the branch at run time:
+
+```yaml
+project:
+    dependency_resolutions:
+        preproduction: feature_branch
+        production: latest_release
+```
+
+```console
+$ cci flow run dev_org --org dev \
+    -o update_dependencies.feature_branch=epic/new-billing
+```
+
+When no feature branch is supplied, the strategy falls through to the
+latest beta and then the latest release, so it is safe to leave
+configured as a default.
+
 (end-to-end-testing-with-second-generation-packages)=
 
 ## End-to-End Testing with Second-Generation Packages
