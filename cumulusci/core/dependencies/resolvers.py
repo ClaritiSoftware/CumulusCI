@@ -30,9 +30,10 @@ from cumulusci.core.exceptions import CumulusCIException, DependencyResolutionEr
 from cumulusci.core.github import (
     find_latest_release,
     find_repo_feature_prefix,
+    get_tag_refs_for_prefix,
     get_version_id_from_commit,
 )
-from cumulusci.core.versions import PackageType
+from cumulusci.core.versions import PackageType, PackageVersionNumber
 from cumulusci.utils.git import (
     construct_release_branch_name,
     get_feature_branch_name,
@@ -55,6 +56,7 @@ class DependencyResolutionStrategy(StrEnum):
     UNLOCKED_DEFAULT_BRANCH = "unlocked_default_branch"
     BETA_RELEASE_TAG = "latest_beta"
     RELEASE_TAG = "latest_release"
+    FEATURE_BRANCH_TAG = "feature_branch_tag"
     UNMANAGED_HEAD = "unmanaged"
 
 
@@ -186,6 +188,120 @@ class GitHubBetaReleaseTagResolver(GitHubReleaseTagResolver):
 
     name = "GitHub Release Resolver (Betas)"
     include_beta = True
+
+
+class GitHubFeatureBranchTagResolver(AbstractResolver):
+    """Resolver that identifies a ref by finding the highest-versioned 2GP beta
+    recorded as an annotated git tag under the current feature branch's tag prefix.
+
+    Feature-branch betas are recorded as annotated git tags ONLY (never GitHub
+    Releases), so this resolver reads them through the git refs API. This keeps
+    them invisible to Release-based resolvers such as ``GitHubBetaReleaseTagResolver``,
+    which would otherwise surface a feature-branch build as the global "latest beta".
+    """
+
+    name = "GitHub Feature Branch Tag Resolver"
+
+    def _get_feature_branch(
+        self, dep: DynamicDependency, context: BaseProjectConfig
+    ) -> Optional[str]:
+        """Resolve the feature branch name, in priority order:
+        1. the dependency's own `feature_branch` field (most specific), then
+        2. an explicit `project__git__active_feature_branch` overlay, then
+        3. the current repo branch, when it is not the default branch.
+        Returns None when there is no feature-branch context.
+
+        Any non-default branch is treated as a candidate feature/epic branch
+        (not only the `feature/` prefix), so a repo checked out on a branch such
+        as `epic/new-billing` is picked up automatically. A branch that has no
+        matching annotated tag simply yields no candidates and the strategy
+        falls through to the next resolver, so this is safe for arbitrarily
+        named branches.
+        """
+        dep_feature_branch = getattr(dep, "feature_branch", None)
+        if dep_feature_branch:
+            return dep_feature_branch
+
+        active_feature_branch = context.lookup("project__git__active_feature_branch")
+        if active_feature_branch:
+            return active_feature_branch
+
+        branch = context.repo_branch
+        if branch and branch != context.project__git__default_branch:
+            return branch
+
+        return None
+
+    def can_resolve(self, dep: DynamicDependency, context: BaseProjectConfig) -> bool:
+        return (
+            isinstance(dep, BaseGitHubDependency)
+            and self._get_feature_branch(dep, context) is not None
+        )
+
+    def resolve(
+        self, dep: BaseGitHubDependency, context: BaseProjectConfig
+    ) -> Tuple[Optional[str], Optional[StaticDependency]]:
+        branch = self._get_feature_branch(dep, context)
+        if not branch:
+            return (None, None)
+
+        repo = get_repo(dep.github, context)
+        prefix = f"{branch}/"
+        tag_refs = get_tag_refs_for_prefix(repo, prefix)
+
+        # Parse each tag's version and choose the highest. PackageVersionNumber has
+        # no ordering operators, so we sort on the version-component tuple.
+        # NOTE: ADR Open Question 3 (version_base semantics) is still open. Current
+        # behavior returns the highest-versioned tag under the branch prefix
+        # regardless of the main-line base version. We intentionally do not attempt
+        # base-version matching here.
+        candidates = []
+        for tag_name, ref in tag_refs:
+            try:
+                version = PackageVersionNumber.parse(
+                    tag_name[len(prefix) :], package_type=PackageType.SECOND_GEN
+                )
+            except ValueError:
+                continue
+            candidates.append((version, tag_name, ref))
+
+        if not candidates:
+            return (None, None)
+
+        version, tag_name, ref = max(
+            candidates,
+            key=lambda c: (
+                c[0].MajorVersion,
+                c[0].MinorVersion,
+                c[0].PatchVersion,
+                int(c[0].BuildNumber),
+            ),
+        )
+
+        tag = repo.tag(ref.object.sha)
+        version_id, package_type = get_package_details_from_tag(tag)
+        if not version_id:
+            return (None, None)
+
+        commit_sha = tag.object.sha
+
+        # Honor an explicitly unmanaged dependency: return the tagged commit
+        # with no package dependency so it deploys as unmanaged metadata,
+        # mirroring GitHubReleaseTagResolver.
+        if dep.is_unmanaged:
+            return (commit_sha, None)
+
+        package_config = get_remote_project_config(repo, commit_sha)
+        package_name, _ = get_package_data(package_config)
+
+        return (
+            commit_sha,
+            PackageVersionIdDependency(
+                version_id=version_id,
+                version_number=version.format(),
+                package_name=package_name,
+            ),
+        )
 
 
 class GitHubUnmanagedHeadResolver(AbstractResolver):
@@ -501,6 +617,7 @@ RESOLVER_CLASSES = {
     DependencyResolutionStrategy.COMMIT_STATUS_DEFAULT_BRANCH: GitHubDefaultBranch2GPResolver,
     DependencyResolutionStrategy.BETA_RELEASE_TAG: GitHubBetaReleaseTagResolver,
     DependencyResolutionStrategy.RELEASE_TAG: GitHubReleaseTagResolver,
+    DependencyResolutionStrategy.FEATURE_BRANCH_TAG: GitHubFeatureBranchTagResolver,
     DependencyResolutionStrategy.UNMANAGED_HEAD: GitHubUnmanagedHeadResolver,
     DependencyResolutionStrategy.UNLOCKED_EXACT_BRANCH: GitHubExactMatchUnlockedCommitStatusResolver,
     DependencyResolutionStrategy.UNLOCKED_RELEASE_BRANCH: GitHubReleaseBranchUnlockedResolver,

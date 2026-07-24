@@ -199,6 +199,10 @@ class BaseGitHubDependency(DynamicDependency, abc.ABC):
 
     tag: Optional[str] = None
     ref: Optional[str] = None
+    # Resolve this dependency to the latest 2GP beta recorded as an annotated
+    # git tag under this feature/epic branch (used by the feature_branch_tag
+    # resolver). Overrides the run-wide feature_branch for this dependency.
+    feature_branch: Optional[str] = None
 
     @property
     @abc.abstractmethod

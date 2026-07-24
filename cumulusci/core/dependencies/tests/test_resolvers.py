@@ -22,6 +22,7 @@ from cumulusci.core.dependencies.resolvers import (
     GitHubBetaReleaseTagResolver,
     GitHubDefaultBranch2GPResolver,
     GitHubExactMatch2GPResolver,
+    GitHubFeatureBranchTagResolver,
     GitHubReleaseBranchCommitStatusResolver,
     GitHubReleaseTagResolver,
     GitHubTagResolver,
@@ -315,6 +316,207 @@ version_id: 04t000000000000"""
 
         assert resolver.can_resolve(dep, project_config)
         assert resolver.resolve(dep, project_config) == (None, None)
+
+
+class TestGitHubFeatureBranchTagResolver:
+    def _make_context(
+        self, active=None, repo_branch=None, default_branch="main", prefix="feature/"
+    ):
+        context = mock.Mock()
+
+        def lookup(name, *args, **kwargs):
+            if name == "project__git__active_feature_branch":
+                return active
+            return None
+
+        context.lookup.side_effect = lookup
+        context.repo_branch = repo_branch
+        context.project__git__default_branch = default_branch
+        context.project__git__prefix_feature = prefix
+        return context
+
+    def _dep(self, unmanaged=False):
+        return GitHubDynamicDependency(
+            github="https://github.com/SFDO-Tooling/TwoGPRepo",
+            unmanaged=unmanaged,
+        )
+
+    def test_can_resolve__no_feature_branch(self):
+        # On the default branch, with no active feature branch overlay, the
+        # resolver short-circuits cleanly.
+        context = self._make_context(active=None, repo_branch="main")
+        resolver = GitHubFeatureBranchTagResolver()
+        assert not resolver.can_resolve(self._dep(), context)
+
+    def test_can_resolve__repo_branch_with_prefix(self):
+        context = self._make_context(active=None, repo_branch="feature/widget")
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.can_resolve(self._dep(), context)
+
+    def test_can_resolve__arbitrary_non_default_branch(self):
+        # Any non-default branch (not only the feature/ prefix) is treated as a
+        # candidate feature/epic branch, so an epic branch is picked up.
+        context = self._make_context(active=None, repo_branch="epic/new-billing")
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.can_resolve(self._dep(), context)
+
+    def test_can_resolve__active_feature_branch_lookup(self):
+        # The active_feature_branch overlay takes priority even when repo_branch
+        # is the default branch.
+        context = self._make_context(active="feature/gadget", repo_branch="main")
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.can_resolve(self._dep(), context)
+
+    def test_can_resolve__per_dependency_feature_branch(self):
+        # A per-dependency feature_branch resolves even on the default branch
+        # with no overlay.
+        context = self._make_context(active=None, repo_branch="main")
+        dep = GitHubDynamicDependency(
+            github="https://github.com/SFDO-Tooling/TwoGPRepo",
+            feature_branch="epic/new-billing",
+        )
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.can_resolve(dep, context)
+
+    def test_get_feature_branch__per_dependency_overrides_context(self):
+        # The dependency's own feature_branch wins over the run-wide overlay.
+        context = self._make_context(active="feature/gadget", repo_branch="main")
+        dep = GitHubDynamicDependency(
+            github="https://github.com/SFDO-Tooling/TwoGPRepo",
+            feature_branch="epic/new-billing",
+        )
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver._get_feature_branch(dep, context) == "epic/new-billing"
+
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_package_data")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_remote_project_config")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_tag_refs_for_prefix")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_repo")
+    def test_resolve__highest_version(
+        self, get_repo, get_tag_refs, get_remote_config, get_package_data
+    ):
+        context = self._make_context(active=None, repo_branch="feature/widget")
+        repo = mock.Mock()
+        get_repo.return_value = repo
+
+        ref1 = mock.Mock()
+        ref1.object.sha = "sha1"
+        ref2 = mock.Mock()
+        ref2.object.sha = "sha2"
+        ref10 = mock.Mock()
+        ref10.object.sha = "sha10"
+        # Build 10 must beat build 2 (integer sort, not string).
+        get_tag_refs.return_value = [
+            ("feature/widget/2.5.0.1", ref1),
+            ("feature/widget/2.5.0.2", ref2),
+            ("feature/widget/2.5.0.10", ref10),
+        ]
+
+        tag = mock.Mock()
+        tag.object.sha = "commit_sha_10"
+        tag.message = "version_id: 04t000000000010\n\npackage_type: 2GP"
+        repo.tag.return_value = tag
+
+        get_remote_config.return_value = mock.Mock()
+        get_package_data.return_value = ("MyPackage", "ns")
+
+        resolver = GitHubFeatureBranchTagResolver()
+        result = resolver.resolve(self._dep(), context)
+
+        # Winning tag is the build-10 tag.
+        repo.tag.assert_called_once_with("sha10")
+        assert result == (
+            "commit_sha_10",
+            PackageVersionIdDependency(
+                version_id="04t000000000010",
+                version_number="2.5.0.10",
+                package_name="MyPackage",
+            ),
+        )
+
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_tag_refs_for_prefix")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_repo")
+    def test_resolve__uses_active_feature_branch_prefix(self, get_repo, get_tag_refs):
+        context = self._make_context(active="feature/gadget", repo_branch="main")
+        get_repo.return_value = mock.Mock()
+        get_tag_refs.return_value = []
+
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.resolve(self._dep(), context) == (None, None)
+        get_tag_refs.assert_called_once_with(get_repo.return_value, "feature/gadget/")
+
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_tag_refs_for_prefix")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_repo")
+    def test_resolve__per_dependency_feature_branch_prefix(
+        self, get_repo, get_tag_refs
+    ):
+        # The dependency's own feature_branch drives the tag prefix, even when a
+        # different run-wide branch is active.
+        context = self._make_context(active="feature/gadget", repo_branch="main")
+        get_repo.return_value = mock.Mock()
+        get_tag_refs.return_value = []
+        dep = GitHubDynamicDependency(
+            github="https://github.com/SFDO-Tooling/TwoGPRepo",
+            feature_branch="epic/new-billing",
+        )
+
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.resolve(dep, context) == (None, None)
+        get_tag_refs.assert_called_once_with(get_repo.return_value, "epic/new-billing/")
+
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_package_data")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_remote_project_config")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_tag_refs_for_prefix")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_repo")
+    def test_resolve__unmanaged_returns_no_package_dependency(
+        self, get_repo, get_tag_refs, get_remote_config, get_package_data
+    ):
+        # An explicitly unmanaged dependency resolves to the tagged commit with
+        # no package dependency, so it deploys as unmanaged metadata.
+        context = self._make_context(active=None, repo_branch="feature/widget")
+        repo = mock.Mock()
+        get_repo.return_value = repo
+        ref = mock.Mock()
+        ref.object.sha = "sha1"
+        get_tag_refs.return_value = [("feature/widget/2.5.0.1", ref)]
+        tag = mock.Mock()
+        tag.object.sha = "commit_sha"
+        tag.message = "version_id: 04t000000000001\n\npackage_type: 2GP"
+        repo.tag.return_value = tag
+
+        resolver = GitHubFeatureBranchTagResolver()
+        result = resolver.resolve(self._dep(unmanaged=True), context)
+
+        assert result == ("commit_sha", None)
+        # The package config is never fetched when installing unmanaged.
+        get_remote_config.assert_not_called()
+
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_tag_refs_for_prefix")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_repo")
+    def test_resolve__no_tags(self, get_repo, get_tag_refs):
+        context = self._make_context(active=None, repo_branch="feature/widget")
+        get_repo.return_value = mock.Mock()
+        get_tag_refs.return_value = []
+
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.resolve(self._dep(), context) == (None, None)
+
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_tag_refs_for_prefix")
+    @mock.patch("cumulusci.core.dependencies.resolvers.get_repo")
+    def test_resolve__no_version_id_in_tag(self, get_repo, get_tag_refs):
+        context = self._make_context(active=None, repo_branch="feature/widget")
+        repo = mock.Mock()
+        get_repo.return_value = repo
+        ref = mock.Mock()
+        ref.object.sha = "sha1"
+        get_tag_refs.return_value = [("feature/widget/2.5.0.1", ref)]
+        tag = mock.Mock()
+        tag.object.sha = "commit_sha"
+        tag.message = "package_type: 2GP"  # no version_id
+        repo.tag.return_value = tag
+
+        resolver = GitHubFeatureBranchTagResolver()
+        assert resolver.resolve(self._dep(), context) == (None, None)
 
 
 class TestGitHubUnmanagedHeadResolver:

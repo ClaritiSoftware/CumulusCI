@@ -1,3 +1,4 @@
+import contextlib
 from typing import List
 
 import click
@@ -54,6 +55,10 @@ class UpdateDependencies(BaseSalesforceTask):
         },
         "resolution_strategy": {
             "description": "The name of a sequence of resolution_strategy (from project__dependency_resolutions) to apply to dynamic dependencies."
+        },
+        "feature_branch": {
+            "description": "The feature branch to resolve feature-branch 2GP betas from. "
+            "When set, the feature_branch_tag resolver will scan annotated git tags under this branch's prefix."
         },
         "packages_only": {
             "description": "Install only packaged dependencies. Ignore all unmanaged metadata. Defaults to False."
@@ -139,6 +144,9 @@ class UpdateDependencies(BaseSalesforceTask):
         unsafe_prod_resolvers = [
             *resolvers_2gp,
             DependencyResolutionStrategy.BETA_RELEASE_TAG,
+            # feature_branch_tag resolves to unpromoted 2GP beta package IDs,
+            # so it must be stripped for persistent orgs like the other betas.
+            DependencyResolutionStrategy.FEATURE_BRANCH_TAG,
         ]
 
         force_strategy = process_bool_arg(
@@ -201,6 +209,33 @@ class UpdateDependencies(BaseSalesforceTask):
             or not self.options["packages_only"]
         ]
 
+    @contextlib.contextmanager
+    def _feature_branch_overlay(self):
+        """Temporarily overlay the `feature_branch` option into the shared
+        project_config as `project__git__active_feature_branch` so the
+        feature_branch_tag resolver can read it, then restore the previous
+        value. Scoping the overlay prevents it from leaking into later
+        task/flow steps that share the same project_config instance.
+        """
+        feature_branch = self.options.get("feature_branch")
+        if not feature_branch:
+            yield
+            return
+
+        git_config = self.project_config.config.setdefault("project", {}).setdefault(
+            "git", {}
+        )
+        sentinel = object()
+        previous = git_config.get("active_feature_branch", sentinel)
+        git_config["active_feature_branch"] = feature_branch
+        try:
+            yield
+        finally:
+            if previous is sentinel:
+                git_config.pop("active_feature_branch", None)
+            else:
+                git_config["active_feature_branch"] = previous
+
     def _run_task(self):
         if not self.dependencies:
             self.logger.info("Project has no dependencies, doing nothing")
@@ -214,14 +249,15 @@ class UpdateDependencies(BaseSalesforceTask):
         else:
             filter_function = None
 
-        dependencies = self._filter_dependencies(
-            get_static_dependencies(
-                self.project_config,
-                dependencies=self.dependencies,
-                strategies=self.resolution_strategy,
-                filter_function=filter_function,
+        with self._feature_branch_overlay():
+            dependencies = self._filter_dependencies(
+                get_static_dependencies(
+                    self.project_config,
+                    dependencies=self.dependencies,
+                    strategies=self.resolution_strategy,
+                    filter_function=filter_function,
+                )
             )
-        )
         self.logger.info("Collected dependencies:")
 
         for d in dependencies:
@@ -339,14 +375,15 @@ class UpdateDependencies(BaseSalesforceTask):
         else:
             filter_function = None
 
-        dependencies = self._filter_dependencies(
-            get_static_dependencies(
-                self.project_config,
-                dependencies=self.dependencies,
-                strategies=self.resolution_strategy,
-                filter_function=filter_function,
+        with self._feature_branch_overlay():
+            dependencies = self._filter_dependencies(
+                get_static_dependencies(
+                    self.project_config,
+                    dependencies=self.dependencies,
+                    strategies=self.resolution_strategy,
+                    filter_function=filter_function,
+                )
             )
-        )
 
         steps = []
         for i, dependency in enumerate(dependencies, start=1):

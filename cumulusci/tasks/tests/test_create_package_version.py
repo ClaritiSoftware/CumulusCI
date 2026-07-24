@@ -590,6 +590,127 @@ class TestCreatePackageVersion:
         )
         assert result == "08c000000000001AAA"
 
+    @responses.activate
+    def test_create_version_request__dedup_query_scopes_to_branch(self, get_task):
+        task = get_task(
+            {
+                "package_type": "Managed",
+                "package_name": "Test Package",
+                "branch": "feature/widget",
+            }
+        )
+        responses.add(
+            "GET",
+            f"{self.devhub_base_url}/tooling/query/",
+            json={"size": 1, "records": [{"Id": "08c000000000001AAA"}]},
+        )
+
+        builder = BasePackageZipBuilder()
+        result = task._create_version_request(
+            "0Ho6g000000fy4ZCAQ", task.package_config, builder
+        )
+        assert result == "08c000000000001AAA"
+        query = responses.calls[-1].request.params["q"]
+        assert "AND Branch = 'feature/widget'" in query
+
+    @responses.activate
+    def test_create_version_request__dedup_query_no_branch(self, get_task):
+        # The branch option is opt-in: when it is omitted the Branch field is
+        # not set and the dedup query is not scoped, even though repo_branch is
+        # populated ("main" in this fixture). This preserves the pre-feature
+        # behavior for every build that does not ask for branch scoping.
+        task = get_task(
+            {
+                "package_type": "Managed",
+                "package_name": "Test Package",
+            }
+        )
+        assert task.project_config.repo_branch  # repo_branch is set...
+        responses.add(
+            "GET",
+            f"{self.devhub_base_url}/tooling/query/",
+            json={"size": 1, "records": [{"Id": "08c000000000001AAA"}]},
+        )
+
+        builder = BasePackageZipBuilder()
+        result = task._create_version_request(
+            "0Ho6g000000fy4ZCAQ", task.package_config, builder
+        )
+        assert result == "08c000000000001AAA"
+        query = responses.calls[-1].request.params["q"]
+        assert "Branch =" not in query  # ...but no Branch filter without the option
+
+    @responses.activate
+    def test_create_version_request__adds_branch_to_request(self, get_task):
+        task = get_task(
+            {
+                "package_type": "Managed",
+                "package_name": "Test Package",
+                "skip_validation": True,
+                "force_upload": True,
+                "branch": "feature/widget",
+            }
+        )
+        # Base-version lookup (no existing versions)
+        responses.add(
+            "GET",
+            f"{self.devhub_base_url}/tooling/query/",
+            json={"size": 0, "records": []},
+        )
+        # POST to create the Package2VersionCreateRequest
+        responses.add(
+            "POST",
+            f"{self.devhub_base_url}/tooling/sobjects/Package2VersionCreateRequest/",
+            json={"id": "08c000000000002AAA"},
+        )
+
+        builder = BasePackageZipBuilder()
+        result = task._create_version_request(
+            "0Ho6g000000fy4ZCAQ",
+            task.package_config,
+            builder,
+            skip_validation=True,
+        )
+        assert result == "08c000000000002AAA"
+        post_call = [c for c in responses.calls if c.request.method == "POST"][0]
+        body = json.loads(post_call.request.body)
+        assert body["Branch"] == "feature/widget"
+
+    @responses.activate
+    def test_create_version_request__no_branch_omits_field(self, get_task):
+        # Backward-compat guard: with no branch option the request body must not
+        # carry a Branch field, even though repo_branch is set.
+        task = get_task(
+            {
+                "package_type": "Managed",
+                "package_name": "Test Package",
+                "skip_validation": True,
+                "force_upload": True,
+            }
+        )
+        assert task.project_config.repo_branch
+        responses.add(
+            "GET",
+            f"{self.devhub_base_url}/tooling/query/",
+            json={"size": 0, "records": []},
+        )
+        responses.add(
+            "POST",
+            f"{self.devhub_base_url}/tooling/sobjects/Package2VersionCreateRequest/",
+            json={"id": "08c000000000002AAA"},
+        )
+
+        builder = BasePackageZipBuilder()
+        task._create_version_request(
+            "0Ho6g000000fy4ZCAQ",
+            task.package_config,
+            builder,
+            skip_validation=True,
+        )
+        post_call = [c for c in responses.calls if c.request.method == "POST"][0]
+        body = json.loads(post_call.request.body)
+        assert "Branch" not in body
+
     def test_has_1gp_namespace_dependencies__no(self, task):
         assert not task._has_1gp_namespace_dependency([])
 

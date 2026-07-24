@@ -5,7 +5,7 @@ import re
 import time
 import webbrowser
 from string import Template
-from typing import Callable, Optional, Union
+from typing import Callable, List, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 import github3
@@ -442,6 +442,36 @@ def get_version_id_from_tag(repo: Repository, tag_name: str) -> str:
             return version_id
 
     raise DependencyLookupError(f"Could not find version_id for tag {tag_name}")
+
+
+def get_tag_refs_for_prefix(
+    repo: Repository, prefix: str
+) -> List[Tuple[str, Reference]]:
+    """List annotated git tag references whose tag name starts with `prefix`.
+
+    This uses the git refs API (``GET /repos/{owner}/{repo}/git/refs/tags/{prefix}``)
+    and NEVER the GitHub Releases API, so feature-branch tags remain invisible to
+    Release-based resolvers such as ``GitHubBetaReleaseTagResolver``.
+
+    Returns a list of ``(tag_name, Reference)`` tuples. Version selection is left to
+    the caller so it can sort on the parsed version components.
+    """
+    # In github3.py v4.0.1, `Repository.refs(subspace='', ...)` takes the subspace
+    # as its first positional arg; passing `type=` as a kwarg would fail.
+    # `refs()` returns a lazy iterator, so a missing prefix raises NotFoundError
+    # during iteration rather than at the call.
+    results = []
+    try:
+        for ref in repo.refs(f"tags/{prefix}"):
+            tag_name = ref.ref
+            if tag_name.startswith("refs/tags/"):
+                tag_name = tag_name[len("refs/tags/") :]
+            if tag_name.startswith(prefix):
+                results.append((tag_name, ref))
+    except github3.exceptions.NotFoundError:
+        return []
+
+    return results
 
 
 def format_github3_exception(

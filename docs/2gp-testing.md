@@ -86,6 +86,135 @@ which operates just like `ci_feature_2gp` but which also executes
 may be executed against 2GP orgs by running `qa_org_2gp` instead of
 `qa_org` before invoking `robot`.
 
+## Feature and Epic Branch Betas via Annotated Git Tags
+
+The commit-status process above targets `feature/NNN` release branches.
+For arbitrarily named feature or epic branches (for example
+`epic/new-billing`), CumulusCI can instead record a 2GP beta as
+an **annotated git tag** and resolve it when building an org from that
+branch. This lets QA and developers spin up a scratch org seeded with the
+in-flight package version for a specific branch without hand-specifying a
+`version_id`.
+
+Feature-branch betas are recorded as annotated git tags **only**, never
+as GitHub Releases. This is deliberate: a feature-branch GitHub Release
+would be returned as the global "latest beta" to every consumer of the
+`include_beta` and `commit_status` strategies, a silent cross-repository
+regression. Annotated tags are read through the git refs API and are
+invisible to every Release-based resolver.
+
+### Building and recording the beta
+
+1.  Build the 2GP package version. To give a branch its own build-number
+    sequence, pass the `branch` option to `create_package_version`. This
+    sets the `Branch` field on the `Package2VersionCreateRequest`, and
+    Salesforce scopes the build counter independently per
+    `(package, major.minor.patch, branch)`. The option is opt-in: when it
+    is omitted the `Branch` field is not set and counting is unscoped,
+    exactly as before.
+
+    ```console
+    $ cci task run create_package_version --branch epic/new-billing
+    ```
+
+2.  Record the resulting version as an annotated git tag with the
+    `create_feature_branch_tag` task. Pass the same `--branch` so the tag
+    is created under the intended prefix regardless of the current
+    checkout. The tag is named `<branch>/<version>` (for example
+    `epic/new-billing/1.2.0.1`) and embeds the `version_id` (`04t`) in its
+    message. No GitHub Release is created.
+
+    ```console
+    $ cci task run create_feature_branch_tag \
+        --branch epic/new-billing \
+        --version 1.2.0.1 \
+        --version-id 04tXXXXXXXXXXXXXXX
+    ```
+
+### Building an org from the beta
+
+Run the `feature_org` flow, which uses the `feature_branch` resolution
+strategy. When run from a repository already checked out on the feature
+branch, the branch is detected automatically:
+
+```console
+$ cci flow run feature_org --org feature
+```
+
+For a repository that stays on `main` (such as a solution-org project
+that aggregates many dependencies), name the branch explicitly. Every
+dependency repository that has a matching feature-branch tag resolves to
+it; those that do not fall through to the latest beta and then the latest
+release, so mixed sets of dependencies resolve correctly:
+
+```console
+$ cci flow run feature_org --org feature \
+    -o update_dependencies.feature_branch=epic/new-billing
+```
+
+See [Controlling GitHub Dependency Resolution](controlling-github-dependency-resolution)
+for the full ordered list of resolvers in the `feature_branch` strategy.
+
+### Declaring the dependency in `cumulusci.yml`
+
+A downstream project can consume a branch beta through its
+`cumulusci.yml` in two ways.
+
+To install one specific branch beta deterministically, pin the annotated
+tag on a GitHub dependency. Because the tag carries the package
+`version_id` in its message, the `tag` resolver installs exactly that
+second-generation package version, with no resolution strategy involved:
+
+```yaml
+project:
+    dependencies:
+        - github: https://github.com/example-org/example-package
+          tag: epic/new-billing/1.2.0.1
+```
+
+To resolve the newest branch beta dynamically instead of pinning a fixed
+version, point a resolution alias at the `feature_branch` strategy so
+development flows use it, then supply the branch at run time:
+
+```yaml
+project:
+    dependency_resolutions:
+        preproduction: feature_branch
+        production: latest_release
+```
+
+```console
+$ cci flow run dev_org --org dev \
+    -o update_dependencies.feature_branch=epic/new-billing
+```
+
+When no feature branch is supplied, the strategy falls through to the
+latest beta and then the latest release, so it is safe to leave
+configured as a default.
+
+To resolve the newest branch beta for a *specific* dependency, set the
+`feature_branch` field directly on that dependency. This is useful when
+different dependencies track different branches, or when only one
+dependency should follow a branch while the rest use their normal
+resolution:
+
+```yaml
+project:
+    dependencies:
+        - github: https://github.com/example-org/package-a
+          feature_branch: epic/new-billing
+        - github: https://github.com/example-org/package-b
+          feature_branch: epic/other-work
+        - github: https://github.com/example-org/package-c
+```
+
+The dependency's `feature_branch` takes precedence over any run-wide
+`feature_branch` option and over the current branch. Package C, with no
+`feature_branch`, resolves normally (latest beta, then release). This
+still requires the `feature_branch` strategy to be active (via the
+`feature_org` flow, a resolution alias, or the `resolution_strategy`
+option).
+
 (end-to-end-testing-with-second-generation-packages)=
 
 ## End-to-End Testing with Second-Generation Packages
