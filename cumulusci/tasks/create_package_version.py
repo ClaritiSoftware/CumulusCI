@@ -152,7 +152,8 @@ class CreatePackageVersion(BaseSalesforceApiTask):
         },
         "branch": {
             "description": "Branch to scope the 2GP build counter (the Package2VersionCreateRequest Branch field). "
-            "Optional; defaults to the project's current repo branch."
+            "Optional; when omitted the Branch field is not set and the build counter is unscoped, "
+            "matching the default behavior. Set this to give a feature/epic branch its own build sequence."
         },
     }
 
@@ -358,8 +359,10 @@ class CreatePackageVersion(BaseSalesforceApiTask):
     ):
         # Resolve the branch used to scope the 2GP build counter. Salesforce
         # scopes the build counter independently per (Package2, M.M.P, Branch),
-        # so feature-branch builds get their own sequence.
-        branch_value = self.options.get("branch") or self.project_config.repo_branch
+        # so feature-branch builds get their own sequence. This is opt-in: the
+        # Branch field is only set when the branch option is explicitly passed,
+        # so default builds behave exactly as before (no Branch, unscoped).
+        branch_value = self.options.get("branch")
 
         # Prepare the VersionInfo file
         version_bytes = io.BytesIO()

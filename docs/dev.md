@@ -572,6 +572,13 @@ library:
 >     betas created on feature branches, if any, or the main branch,
 >     before falling back to managed package releases. This strategy
 >     is used only in the `qa_org_2gp` and `ci_feature_2gp` flows.
+> -   `feature_branch`, which will resolve to a second-generation package
+>     beta recorded as an annotated git tag on a named feature or epic
+>     branch, if any, before falling back to the latest beta and then the
+>     latest managed release. This strategy is used in the `feature_org`
+>     flow. Unlike `commit_status`, it supports arbitrarily named branches
+>     (not only `feature/NNN` release branches) and reads annotated git
+>     tags rather than commit statuses.
 > -   `unlocked`, which will resolve to unlocked package betas
 >     created on feature branches, if any, or the main branch.
 >     This strategy does _not_ fall back to managed package releases,
@@ -714,6 +721,39 @@ Package versions are used for ongoing QA.
 > -   If a commit status contains a beta package Id for any of the first
 >     five commits on the default branch, use that commit and package.
 >     (Resolver: `unlocked_default_branch`)
+
+**feature_branch**:
+
+This resolution strategy is suitable for building an org from a named
+feature or epic branch (for example `epic/new-billing`) whose
+second-generation package beta has been recorded as an annotated git tag
+by the `create_feature_branch_tag` task. Unlike `commit_status`, it is
+not limited to `feature/NNN` release branches and does not depend on
+commit statuses.
+
+The feature branch name is taken from the `feature_branch` option of the
+`update_dependencies` task, if set; otherwise from the current branch
+when it begins with the feature branch prefix. When neither yields a
+feature branch, the `feature_branch_tag` resolver is skipped and the
+strategy falls through to the beta and release resolvers, so it is always
+safe to run.
+
+> -   If a `tag` is present, use the commit for that tag, and any package
+>     version found there. (Resolver: `tag`)
+> -   In the dependency repository, find annotated git tags under the
+>     `<feature-branch>/` prefix. Use the highest package version found and
+>     its commit. Feature-branch betas are recorded as annotated git tags
+>     only, never GitHub Releases, so they remain invisible to the
+>     `latest_beta` resolver and never leak across repositories as a global
+>     "latest beta." (Resolver: `feature_branch_tag`)
+> -   Identify the most recent beta package release via the GitHub
+>     Releases section. If located, use that package and commit.
+>     (Resolver: `latest_beta`)
+> -   Identify the most recent production package release via the GitHub
+>     Releases section. If located, use that package and commit.
+>     (Resolver: `latest_release`)
+> -   Use the most recent commit on the repository's main branch as an
+>     unmanaged dependency. (Resolver: `unmanaged`)
 
 #### Customizing Resolution Strategies
 
