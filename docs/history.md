@@ -2,6 +2,18 @@
 
 <!-- latest-start -->
 
+## v4.8.0.dev0 (2026-08-14)
+
+## What's Changed
+
+### Changes
+
+-   DEVOPS-573 feat: add feature-branch 2GP beta strategy via annotated git tags by [@dipakparmar](https://github.com/dipakparmar) in [#32](https://github.com/ClaritiSoftware/CumulusCI/pull/32)
+
+**Full Changelog**: https://github.com/ClaritiSoftware/CumulusCI/compare/v4.8.0...v4.8.0.dev0
+
+<!-- latest-stop -->
+
 ## v4.8.0 (2026-07-10)
 
 ## What's Changed
@@ -13,8 +25,6 @@
 -   DEVOPS-929 feat: add cci completion command with zsh shell completion by [@dipakparmar](https://github.com/dipakparmar) in [#28](https://github.com/ClaritiSoftware/CumulusCI/pull/28)
 
 **Full Changelog**: https://github.com/ClaritiSoftware/CumulusCI/compare/v4.7.0...v4.8.0
-
-<!-- latest-stop -->
 
 ## v4.7.0 (2026-06-23)
 
