@@ -1026,11 +1026,7 @@ flows:
     feature_org:
         group: Org Setup
         description: >-
-            Set up a scratch org (the `feature` org) seeded with the latest 2GP beta
-            built from the current feature branch. Uses the `feature_branch` resolution
-            strategy; when no feature branch is in context the feature_branch_tag
-            resolver short-circuits and the stack falls through to latest_beta, so this
-            flow is always safe to run.
+            Set up a scratch org (the `feature` org) seeded with the latest 2GP beta built from the current feature branch. Uses the `feature_branch` resolution strategy; when no feature branch is in context the feature_branch_tag resolver short-circuits and the stack falls through to latest_beta, so this flow is always safe to run.
         steps:
             1:
                 flow: dependencies
@@ -1520,7 +1516,7 @@ project:
         namespace:
         install_class:
         uninstall_class:
-        api_version: "67.0"
+        api_version: ""
     git:
         default_branch: master
         prefix_feature: feature/
